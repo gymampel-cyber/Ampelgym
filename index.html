@@ -1231,6 +1231,26 @@ const google = {
               <div class="stat-value" id="statFitnessRevenue" style="font-size:18px">Rp 0</div>
               <div class="stat-label">Reg & Perpanjangan</div>
             </div>
+            <div class="stat-card" style="border-top-color:#ef4444">
+              <div class="stat-header">
+                <span class="stat-label">Total Pengeluaran</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="statExpenses" style="font-size:18px">Rp 0</div>
+              <div class="stat-label">Biaya Operasional</div>
+            </div>
+            <div class="stat-card" style="border-top-color:#16a34a">
+              <div class="stat-header">
+                <span class="stat-label">Laba Bersih</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#16a34a,#15803d)">
+                  <i class="fas fa-wallet"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="statNetProfit" style="font-size:18px">Rp 0</div>
+              <div class="stat-label">Omzet - Pengeluaran</div>
+            </div>
           </div>
 
           <div style="margin-top:20px">
@@ -1328,6 +1348,8 @@ const google = {
             // POS Stats
             if (document.getElementById('statPOSRevenue')) document.getElementById('statPOSRevenue').textContent = formatCurrency(s.posRevenue || 0);
             if (document.getElementById('statPOSToday')) document.getElementById('statPOSToday').textContent = s.posCount || 0;
+            if (document.getElementById('statExpenses')) document.getElementById('statExpenses').textContent = formatCurrency(s.expenses || 0);
+            if (document.getElementById('statNetProfit')) document.getElementById('statNetProfit').textContent = formatCurrency(s.netProfit || 0);
 
             // Low Stock Widget
             const lsEl = document.getElementById('lowStockWidget');
@@ -1378,7 +1400,11 @@ const google = {
 
       // Helper to parse currency back to number
       const parseVal = (txt) => Number(txt.replace(/[^0-9]/g, '')) || 0;
-      const totalRevenue = parseVal(fitnessRevenueText) + parseVal(posRevenueText);
+      const fitnessRev = parseVal(fitnessRevenueText);
+      const posRev = parseVal(posRevenueText);
+      const totalExp = parseVal(document.getElementById('statExpenses')?.textContent || '0');
+      const totalRevenue = fitnessRev + posRev;
+      const netProfit = totalRevenue - totalExp;
 
       const printTitle = document.createElement('div');
       printTitle.className = 'print-only';
@@ -1427,12 +1453,32 @@ const google = {
                 <td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-weight:600">${posCount}</td>
               </tr>
               <tr style="background:#fdfcf0">
-                <td style="padding:10px; border:1px solid #e2e8f0">Total Pendapatan POS (Retail)</td>
-                <td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-weight:700">${posRevenueText}</td>
+                <td style="padding:10px; border:1px solid #cbd5e1">Omzet Fitness (Registrasi & Perpanjangan)</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1">${formatCurrency(fitnessRev)}</td>
               </tr>
-              <tr style="background:#f1f5f9; font-weight:800; font-size:16px">
-                <td style="padding:12px; border:1px solid #cbd5e1; color:var(--primary)">TOTAL PENDAPATAN KESELURUHAN</td>
-                <td style="text-align:right; padding:12px; border:1px solid #cbd5e1; color:var(--primary)">${formatCurrency(totalRevenue)}</td>
+              <tr>
+                <td style="padding:10px; border:1px solid #cbd5e1">Omzet POS (Retail)</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1">${formatCurrency(posRev)}</td>
+              </tr>
+              <tr style="background:#f8fafc; font-weight:bold">
+                <td style="padding:10px; border:1px solid #cbd5e1">TOTAL OMZET KOTOR</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1">${formatCurrency(totalRevenue)}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border:1px solid #cbd5e1; color:#ef4444">Total Pengeluaran Toko</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1; color:#ef4444">(${formatCurrency(totalExp)})</td>
+              </tr>
+              <tr style="background:#f0fdf4; font-weight:bold; font-size:16px">
+                <td style="padding:10px; border:1px solid #cbd5e1; color:#16a34a">LABA BERSIH (NET PROFIT)</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1; color:#16a34a">${formatCurrency(netProfit)}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border:1px solid #cbd5e1">Total Transaksi POS</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1">${posCount} Transaksi</td>
+              </tr>
+              <tr>
+                <td style="padding:10px; border:1px solid #cbd5e1">Total Kunjungan (Check-In)</td>
+                <td style="text-align:right; padding:10px; border:1px solid #cbd5e1">${checkinCount} Kunjungan</td>
               </tr>
             </tbody>
           </table>
