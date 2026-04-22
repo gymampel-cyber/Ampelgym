@@ -3543,7 +3543,17 @@ const google = {
               document.getElementById('pkg_id').value = p['ID Paket'];
               document.getElementById('pkg_name').value = p['Nama Paket'];
               document.getElementById('pkg_type').value = p['Tipe Paket'];
-              document.getElementById('pkg_duration').value = p['Durasi'];
+              
+              const durStr = (p['Durasi'] || '30 Hari').toString();
+              const match = durStr.match(/(\d+)\s*(.*)/);
+              if (match) {
+                document.getElementById('pkg_duration').value = match[1];
+                document.getElementById('pkg_unit').value = match[2] || 'Hari';
+              } else {
+                document.getElementById('pkg_duration').value = parseInt(durStr) || 30;
+                document.getElementById('pkg_unit').value = 'Hari';
+              }
+              
               document.getElementById('pkg_price').value = p['Harga'];
               document.getElementById('pkg_desc').value = p['Deskripsi'];
               document.getElementById('pkg_active').checked = p['Is Active'] === true || p['Is Active'] === 'TRUE';
@@ -3554,20 +3564,26 @@ const google = {
         document.getElementById('packageModalTitle').textContent = 'Tambah Paket';
         document.getElementById('pkg_id').value = '';
         document.getElementById('pkg_name').value = '';
-        document.getElementById('pkg_duration').value = 30;
+        document.getElementById('pkg_duration').value = 1;
+        document.getElementById('pkg_unit').value = 'Bulan';
         document.getElementById('pkg_price').value = 0;
         document.getElementById('pkg_desc').value = '';
+        document.getElementById('pkg_active').checked = true;
       }
     }
 
     function closePackageModal() { document.getElementById('packageModal').style.display = 'none'; }
 
     function savePackageSubmit() {
+      const durationVal = document.getElementById('pkg_duration').value;
+      const unitVal = document.getElementById('pkg_unit').value;
+      const fullDuration = `${durationVal} ${unitVal}`;
+      
       const data = {
         'ID Paket': document.getElementById('pkg_id').value,
         'Nama Paket': document.getElementById('pkg_name').value,
         'Tipe Paket': document.getElementById('pkg_type').value,
-        'Durasi': document.getElementById('pkg_duration').value,
+        'Durasi': fullDuration,
         'Harga': document.getElementById('pkg_price').value,
         'Total Harga': document.getElementById('pkg_price').value,
         'Deskripsi': document.getElementById('pkg_desc').value,
@@ -6251,8 +6267,15 @@ const google = {
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Durasi (Hari)</label>
-            <input type="number" id="pkg_duration" class="form-input" value="30">
+            <label class="form-label">Durasi</label>
+            <div style="display:flex; gap:4px">
+              <input type="number" id="pkg_duration" class="form-input" value="1" style="width:70px">
+              <select id="pkg_unit" class="form-input">
+                <option value="Bulan">Bulan</option>
+                <option value="Hari">Hari</option>
+                <option value="Tahun">Tahun</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Harga (Rp)</label>
