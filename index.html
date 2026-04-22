@@ -569,6 +569,9 @@ const google = {
         <div class="menu-item" data-view="catalog" onclick="showView('catalog')">
           <i class="fas fa-boxes-stacked"></i><span>Katalog & Inventori</span>
         </div>
+        <div class="menu-item" data-view="expenses" onclick="showView('expenses')">
+          <i class="fas fa-file-invoice-dollar"></i><span>Pengeluaran Toko</span>
+        </div>
         <div id="adminMenu" class="menu-item hidden" data-view="admin" onclick="showView('admin')">
           <i class="fas fa-cogs"></i><span>Admin Panel</span>
         </div>
@@ -1053,7 +1056,8 @@ const google = {
         approvals: 'Pending Approvals', 
         admin: 'Admin Panel',
         pos: 'Point of Sale',
-        catalog: 'Katalog & Inventori'
+        catalog: 'Katalog & Inventori',
+        expenses: 'Pengeluaran Toko'
       };
       
       document.getElementById('pageTitle').textContent = titles[view] || view;
@@ -1071,6 +1075,7 @@ const google = {
         case 'admin':        loadAdminPanel();    break;
         case 'pos':          loadPOSView();       break;
         case 'catalog':      loadCatalogView();   break;
+        case 'expenses':     loadExpensesView();  break;
       }
     }
     
@@ -5315,6 +5320,9 @@ const google = {
                   <button class="btn btn-warning" onclick="showDuplicateCleanupDialog()">
                     <i class="fas fa-broom"></i> Cleanup Duplikat Data
                   </button>
+                  <button class="btn btn-primary" onclick="syncDatabase()">
+                    <i class="fas fa-sync"></i> Sinkronisasi Database (Initialisasi)
+                  </button>
                 </div>
               </div>
             </div>
@@ -5323,6 +5331,31 @@ const google = {
         </div>
       `;
     }
+
+    function syncDatabase() {
+      showConfirmModal(
+        'Sinkronisasi Database',
+        'Sistem akan memeriksa dan membuat sheet yang belum ada (termasuk sheet Pengeluaran).\nLanjutkan?',
+        function() {
+          showLoading();
+          google.script.run
+            .withSuccessHandler(function(res) {
+              hideLoading();
+              if (res && res.success) {
+                showToast('✅ ' + res.message, 'success');
+              } else {
+                showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              hideLoading();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .initializeSheets();
+        }
+      );
+    }
+
     
     function clearCache() {
       showLoading();
@@ -5622,6 +5655,270 @@ const google = {
       );
     }
     
+    // ================ EXPENSES ================
+    function loadExpensesView() {
+      const content = `
+        <div class="filter-container">
+          <div class="filter-item">
+            <label class="filter-label">Tanggal Mulai</label>
+            <input type="date" id="exp_start_date" class="filter-input">
+          </div>
+          <div class="filter-item">
+            <label class="filter-label">Tanggal Akhir</label>
+            <input type="date" id="exp_end_date" class="filter-input">
+          </div>
+          <div style="display:flex; gap:8px">
+            <button class="btn btn-primary" onclick="refreshExpenses()" style="padding:8px 20px">
+              <i class="fas fa-filter"></i> Filter
+            </button>
+            <button class="btn btn-outline" onclick="resetExpensesFilter()" style="padding:8px 12px">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top-color:#ef4444">
+            <div class="stat-header">
+              <span class="stat-label">Total Pengeluaran</span>
+              <div class="stat-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">
+                <i class="fas fa-file-invoice-dollar"></i>
+              </div>
+            </div>
+            <div class="stat-value" id="expTotalValue">Rp 0</div>
+            <div class="stat-label">Periode Terpilih</div>
+          </div>
+          <div class="stat-card" style="border-top-color:#3b82f6">
+            <div class="stat-header">
+              <span class="stat-label">Jumlah Transaksi</span>
+              <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">
+                <i class="fas fa-list-ul"></i>
+              </div>
+            </div>
+            <div class="stat-value" id="expCountValue">0</div>
+            <div class="stat-label">Catatan Pengeluaran</div>
+          </div>
+        </div>
+
+        <div class="pos-layout" style="grid-template-columns: 1fr 2fr; height: auto;">
+          <!-- FORM ADD EXPENSE -->
+          <div class="form-card">
+            <div class="form-card-header">
+              <h4><i class="fas fa-plus-circle"></i> Catat Pengeluaran Baru</h4>
+            </div>
+            <div class="form-card-body">
+              <form id="expenseForm" onsubmit="event.preventDefault(); submitExpenseForm();">
+                <div class="form-group">
+                  <label class="form-label">Tanggal</label>
+                  <input type="date" id="exp_date" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Kategori</label>
+                  <select id="exp_category" class="form-input" required>
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="Operasional">Operasional</option>
+                    <option value="Gaji & Upah">Gaji & Upah</option>
+                    <option value="Listrik, Air & Wifi">Listrik, Air & Wifi</option>
+                    <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
+                    <option value="Pembelian Barang / Stok">Pembelian Barang / Stok</option>
+                    <option value="Sewa Tempat">Sewa Tempat</option>
+                    <option value="Promosi & Marketing">Promosi & Marketing</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Deskripsi / Keterangan</label>
+                  <textarea id="exp_description" class="form-input" rows="3" placeholder="Contoh: Bayar tagihan listrik bulan April" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Jumlah (Rp)</label>
+                  <input type="number" id="exp_amount" class="form-input" placeholder="Masukkan angka saja" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Metode Pembayaran</label>
+                  <select id="exp_payment" class="form-input" required>
+                    <option value="Tunai">Tunai</option>
+                    <option value="Transfer">Transfer</option>
+                    <option value="QRIS">QRIS</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i class="fas fa-save"></i> Simpan Pengeluaran
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- LIST EXPENSES -->
+          <div class="table-container">
+            <div class="cart-header" style="background:#fff; border-bottom:1px solid #f1f5f9">
+              <h4 style="color:#334155"><i class="fas fa-history"></i> Riwayat Pengeluaran</h4>
+            </div>
+            <div id="expensesTableContainer" style="overflow-x:auto">
+              <div style="text-align:center; padding:40px; color:#94a3b8">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br>
+                <p style="margin-top:12px">Memuat data pengeluaran...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('contentArea').innerHTML = content;
+      document.getElementById('exp_date').valueAsDate = new Date();
+      
+      refreshExpenses();
+    }
+
+    function refreshExpenses() {
+      const start = document.getElementById('exp_start_date')?.value || '';
+      const end = document.getElementById('exp_end_date')?.value || '';
+      
+      document.getElementById('expensesTableContainer').innerHTML = `
+        <div style="text-align:center; padding:40px; color:#94a3b8">
+          <i class="fas fa-spinner fa-spin fa-2x"></i><br>
+          <p style="margin-top:12px">Memuat data pengeluaran...</p>
+        </div>
+      `;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            renderExpensesTable(res.expenses || []);
+          } else {
+            showToast('Gagal memuat data: ' + (res.message || 'Error Unknown'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error: ' + err.message, 'error');
+        })
+        .getExpenses(start, end);
+    }
+
+    function resetExpensesFilter() {
+      if (document.getElementById('exp_start_date')) document.getElementById('exp_start_date').value = '';
+      if (document.getElementById('exp_end_date')) document.getElementById('exp_end_date').value = '';
+      refreshExpenses();
+    }
+
+    function renderExpensesTable(data) {
+      const container = document.getElementById('expensesTableContainer');
+      let totalAmount = 0;
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:60px 20px; color:#94a3b8">
+            <i class="fas fa-folder-open fa-3x" style="margin-bottom:16px; opacity:0.3"></i>
+            <p>Tidak ada data pengeluaran ditemukan</p>
+          </div>
+        `;
+        document.getElementById('expTotalValue').textContent = formatCurrency(0);
+        document.getElementById('expCountValue').textContent = '0';
+        return;
+      }
+
+      let html = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Kategori</th>
+              <th>Keterangan</th>
+              <th>Jumlah</th>
+              <th>Metode</th>
+              <th>User</th>
+              <th style="width:50px"></th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      data.forEach(item => {
+        totalAmount += Number(item.amount) || 0;
+        html += `
+          <tr>
+            <td style="white-space:nowrap">${formatDate(item.date)}</td>
+            <td><span class="badge badge-primary">${item.category}</span></td>
+            <td style="max-width:250px; font-size:13px">${item.description}</td>
+            <td style="font-weight:600; color:#ef4444">${formatCurrency(item.amount)}</td>
+            <td>${item.paymentMethod}</td>
+            <td style="font-size:12px; color:#64748b">${item.user || '-'}</td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="deleteExpenseRecord('${item.id}')" title="Hapus">
+                <i class="fas fa-trash text-danger"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+      
+      document.getElementById('expTotalValue').textContent = formatCurrency(totalAmount);
+      document.getElementById('expCountValue').textContent = data.length;
+    }
+
+    function submitExpenseForm() {
+      const payload = {
+        date: document.getElementById('exp_date').value,
+        category: document.getElementById('exp_category').value,
+        description: document.getElementById('exp_description').value,
+        amount: Number(document.getElementById('exp_amount').value),
+        paymentMethod: document.getElementById('exp_payment').value,
+        user: currentUser ? currentUser.name : 'Unknown'
+      };
+
+      if (!payload.category || !payload.amount || !payload.description) {
+        showToast('Mohon lengkapi semua data wajib', 'warning');
+        return;
+      }
+
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideLoading();
+          if (res && res.success) {
+            showToast('✅ Pengeluaran berhasil dicatat', 'success');
+            document.getElementById('expenseForm').reset();
+            document.getElementById('exp_date').valueAsDate = new Date();
+            refreshExpenses();
+          } else {
+            showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast('Error: ' + err.message, 'error');
+        })
+        .saveExpense(payload);
+    }
+
+    function deleteExpenseRecord(id) {
+      showConfirmModal(
+        'Hapus Pengeluaran',
+        'Apakah Anda yakin ingin menghapus catatan pengeluaran ini?\nTindakan ini tidak dapat dibatalkan.',
+        function() {
+          showLoading();
+          google.script.run
+            .withSuccessHandler(function(res) {
+              hideLoading();
+              if (res && res.success) {
+                showToast('✅ Pengeluaran dihapus', 'success');
+                refreshExpenses();
+              } else {
+                showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              hideLoading();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .deleteExpense(id);
+        }
+      );
+    }
+
     window.onload = initApp;
   </script>
   
