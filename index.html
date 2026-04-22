@@ -3314,9 +3314,17 @@ const google = {
                         <td style="color:${p['Stok'] <= 5 ? '#ef4444' : 'inherit'}"><b>${p['Stok']}</b> ${p['Satuan']}</td>
                         <td><span class="badge badge-${p['Status'] === 'Aktif' ? 'success' : 'secondary'}">${p['Status'] || 'Aktif'}</span></td>
                         <td>
-                          <button class="btn btn-sm btn-outline" onclick="openProductModal('${p['ID Produk']}')">
-                            <i class="fas fa-edit"></i>
-                          </button>
+                          <div style="display:flex; gap:4px">
+                            <button class="btn btn-sm btn-outline" onclick="openProductModal('${p['ID Produk']}')" title="Edit Data">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="openRestockModal('${p['ID Produk']}', '${escapeJs(p['Nama Produk'])}')" title="Restock / Kulakan">
+                              <i class="fas fa-plus-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="openAdjustModal('${p['ID Produk']}', '${escapeJs(p['Nama Produk'])}', ${p['Stok']})" title="Penyesuaian / Rusak">
+                              <i class="fas fa-tools"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     `).join('')}
@@ -3434,6 +3442,87 @@ const google = {
           }
         })
         .updateInventoryByBarcode(barcode, stock, price);
+    }
+
+    // RESTOCK & ADJUSTMENT FUNCTIONS
+    function openRestockModal(id, name) {
+      document.getElementById('restock_prod_id').value = id;
+      document.getElementById('restock_prod_name').value = name;
+      document.getElementById('restock_qty').value = 0;
+      document.getElementById('restock_cost').value = 0;
+      document.getElementById('restockModal').style.display = 'flex';
+    }
+    
+    function closeRestockModal() {
+      document.getElementById('restockModal').style.display = 'none';
+    }
+    
+    function submitRestock() {
+      const payload = {
+        productId: document.getElementById('restock_prod_id').value,
+        addedQty: parseInt(document.getElementById('restock_qty').value),
+        totalCost: parseInt(document.getElementById('restock_cost').value),
+        paymentMethod: document.getElementById('restock_payment').value,
+        user: currentUser ? currentUser.name : 'System'
+      };
+      
+      if (payload.addedQty <= 0) { showToast('Jumlah harus lebih dari 0', 'warning'); return; }
+      if (payload.totalCost <= 0) { showToast('Total biaya harus diisi', 'warning'); return; }
+      
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideLoading();
+          if (res.success) {
+            showToast('✅ ' + res.message, 'success');
+            closeRestockModal();
+            loadProductList();
+            if (currentView === 'expenses') refreshExpenses();
+            if (currentView === 'dashboard') refreshDashboard();
+          } else {
+            showToast('❌ ' + res.message, 'error');
+          }
+        })
+        .processRestock(payload);
+    }
+    
+    function openAdjustModal(id, name, currentStock) {
+      document.getElementById('adjust_prod_id').value = id;
+      document.getElementById('adjust_prod_name').value = name;
+      document.getElementById('adjust_new_stock').value = currentStock;
+      document.getElementById('adjustModal').style.display = 'flex';
+    }
+    
+    function closeAdjustModal() {
+      document.getElementById('adjustModal').style.display = 'none';
+    }
+    
+    function submitAdjust() {
+      const payload = {
+        productId: document.getElementById('adjust_prod_id').value,
+        newStock: parseInt(document.getElementById('adjust_new_stock').value),
+        reason: document.getElementById('adjust_reason').value,
+        user: currentUser ? currentUser.name : 'System'
+      };
+      
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideLoading();
+          if (res.success) {
+            showToast('✅ ' + res.message, 'success');
+            closeAdjustModal();
+            loadProductList();
+          } else {
+            showToast('❌ ' + res.message, 'error');
+          }
+        })
+        .adjustStock(payload);
+    }
+
+    function escapeJs(str) {
+      if (!str) return '';
+      return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
     // Modal Helpers
@@ -6113,6 +6202,79 @@ const google = {
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeProductModal()">Batal</button>
         <button id="btnSaveProduct" class="btn btn-primary" onclick="saveProductSubmit()" style="display:none">Simpan Produk</button>
+      </div>
+    </div>
+  </div>
+  <!-- Modal Restock Produk -->
+  <div id="restockModal" class="modal-overlay" style="display:none">
+    <div class="modal-container" style="max-width:450px">
+      <div class="modal-header">
+        <h3 id="restockModalTitle">Restock Produk</h3>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="restock_prod_id">
+        <div class="form-group">
+          <label class="form-label">Nama Produk</label>
+          <input type="text" id="restock_prod_name" class="form-input" readonly style="background:#f1f5f9">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jumlah Ditambah</label>
+            <input type="number" id="restock_qty" class="form-input" value="0" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Biaya Beli (Rp)</label>
+            <input type="number" id="restock_cost" class="form-input" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Metode Pembayaran (Diambil dari Kas)</label>
+          <select id="restock_payment" class="form-input">
+            <option value="Tunai">Tunai</option>
+            <option value="Transfer">Transfer</option>
+            <option value="QRIS">QRIS</option>
+          </select>
+        </div>
+        <p style="font-size:12px; color:#64748b; margin-top:8px">
+          <i class="fas fa-info-circle"></i> Restock akan otomatis tercatat sebagai <b>Pengeluaran</b> di laporan keuangan.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeRestockModal()">Batal</button>
+        <button class="btn btn-primary" onclick="submitRestock()">Proses Restock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Penyesuaian Stok -->
+  <div id="adjustModal" class="modal-overlay" style="display:none">
+    <div class="modal-container" style="max-width:450px">
+      <div class="modal-header">
+        <h3>Penyesuaian Stok</h3>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="adjust_prod_id">
+        <div class="form-group">
+          <label class="form-label">Nama Produk</label>
+          <input type="text" id="adjust_prod_name" class="form-input" readonly style="background:#f1f5f9">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stok Akhir Sebenarnya (Hasil Opname)</label>
+          <input type="number" id="adjust_new_stock" class="form-input" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alasan Penyesuaian</label>
+          <select id="adjust_reason" class="form-input">
+            <option value="Stock Opname">Stock Opname (Selisih Hitung)</option>
+            <option value="Barang Rusak/Kadaluarsa">Barang Rusak / Kadaluarsa</option>
+            <option value="Konsumsi Sendiri">Konsumsi Sendiri / Internal</option>
+            <option value="Hilang">Hilang / Shrinkage</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeAdjustModal()">Batal</button>
+        <button class="btn btn-warning" onclick="submitAdjust()">Update Stok</button>
       </div>
     </div>
   </div>
