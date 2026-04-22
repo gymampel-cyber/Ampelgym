@@ -1009,13 +1009,8 @@ const google = {
             currentUser = res.user;
             document.getElementById('authView').style.display = 'none';
             document.getElementById('dashboardView').style.display = 'flex';
-            document.getElementById('userName').textContent = res.user.name || res.user.username;
-            document.getElementById('userRole').textContent = res.user.role || 'Staff';
             
-            if (res.user.role === 'Admin' || res.user.role === 'Super Admin') {
-              document.getElementById('adminMenu').classList.remove('hidden');
-            }
-            
+            applyRolePermissions();
             showView('dashboard');
             loadApprovalCount();
           } else { 
@@ -1350,6 +1345,15 @@ const google = {
             if (document.getElementById('statPOSToday')) document.getElementById('statPOSToday').textContent = s.posCount || 0;
             if (document.getElementById('statExpenses')) document.getElementById('statExpenses').textContent = formatCurrency(s.expenses || 0);
             if (document.getElementById('statNetProfit')) document.getElementById('statNetProfit').textContent = formatCurrency(s.netProfit || 0);
+
+            // Hide financial stats for Staff
+            if (currentUser && currentUser.role === 'Staff') {
+               const financialStats = ['statFitnessRevenue', 'statPOSRevenue', 'statExpenses', 'statNetProfit'];
+               financialStats.forEach(id => {
+                 const el = document.getElementById(id);
+                 if (el) el.textContent = '***';
+               });
+            }
 
             // Low Stock Widget
             const lsEl = document.getElementById('lowStockWidget');
@@ -5458,6 +5462,9 @@ const google = {
                   <button class="btn btn-primary" onclick="syncDatabase()">
                     <i class="fas fa-sync"></i> Sinkronisasi Database (Initialisasi)
                   </button>
+                  <button class="btn btn-secondary" onclick="triggerSetupLeveling()" style="background:#8b5cf6; color:white">
+                    <i class="fas fa-user-shield"></i> Setup Role Leveling (Akun Baru)
+                  </button>
                 </div>
               </div>
             </div>
@@ -5465,6 +5472,48 @@ const google = {
           </div>
         </div>
       `;
+      
+      // Additional restrictions for Admin (not Super Admin) inside Admin Panel
+      if (currentUser.role === 'Admin') {
+        const createUserCard = document.querySelector('.admin-card');
+        if (createUserCard && createUserCard.innerHTML.includes('Buat Akun User')) {
+          createUserCard.style.opacity = '0.5';
+          createUserCard.style.pointerEvents = 'none';
+          createUserCard.innerHTML += '<div style="color:#ef4444; font-size:12px; margin-top:8px">Hanya Super Admin yang dapat mengelola akun user.</div>';
+        }
+      }
+    }
+
+    function triggerSetupLeveling() {
+      showConfirmModal(
+        'Setup Leveling User',
+        'Sistem akan membuat 3 akun default: Super Admin, Admin, dan Staff.\nLanjutkan?',
+        function() {
+          showLoading();
+          google.script.run
+            .withSuccessHandler(function(res) {
+              hideLoading();
+              if (res && res.success) {
+                showToast('✅ ' + res.message, 'success');
+                showAlert('Informasi Login', 
+                  'Akun berhasil dibuat:\n\n' +
+                  '1. Super Admin: superadmin / superadmin123\n' +
+                  '2. Admin: admin / admin123\n' +
+                  '3. Staff: staff / staff123\n\n' +
+                  'Silakan simpan informasi ini.', 
+                  'success'
+                );
+              } else {
+                showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              hideLoading();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .setupDefaultUsers();
+        }
+      );
     }
 
     function syncDatabase() {
@@ -6052,6 +6101,34 @@ const google = {
             .deleteExpense(id);
         }
       );
+    }
+
+    function applyRolePermissions() {
+      if (!currentUser) return;
+      
+      const role = currentUser.role;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userRole').textContent = role;
+      
+      // Sidebar visibility
+      const menuItems = document.querySelectorAll('.menu-item[data-view]');
+      menuItems.forEach(item => {
+        const view = item.dataset.view;
+        let visible = true;
+        
+        if (role === 'Staff') {
+          // Staff only sees operational menus
+          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos'];
+          if (!staffViews.includes(view)) visible = false;
+        } else if (role === 'Admin') {
+          // Admin sees everything except sensitive Admin Panel items (handled in loadAdminPanel)
+          if (view === 'admin') {
+            // Admin can see Admin Panel but restricted inside
+          }
+        }
+        
+        item.style.display = visible ? 'flex' : 'none';
+      });
     }
 
     window.onload = initApp;
