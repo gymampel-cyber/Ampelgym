@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AMPEL GYM Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyCbtuJIB5VqEx0komvoxV_fngSCRk7w9iiEs4PWgu2umgllXkdYywilPlP7rJBNnp/exec';
    // ================ IMPROVED PROXY FOR google.script.run ================
@@ -572,6 +573,9 @@ const google = {
         <div class="menu-item" data-view="expenses" onclick="showView('expenses')">
           <i class="fas fa-file-invoice-dollar"></i><span>Pengeluaran Toko</span>
         </div>
+        <div class="menu-item" data-view="analytics" onclick="showView('analytics')">
+          <i class="fas fa-chart-pie"></i><span>Laporan Analitik</span>
+        </div>
         <div id="adminMenu" class="menu-item hidden" data-view="admin" onclick="showView('admin')">
           <i class="fas fa-cogs"></i><span>Admin Panel</span>
         </div>
@@ -1052,7 +1056,8 @@ const google = {
         admin: 'Admin Panel',
         pos: 'Point of Sale',
         catalog: 'Katalog & Inventori',
-        expenses: 'Pengeluaran Toko'
+        expenses: 'Pengeluaran Toko',
+        analytics: 'Laporan Analitik & Grafik'
       };
       
       document.getElementById('pageTitle').textContent = titles[view] || view;
@@ -1071,6 +1076,7 @@ const google = {
         case 'pos':          loadPOSView();       break;
         case 'catalog':      loadCatalogView();   break;
         case 'expenses':     loadExpensesView();  break;
+        case 'analytics':    loadAnalyticsView(); break;
       }
     }
     
@@ -6464,3 +6470,129 @@ const google = {
       </div>
     </div>
   </div>
+
+  <script>
+    // ================ ANALYTICS VIEW ================
+    function loadAnalyticsView() {
+      const content = `
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap:24px">
+          <!-- REVENUE TREND -->
+          <div class="stat-card" style="border-top-color: #8b5cf6">
+            <div class="stat-header">
+              <h4 style="color:#1e293b"><i class="fas fa-chart-line"></i> Tren Pendapatan (6 Bulan)</h4>
+            </div>
+            <div style="height:300px; position:relative">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- PACKAGE POPULARITY -->
+          <div class="stat-card" style="border-top-color: #ec4899">
+            <div class="stat-header">
+              <h4 style="color:#1e293b"><i class="fas fa-chart-pie"></i> Popularitas Paket</h4>
+            </div>
+            <div style="height:300px; position:relative">
+              <canvas id="packageChart"></canvas>
+            </div>
+          </div>
+
+          <!-- CHECK-IN BY DAY -->
+          <div class="stat-card" style="border-top-color: #3b82f6">
+            <div class="stat-header">
+              <h4 style="color:#1e293b"><i class="fas fa-users"></i> Tingkat Kunjungan (7 Hari)</h4>
+            </div>
+            <div style="height:300px; position:relative">
+              <canvas id="checkinChart"></canvas>
+            </div>
+          </div>
+
+          <!-- INCOME VS EXPENSE -->
+          <div class="stat-card" style="border-top-color: #10b981">
+            <div class="stat-header">
+              <h4 style="color:#1e293b"><i class="fas fa-balance-scale"></i> Arus Kas (Bulan Ini)</h4>
+            </div>
+            <div style="height:300px; position:relative">
+              <canvas id="financeChart"></canvas>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('contentArea').innerHTML = content;
+      
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideLoading();
+          if (res.success) {
+            renderCharts(res);
+          } else {
+            showToast('Gagal memuat analitik: ' + res.message, 'error');
+          }
+        })
+        .getAnalyticsData();
+    }
+
+    function renderCharts(data) {
+      // 1. REVENUE CHART
+      const revCtx = document.getElementById('revenueChart').getContext('2d');
+      new Chart(revCtx, {
+        type: 'line',
+        data: {
+          labels: Object.keys(data.revenueTrend),
+          datasets: [{
+            label: 'Total Pendapatan (Rp)',
+            data: Object.values(data.revenueTrend),
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 2. PACKAGE CHART
+      const pkgCtx = document.getElementById('packageChart').getContext('2d');
+      new Chart(pkgCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(data.packageStats),
+          datasets: [{
+            data: Object.values(data.packageStats),
+            backgroundColor: ['#ec4899', '#f43f5e', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 3. CHECK-IN CHART
+      const cinCtx = document.getElementById('checkinChart').getContext('2d');
+      new Chart(cinCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data.checkinStats),
+          datasets: [{
+            label: 'Jumlah Check-in',
+            data: Object.values(data.checkinStats),
+            backgroundColor: '#3b82f6'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 4. FINANCE CHART
+      const finCtx = document.getElementById('financeChart').getContext('2d');
+      new Chart(finCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Pendapatan', 'Pengeluaran'],
+          datasets: [{
+            data: [data.financialSummary.income, data.financialSummary.income === 0 && data.financialSummary.expenses === 0 ? 1 : data.financialSummary.expenses],
+            backgroundColor: ['#10b981', '#ef4444']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+  </script>
