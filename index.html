@@ -610,6 +610,9 @@ const google = {
     var ptSearchTimeout = null;
     var activeSearchRequest = null;
     var activePTSearchRequest = null;
+    var productPhotoBase64 = null;
+    var productWebcamStream = null;
+    var productCameraFacing = 'environment';
 
     // ================ UTILS ================
     function showLoading()  { document.getElementById('loadingOverlay').style.display = 'flex'; }
@@ -715,62 +718,62 @@ const google = {
       const now = formatDateTime(new Date());
       let text = '';
       if (type === 'registration') {
-        text = `*RECEIPT REGISTRASI AMPEL GYM*\\n` +
-               `--------------------------------\\n` +
-               `Waktu: ${now}\\n` +
-               `Member ID: ${data.memberId}\\n` +
-               `Nama: ${data.name}\\n` +
-               `Paket: ${data.package}\\n` +
-               `Berlaku s/d: ${formatDate(data.expiry)}\\n` +
-               `No. Transaksi: ${data.receipt}\\n` +
-               `--------------------------------\\n` +
-               `Alamat: Jln. K.H.M. Mansyur No. 88 Surabaya\\n` +
-               `No HP: 087795175243\\n` +
-               `--------------------------------\\n` +
-               `*Rincian Pembayaran*\\n` +
-               `Harga Paket: ${formatCurrency(data.price)}\\n` +
-               `Biaya Reg: ${formatCurrency(data.regFee)}\\n` +
-               `Total: ${formatCurrency(data.total)}\\n` +
-               `Metode: ${data.payment}\\n` +
-               `--------------------------------\\n` +
-               `Gunakan QR Code berikut untuk check-in:\\n` +
-               `${data.qr}\\n\\n` +
+        text = `*RECEIPT REGISTRASI AMPEL GYM*\n` +
+               `--------------------------------\n` +
+               `Waktu: ${now}\n` +
+               `Member ID: ${data.memberId}\n` +
+               `Nama: ${data.name}\n` +
+               `Paket: ${data.package}\n` +
+               `Berlaku s/d: ${formatDate(data.expiry)}\n` +
+               `No. Transaksi: ${data.receipt}\n` +
+               `--------------------------------\n` +
+               `Alamat: Jln. K.H.M. Mansyur No. 88 Surabaya\n` +
+               `No HP: 087795175243\n` +
+               `--------------------------------\n` +
+               `*Rincian Pembayaran*\n` +
+               `Harga Paket: ${formatCurrency(data.price)}\n` +
+               `Biaya Reg: ${formatCurrency(data.regFee)}\n` +
+               `Total: ${formatCurrency(data.total)}\n` +
+               `Metode: ${data.payment}\n` +
+               `--------------------------------\n` +
+               `Gunakan QR Code berikut untuk check-in:\n` +
+               `${data.qr}\n\n` +
                `Terima kasih telah bergabung!`;
       } else if (type === 'extension') {
-        text = `*RECEIPT PERPANJANGAN AMPEL GYM*\\n` +
-               `--------------------------------\\n` +
-               `Waktu: ${now}\\n` +
-               `Member ID: ${data.memberId}\\n` +
-               `Nama: ${data.name}\\n` +
-               `Paket: ${data.package}\\n` +
-               `Berlaku s/d: ${formatDate(data.expiry)}\\n` +
-               `No. Transaksi: ${data.receipt}\\n` +
-               `--------------------------------\\n` +
-               `Alamat: Jln. K.H.M. Mansyur No. 88 Surabaya\\n` +
-               `No HP: 087795175243\\n` +
-               `--------------------------------\\n` +
-               `*Rincian Pembayaran*\\n` +
-               `Total: ${formatCurrency(data.total)}\\n` +
-               `Metode: ${data.payment}\\n` +
-               `--------------------------------\\n` +
+        text = `*RECEIPT PERPANJANGAN AMPEL GYM*\n` +
+               `--------------------------------\n` +
+               `Waktu: ${now}\n` +
+               `Member ID: ${data.memberId}\n` +
+               `Nama: ${data.name}\n` +
+               `Paket: ${data.package}\n` +
+               `Berlaku s/d: ${formatDate(data.expiry)}\n` +
+               `No. Transaksi: ${data.receipt}\n` +
+               `--------------------------------\n` +
+               `Alamat: Jln. K.H.M. Mansyur No. 88 Surabaya\n` +
+               `No HP: 087795175243\n` +
+               `--------------------------------\n` +
+               `*Rincian Pembayaran*\n` +
+               `Total: ${formatCurrency(data.total)}\n` +
+               `Metode: ${data.payment}\n` +
+               `--------------------------------\n` +
                `Terima kasih!`;
       } else if (type === 'pt') {
-        text = `*RECEIPT REGISTRASI PT AMPEL GYM*\\n` +
-               `--------------------------------\\n` +
-               `Waktu: ${now}\\n` +
-               `Member: ${data.name}\\n` +
-               `Trainer: ${data.trainer}\\n` +
-               `Jumlah Sesi: ${data.sessions}\\n` +
-               `Berlaku s/d: ${formatDate(data.expiry)}\\n` +
-               `No. Transaksi: ${data.receipt}\\n` +
-               `--------------------------------\\n` +
-               `Alamat: Jln. K.H.M. Mansyur No. 88 Surabaya\\n` +
-               `No HP: 087795175243\\n` +
-               `--------------------------------\\n` +
-               `*Rincian Pembayaran*\\n` +
-               `Total: ${formatCurrency(data.total)}\\n` +
-               `Metode: ${data.payment}\\n` +
-               `--------------------------------\\n` +
+        text = `*RECEIPT REGISTRASI PT AMPEL GYM*\n` +
+               `--------------------------------\n` +
+               `Waktu: ${now}\n` +
+               `Member: ${data.name}\n` +
+               `Trainer: ${data.trainer}\n` +
+               `Jumlah Sesi: ${data.sessions}\n` +
+               `Berlaku s/d: ${formatDate(data.expiry)}\n` +
+               `No. Transaksi: ${data.receipt}\n` +
+               `--------------------------------\n` +
+               `Alamat: Jln. K.H.M. Mansyur No. 88 Surabaya\n` +
+               `No HP: 087795175243\n` +
+               `--------------------------------\n` +
+               `*Rincian Pembayaran*\n` +
+               `Total: ${formatCurrency(data.total)}\n` +
+               `Metode: ${data.payment}\n` +
+               `--------------------------------\n` +
                `Selamat berlatih!`;
       }
       return text;
@@ -2081,7 +2084,96 @@ const google = {
     }
     
     function printMemberCard(memberId) {
-      showToast('Fitur cetak kartu akan segera tersedia', 'info');
+      if (!memberId) {
+        showToast('ID Member tidak valid', 'warning');
+        return;
+      }
+      
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideLoading();
+          if (res && res.success) {
+            const m = res.member;
+            const printWindow = window.open('', '_blank');
+            const photoUrl = m.profilePic ? getDirectLink(m.profilePic) : 'https://i.imgur.com/vHEx3jR.png';
+            
+            printWindow.document.write(`
+              <html>
+                <head>
+                  <title>Member Card - ${m.name}</title>
+                  <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap');
+                    body { margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f1f5f9; font-family: 'Roboto', sans-serif; }
+                    .card { 
+                      width: 350px; height: 210px; background: #1a1a1a; color: white; border-radius: 12px; position: relative; overflow: hidden; 
+                      box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #333;
+                    }
+                    .card-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.15; pointer-events: none; }
+                    .card-content { position: relative; z-index: 2; padding: 15px; display: flex; height: calc(100% - 30px); }
+                    .card-left { flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+                    .card-right { flex: 1; padding-left: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+                    .photo-container { width: 85px; height: 105px; border: 2px solid #facc15; border-radius: 6px; overflow: hidden; background: #333; }
+                    .photo-container img { width: 100%; height: 100%; object-fit: cover; }
+                    .qr-container { width: 70px; height: 70px; background: white; padding: 3px; border-radius: 4px; margin-top: 10px; }
+                    .qr-container img { width: 100%; height: 100%; }
+                    .header { border-bottom: 2px solid #7c3aed; padding-bottom: 5px; margin-bottom: 8px; }
+                    .gym-name { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 700; color: #facc15; letter-spacing: 1px; }
+                    .member-name { font-size: 16px; font-weight: 700; margin: 4px 0; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .member-id { font-family: monospace; font-size: 13px; color: #a78bfa; margin-bottom: 8px; }
+                    .info-row { font-size: 10px; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; color: #cbd5e1; }
+                    .info-row b { color: #facc15; }
+                    .footer-tag { position: absolute; bottom: 0; right: 0; padding: 4px 12px; background: #7c3aed; color: white; font-size: 9px; font-weight: 700; border-top-left-radius: 10px; }
+                    @media print {
+                      body { background: none; padding: 0; display: block; }
+                      .card { box-shadow: none; -webkit-print-color-adjust: exact; margin: 0; }
+                    }
+                  </style>
+                </head>
+                <body onload="window.print(); window.close();">
+                  <div class="card">
+                    <div class="card-bg">
+                      <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h400v250H0z" fill="none"/><path d="M400 250L0 0v250h400z" fill="#333" fill-opacity=".2"/><path d="M0 0l400 250V0H0z" fill="#555" fill-opacity=".1"/></svg>
+                    </div>
+                    <div class="card-content">
+                      <div class="card-left">
+                        <div class="photo-container">
+                          <img src="${photoUrl}" alt="Photo">
+                        </div>
+                        <div class="qr-container">
+                          <img src="${m.qr || ''}" alt="QR">
+                        </div>
+                      </div>
+                      <div class="card-right">
+                        <div>
+                          <div class="header">
+                            <div class="gym-name">AMPEL GYM</div>
+                          </div>
+                          <div class="member-name">${m.name}</div>
+                          <div class="member-id">ID: ${m.id}</div>
+                        </div>
+                        <div>
+                          <div class="info-row"><span>Paket:</span> <b>${m.package}</b></div>
+                          <div class="info-row"><span>Berlaku s/d:</span> <b>${formatDate(m.expiry)}</b></div>
+                          <div class="info-row"><span>Status:</span> <b style="color:${m.status === 'Aktif' ? '#4ade80' : '#f87171'}">${m.status}</b></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="footer-tag">MEMBER CARD</div>
+                  </div>
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+          } else {
+            showToast('Gagal memuat data member: ' + (res.message || 'Error'), 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast('Error: ' + err.message, 'error');
+        })
+        .getMemberDetail(memberId);
     }
     
     // ================ TRANSACTIONS ================
@@ -3357,19 +3449,25 @@ const google = {
               document.getElementById('prod_price').value = p['Harga Jual'];
               document.getElementById('prod_stock').value = p['Stok'];
               document.getElementById('prod_unit').value = p['Satuan'];
-              document.getElementById('prod_photo').value = p['Foto URL'];
+              document.getElementById('prod_photo_url').value = p['Foto URL'];
+              
+              if (p['Foto URL']) {
+                const prev = document.getElementById('productPhotoPreview');
+                if (prev) prev.src = getDirectLink(p['Foto URL']);
+                document.getElementById('productPhotoUploadBox').classList.add('has-photo');
+                document.getElementById('productPhotoClearBtn').style.display = 'inline-flex';
+                document.getElementById('productPhotoLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i> Foto produk terpasang';
+              } else {
+                clearProductPhoto();
+              }
             }
           })
           .getFullProducts();
-      } else {
-        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
-        document.getElementById('prod_id').value = '';
-        if (scannerArea) scannerArea.style.display = 'block';
-        if (btnSave) btnSave.style.display = 'none'; // Hide initially on new
-        
-        ['prod_name','prod_barcode','prod_category','prod_buyPrice','prod_price','prod_stock','prod_unit','prod_photo'].forEach(id => {
-          document.getElementById(id).value = id.includes('Price') || id.includes('stock') ? 0 : '';
+        ['prod_name','prod_barcode','prod_category','prod_buyPrice','prod_price','prod_stock','prod_unit','prod_photo_url'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = id.includes('Price') || id.includes('stock') ? 0 : '';
         });
+        clearProductPhoto();
       }
     }
 
@@ -3437,7 +3535,8 @@ const google = {
         'Harga Jual': document.getElementById('prod_price').value,
         'Stok': document.getElementById('prod_stock').value,
         'Satuan': document.getElementById('prod_unit').value,
-        'Foto URL': document.getElementById('prod_photo').value,
+        'Foto URL': document.getElementById('prod_photo_url').value,
+        'productPhoto': productPhotoBase64,
         'Status': 'Aktif'
       };
       
@@ -3451,9 +3550,133 @@ const google = {
             showToast('✅ Produk disimpan', 'success');
             closeProductModal();
             loadProductList();
+          } else {
+            showToast('❌ ' + res.message, 'error');
           }
         })
+        .withFailureHandler(function(err) {
+          hideLoading();
+          showToast('Error: ' + err.message, 'error');
+        })
         .saveProduct(data);
+    }
+
+    // ================ PRODUCT PHOTO UTILS ================
+    function openProductWebcam() {
+      const modal = document.getElementById('adminWebcamModal'); // Reuse the same modal
+      const video = document.getElementById('adminWebcamVideo');
+      
+      // Update the snap button to use product logic
+      const snapBtn = document.querySelector('.webcam-snap-btn');
+      snapBtn.onclick = snapProductPhoto;
+      
+      // Update flip button
+      const flipBtn = document.getElementById('adminFlipBtn');
+      flipBtn.onclick = flipProductCamera;
+
+      const closeBtn = document.querySelector('.webcam-close-btn');
+      closeBtn.onclick = closeProductWebcam;
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+        inp.onchange = function() {
+          if (inp.files && inp.files[0]) previewProductPhoto(inp);
+        };
+        inp.click(); return;
+      }
+      
+      try {
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: productCameraFacing, width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false
+        }).then(stream => {
+          productWebcamStream = stream;
+          video.srcObject = stream;
+          modal.style.display = 'flex';
+        }).catch(e => {
+          showToast('Kamera tidak dapat diakses: ' + (e.message || e), 'warning');
+          document.getElementById('productPhotoFile').click();
+        });
+      } catch(e) {
+        showToast('Error kamera: ' + e.message, 'error');
+      }
+    }
+
+    function flipProductCamera() {
+      productCameraFacing = productCameraFacing === 'user' ? 'environment' : 'user';
+      if (productWebcamStream) {
+        productWebcamStream.getTracks().forEach(t => t.stop());
+      }
+      openProductWebcam();
+    }
+
+    function snapProductPhoto() {
+      const video  = document.getElementById('adminWebcamVideo');
+      const canvas = document.getElementById('adminWebcamCanvas');
+      if (!video || !canvas) return;
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (productCameraFacing === 'user') {
+        ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      closeProductWebcam();
+      _setProductPhoto(dataUrl);
+      showToast('Foto produk berhasil diambil!', 'success');
+    }
+
+    function closeProductWebcam() {
+      if (productWebcamStream) {
+        productWebcamStream.getTracks().forEach(t => t.stop());
+        productWebcamStream = null;
+      }
+      document.getElementById('adminWebcamModal').style.display = 'none';
+      // Restore default admin handlers
+      const snapBtn = document.querySelector('.webcam-snap-btn');
+      snapBtn.onclick = adminSnapWebcamPhoto;
+      const flipBtn = document.getElementById('adminFlipBtn');
+      flipBtn.onclick = adminFlipCamera;
+      const closeBtn = document.querySelector('.webcam-close-btn');
+      closeBtn.onclick = adminCloseWebcam;
+    }
+
+    function _setProductPhoto(dataUrl) {
+      productPhotoBase64 = dataUrl;
+      const prev = document.getElementById('productPhotoPreview');
+      const box  = document.getElementById('productPhotoUploadBox');
+      const lbl  = document.getElementById('productPhotoLabel');
+      const clr  = document.getElementById('productPhotoClearBtn');
+      if (prev) prev.src = dataUrl;
+      if (box) box.classList.add('has-photo');
+      if (lbl) lbl.innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i> Foto produk siap';
+      if (clr) clr.style.display = 'inline-flex';
+    }
+
+    function clearProductPhoto() {
+      productPhotoBase64 = null;
+      const BLANK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+      const prev = document.getElementById('productPhotoPreview');
+      const box  = document.getElementById('productPhotoUploadBox');
+      const lbl  = document.getElementById('productPhotoLabel');
+      const clr  = document.getElementById('productPhotoClearBtn');
+      const inp  = document.getElementById('productPhotoFile');
+      if (prev) prev.src = BLANK;
+      if (box) box.classList.remove('has-photo');
+      if (lbl) lbl.innerHTML = 'Ambil atau unggah foto produk';
+      if (clr) clr.style.display = 'none';
+      if (inp) inp.value = '';
+      document.getElementById('prod_photo_url').value = '';
+    }
+
+    function previewProductPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) { _setProductPhoto(e.target.result); };
+        reader.readAsDataURL(input.files[0]);
+      }
     }
 
     function startBarcodeScannerForInput(inputId) {
@@ -3785,6 +4008,12 @@ const google = {
                 </div>
                 
                 ${warningHtml}
+                
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
+                  <button class="btn btn-success btn-sm" onclick="printMemberCard('${res.memberId || mid}')">
+                    <i class="fas fa-id-card"></i> Cetak Kartu
+                  </button>
+                </div>
                 
                 <div style="margin-top:12px;text-align:right;color:#64748b;font-size:12px">
                   <i class="far fa-clock"></i> Check-in: ${formatTime(checkinTime)}
@@ -5491,8 +5720,26 @@ const google = {
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Foto URL (Opsional)</label>
-          <input type="text" id="prod_photo" class="form-input">
+          <label class="form-label">Foto Produk</label>
+          <div id="productPhotoUploadBox" class="admin-photo-upload">
+            <img id="productPhotoPreview" class="admin-photo-avatar" style="border-radius:8px" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E">
+            <div class="admin-photo-actions">
+              <p id="productPhotoLabel" style="margin-bottom:8px">Ambil atau unggah foto produk</p>
+              <div class="admin-photo-btns">
+                <button type="button" class="admin-photo-btn camera" onclick="openProductWebcam()">
+                  <i class="fas fa-camera"></i> Ambil Foto
+                </button>
+                <button type="button" class="admin-photo-btn" onclick="document.getElementById('productPhotoFile').click()">
+                  <i class="fas fa-upload"></i> Pilih File
+                </button>
+                <button type="button" id="productPhotoClearBtn" class="admin-photo-btn remove" onclick="clearProductPhoto()" style="display:none">
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              </div>
+              <input type="file" id="productPhotoFile" style="display:none" accept="image/*" onchange="previewProductPhoto(this)">
+              <input type="hidden" id="prod_photo_url">
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
