@@ -1552,9 +1552,9 @@ const google = {
                     <span>Harga Paket</span>
                     <span id="paymentPackagePrice">Rp 0</span>
                   </div>
-                  <div class="payment-row">
+                  <div class="payment-row" id="regFeeRow" style="display:none">
                     <span>Biaya Registrasi</span>
-                    <span>${formatCurrency(50000)}</span>
+                    <span>${formatCurrency(0)}</span>
                   </div>
                   <div class="payment-row payment-total">
                     <span>Total</span>
@@ -1652,7 +1652,7 @@ const google = {
       const totalEl = document.getElementById('paymentTotal');
       
       if (selectedPkg) {
-        const total = selectedPkg.price + 50000;
+        const total = selectedPkg.price + 0;
         packagePriceEl.textContent = formatCurrency(selectedPkg.price);
         packagePriceEl.style.color = '#667eea';
         totalEl.textContent = formatCurrency(total);
@@ -1844,7 +1844,7 @@ const google = {
         return; 
       }
       
-      const totalAmount = pkg.price + 50000;
+      const totalAmount = pkg.price + 0;
       
       showConfirm(
         `KONFIRMASI REGISTRASI MEMBER\n\n` +
@@ -1854,7 +1854,7 @@ const google = {
         `Paket       : ${pkg.name}\n` +
         `Durasi      : ${pkg.duration}\n` +
         `Harga Paket : ${formatCurrency(pkg.price)}\n` +
-        `Biaya Reg   : ${formatCurrency(50000)}\n` +
+        (0 > 0 ? `Biaya Reg   : ${formatCurrency(0)}\n` : '') +
         `Total       : ${formatCurrency(totalAmount)}\n` +
         `Metode      : ${pay}\n\n` +
         `Lanjutkan registrasi member?`, 
@@ -1949,9 +1949,9 @@ const google = {
                       <span>Harga Paket</span>
                       <span>${formatCurrency(res.packagePrice || pkg.price)}</span>
                     </div>
-                    <div class="payment-row">
+                    <div class="payment-row" style="${(res.registrationFee || 0) > 0 ? '' : 'display:none'}">
                       <span>Biaya Registrasi</span>
-                      <span>${formatCurrency(res.registrationFee || 50000)}</span>
+                      <span>${formatCurrency(res.registrationFee || 0)}</span>
                     </div>
                     <div class="payment-row payment-total">
                       <span>Total</span>
@@ -1993,10 +1993,10 @@ const google = {
                   </div>
                   
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
-                    <button class="btn btn-info btn-sm" onclick="const txt = generateReceiptText('registration', { memberId:'${res.memberId}', name:'${res.memberName || name}', package:'${res.currentPackage || pkg.name}', expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', price:${res.packagePrice || pkg.price}, regFee:${res.registrationFee || 50000}, total:${res.totalAmount || totalAmount}, payment:'${res.paymentMethod || pay}', qr:'${res.qrCodeUrl || ''}' }); shareToWhatsApp('${res.memberPhone || phone}', txt)">
+                    <button class="btn btn-info btn-sm" onclick="const txt = generateReceiptText('registration', { memberId:'${res.memberId}', name:'${res.memberName || name}', package:'${res.currentPackage || pkg.name}', expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', price:${res.packagePrice || pkg.price}, regFee:${res.registrationFee || 0}, total:${res.totalAmount || totalAmount}, payment:'${res.paymentMethod || pay}', qr:'${res.qrCodeUrl || ''}' }); shareToWhatsApp('${res.memberPhone || phone}', txt)">
                       <i class="fab fa-whatsapp"></i> Kirim WA
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="printReceipt('registration', { memberId:'${res.memberId}', name:'${res.memberName || name}', package:'${res.currentPackage || pkg.name}', expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', price:${res.packagePrice || pkg.price}, regFee:${res.registrationFee || 50000}, total:${res.totalAmount || totalAmount}, payment:'${res.paymentMethod || pay}', qr:'${res.qrCodeUrl || ''}' })">
+                    <button class="btn btn-outline btn-sm" onclick="printReceipt('registration', { memberId:'${res.memberId}', name:'${res.memberName || name}', package:'${res.currentPackage || pkg.name}', expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', price:${res.packagePrice || pkg.price}, regFee:${res.registrationFee || 0}, total:${res.totalAmount || totalAmount}, payment:'${res.paymentMethod || pay}', qr:'${res.qrCodeUrl || ''}' })">
                       <i class="fas fa-print"></i> Cetak Resi
                     </button>
                     <button class="btn btn-success btn-sm" onclick="printMemberCard('${res.memberId}')">
