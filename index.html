@@ -6205,17 +6205,15 @@ const google = {
         let visible = true;
         
         if (role === 'Staff') {
-          // Staff only sees operational menus
           const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos'];
           if (!staffViews.includes(view)) visible = false;
-        } else if (role === 'Admin') {
-          // Admin sees everything except sensitive Admin Panel items (handled in loadAdminPanel)
-          if (view === 'admin') {
-            // Admin can see Admin Panel but restricted inside
-          }
         }
         
-        item.style.display = visible ? 'flex' : 'none';
+        if (visible) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
       });
     }
 
