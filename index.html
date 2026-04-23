@@ -123,6 +123,15 @@ const google = {
     .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; background:var(--gradient-purple); }
     .stat-value { font-size:28px; font-weight:700; margin-bottom:8px; }
     .stat-label { color:#64748b; font-size:14px; }
+    .stat-card-clickable { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card-clickable:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .stat-card-clickable:active { transform: translateY(0); }
+    
+    .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 1rem; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+    .table th { background: #f8fafc; font-weight: 600; color: #475569; position: sticky; top: 0; }
+    .table tr:hover { background: #f1f5f9; }
     .form-card { background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:24px; }
     .form-card-header { background:var(--gradient-dark); color:white; padding:20px; border-radius:12px 12px 0 0; }
     .form-card-body { padding:24px; }
@@ -1127,7 +1136,7 @@ const google = {
             <i class="fas fa-dumbbell" style="color:#667eea"></i> Dashboard Fitness
           </div>
           <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card stat-card-clickable" onclick="showDashboardDetail('total_member')">
               <div class="stat-header">
                 <span class="stat-label">Total Member</span>
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
@@ -1135,7 +1144,7 @@ const google = {
               <div class="stat-value" id="statTotal">0</div>
               <div class="stat-label">Terdaftar</div>
             </div>
-            <div class="stat-card" style="border-top-color:#22c55e">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#22c55e" onclick="showDashboardDetail('active_member')">
               <div class="stat-header">
                 <span class="stat-label">Aktif</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a)">
@@ -1145,7 +1154,7 @@ const google = {
               <div class="stat-value" id="statAktif">0</div>
               <div class="stat-label">Member aktif</div>
             </div>
-            <div class="stat-card" style="border-top-color:#f59e0b">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#f59e0b" onclick="showDashboardDetail('expiring_member')">
               <div class="stat-header">
                 <span class="stat-label">Akan Expire</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
@@ -1155,7 +1164,7 @@ const google = {
               <div class="stat-value" id="statExpiring">0</div>
               <div class="stat-label">7 hari ke depan</div>
             </div>
-            <div class="stat-card" style="border-top-color:#ef4444">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#ef4444" onclick="showDashboardDetail('expired_member')">
               <div class="stat-header">
                 <span class="stat-label">Expired</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">
@@ -1165,7 +1174,7 @@ const google = {
               <div class="stat-value" id="statExpired">0</div>
               <div class="stat-label">Tidak aktif</div>
             </div>
-            <div class="stat-card" style="border-top-color:#3b82f6">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#3b82f6" onclick="showDashboardDetail('checkins')">
               <div class="stat-header">
                 <span class="stat-label">Check-In</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">
@@ -1209,7 +1218,7 @@ const google = {
             <i class="fas fa-shopping-cart" style="color:#06b6d4"></i> Dashboard POS (Retail)
           </div>
           <div class="stats-grid">
-            <div class="stat-card" style="border-top-color:#06b6d4">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#06b6d4" onclick="showDashboardDetail('pos_revenue')">
               <div class="stat-header">
                 <span class="stat-label">Omzet POS</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">
@@ -1219,7 +1228,7 @@ const google = {
               <div class="stat-value" id="statPOSRevenue" style="font-size:18px">Rp 0</div>
               <div class="stat-label">Penjualan retail</div>
             </div>
-            <div class="stat-card" style="border-top-color:#10b981">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#10b981" onclick="showDashboardDetail('pos_revenue')">
               <div class="stat-header">
                 <span class="stat-label">Transaksi POS</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669)">
@@ -1229,7 +1238,7 @@ const google = {
               <div class="stat-value" id="statPOSToday">0</div>
               <div class="stat-label">Transaksi retail</div>
             </div>
-            <div class="stat-card" style="border-top-color:#f43f5e">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#f43f5e" onclick="showDashboardDetail('fitness_revenue')">
               <div class="stat-header">
                 <span class="stat-label">Total Omzet Fitnes</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#f43f5e,#e11d48)">
@@ -1239,25 +1248,68 @@ const google = {
               <div class="stat-value" id="statFitnessRevenue" style="font-size:18px">Rp 0</div>
               <div class="stat-label">Reg & Perpanjangan</div>
             </div>
-            <div class="stat-card" style="border-top-color:#ef4444">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#16a34a" onclick="showDashboardDetail('fitness_revenue')">
+              <div class="stat-header">
+                <span class="stat-label">Pendapatan Fitness</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#16a34a,#10b981)">
+                  <i class="fas fa-dumbbell"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="statFitnessRevenue">Rp 0</div>
+              <div class="stat-label">Bulan Ini / Terpilih</div>
+            </div>
+            <div class="stat-card stat-card-clickable" style="border-top-color:#8b5cf6" onclick="showDashboardDetail('pos_revenue')">
+              <div class="stat-header">
+                <span class="stat-label">Pendapatan Retail/POS</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">
+                  <i class="fas fa-store"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="statPOSRevenue">Rp 0</div>
+              <div class="stat-label">Bulan Ini / Terpilih</div>
+            </div>
+          </div>
+
+          <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top:20px">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#ef4444" onclick="showDashboardDetail('expenses')">
               <div class="stat-header">
                 <span class="stat-label">Total Pengeluaran</span>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">
                   <i class="fas fa-file-invoice-dollar"></i>
                 </div>
               </div>
-              <div class="stat-value" id="statExpenses" style="font-size:18px">Rp 0</div>
-              <div class="stat-label">Biaya Operasional</div>
+              <div class="stat-value" id="statExpenses">Rp 0</div>
+              <div class="stat-label">Fitness + Retail</div>
             </div>
-            <div class="stat-card" style="border-top-color:#16a34a">
+            <div class="stat-card stat-card-clickable" style="border-top-color:#0ea5e9" onclick="showDashboardDetail('fitness_expenses')">
               <div class="stat-header">
-                <span class="stat-label">Laba Bersih</span>
-                <div class="stat-icon" style="background:linear-gradient(135deg,#16a34a,#15803d)">
+                <span class="stat-label">Net Profit Fitness</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="statFitnessNetProfit">Rp 0</div>
+              <div class="stat-label">Fitness Rev - Fitness Exp</div>
+            </div>
+            <div class="stat-card stat-card-clickable" style="border-top-color:#f59e0b" onclick="showDashboardDetail('pos_expenses')">
+              <div class="stat-header">
+                <span class="stat-label">Net Profit Retail</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+                  <i class="fas fa-cash-register"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="statPOSNetProfit">Rp 0</div>
+              <div class="stat-label">Retail Rev - Retail Exp</div>
+            </div>
+            <div class="stat-card" style="border-top-color:#10b981">
+              <div class="stat-header">
+                <span class="stat-label">Total Net Profit</span>
+                <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669)">
                   <i class="fas fa-wallet"></i>
                 </div>
               </div>
-              <div class="stat-value" id="statNetProfit" style="font-size:18px">Rp 0</div>
-              <div class="stat-label">Omzet - Pengeluaran</div>
+              <div class="stat-value" id="statNetProfit">Rp 0</div>
+              <div class="stat-label">Fitness + Retail Net</div>
             </div>
           </div>
 
@@ -1357,6 +1409,9 @@ const google = {
             if (document.getElementById('statPOSRevenue')) document.getElementById('statPOSRevenue').textContent = formatCurrency(s.posRevenue || 0);
             if (document.getElementById('statPOSToday')) document.getElementById('statPOSToday').textContent = s.posCount || 0;
             if (document.getElementById('statExpenses')) document.getElementById('statExpenses').textContent = formatCurrency(s.expenses || 0);
+            
+            if (document.getElementById('statFitnessNetProfit')) document.getElementById('statFitnessNetProfit').textContent = formatCurrency(s.fitnessNetProfit || 0);
+            if (document.getElementById('statPOSNetProfit')) document.getElementById('statPOSNetProfit').textContent = formatCurrency(s.posNetProfit || 0);
             if (document.getElementById('statNetProfit')) document.getElementById('statNetProfit').textContent = formatCurrency(s.netProfit || 0);
 
             // Hide financial stats for Staff
@@ -4807,7 +4862,7 @@ const google = {
                   <div class="form-group">
                     <label class="form-label"><i class="fas fa-tag"></i> Harga/Sesi *</label>
                     <input id="pt_price" type="number" class="form-input" min="10000" value="150000" 
-                           oninput="updatePTSummary()" placeholder="150000">
+                           oninput="updatePTSummary()" placeholder="150000" readonly style="background:#f1f5f9; cursor:not-allowed">
                   </div>
                 </div>
                 
@@ -6207,6 +6262,27 @@ const google = {
                   </select>
                 </div>
                 <div class="form-group">
+                  <label class="form-label">Jenis Pengeluaran</label>
+                  <select id="exp_type" class="form-input" required onchange="toggleExpenseSplit()">
+                    <option value="Gym">Gym / Fitness</option>
+                    <option value="Retail">Retail / POS</option>
+                    <option value="Global">Global (Bagi Beban)</option>
+                  </select>
+                </div>
+                <div id="split_section" style="display:none; background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #e2e8f0">
+                  <p style="font-size:12px; color:#64748b; margin-bottom:10px">Tentukan persentase pembagian beban biaya:</p>
+                  <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                    <div class="form-group" style="margin-bottom:0">
+                      <label class="form-label" style="font-size:12px">Porsi Gym (%)</label>
+                      <input type="number" id="exp_gym_split" class="form-input" value="50" min="0" max="100" oninput="balanceSplit('gym')">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                      <label class="form-label" style="font-size:12px">Porsi Retail (%)</label>
+                      <input type="number" id="exp_retail_split" class="form-input" value="50" min="0" max="100" oninput="balanceSplit('retail')">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
                   <label class="form-label">Deskripsi / Keterangan</label>
                   <textarea id="exp_description" class="form-input" rows="3" placeholder="Contoh: Bayar tagihan listrik bulan April" required></textarea>
                 </div>
@@ -6346,7 +6422,10 @@ const google = {
         description: document.getElementById('exp_description').value,
         amount: Number(document.getElementById('exp_amount').value),
         paymentMethod: document.getElementById('exp_payment').value,
-        user: currentUser ? currentUser.name : 'Unknown'
+        'Jenis': document.getElementById('exp_type').value,
+        'Gym Split (%)': document.getElementById('exp_gym_split').value,
+        'Retail Split (%)': document.getElementById('exp_retail_split').value,
+        'User': currentUser?.name || 'Admin'
       };
 
       if (!payload.category || !payload.amount || !payload.description) {
@@ -6425,6 +6504,86 @@ const google = {
       });
     }
 
+    }
+
+    function toggleExpenseSplit() {
+      const type = document.getElementById('exp_type').value;
+      document.getElementById('split_section').style.display = type === 'Global' ? 'block' : 'none';
+    }
+
+    function balanceSplit(source) {
+      const gymInput = document.getElementById('exp_gym_split');
+      const retailInput = document.getElementById('exp_retail_split');
+      if (source === 'gym') {
+        retailInput.value = 100 - (Number(gymInput.value) || 0);
+      } else {
+        gymInput.value = 100 - (Number(retailInput.value) || 0);
+      }
+    }
+
+    function showDashboardDetail(type) {
+      const modal = document.getElementById('detailModal');
+      const title = document.getElementById('detailModalTitle');
+      const container = document.getElementById('detailModalBody');
+      
+      const titles = {
+        'total_member': 'Daftar Semua Member',
+        'active_member': 'Daftar Member Aktif',
+        'expired_member': 'Daftar Member Expired',
+        'expiring_member': 'Daftar Member Segera Habis',
+        'checkins': 'Riwayat Check-in',
+        'fitness_revenue': 'Rincian Pendapatan Fitness',
+        'pos_revenue': 'Rincian Pendapatan Retail/POS',
+        'expenses': 'Rincian Semua Pengeluaran',
+        'fitness_expenses': 'Rincian Pengeluaran Fitness',
+        'pos_expenses': 'Rincian Pengeluaran Retail/POS'
+      };
+      
+      title.textContent = titles[type] || 'Detail Data';
+      container.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat data...</div>';
+      modal.style.display = 'flex';
+      
+      const startDate = document.getElementById('dashboardStart')?.value || '';
+      const endDate = document.getElementById('dashboardEnd')?.value || '';
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            if (res.data.length === 0) {
+              container.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Tidak ada data untuk periode ini.</div>';
+              return;
+            }
+            
+            let html = `
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      ${res.headers.map(h => `<th>${h}</th>`).join('')}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${res.data.map(row => `
+                      <tr>
+                        ${row.map(cell => `<td>${cell}</td>`).join('')}
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+            container.innerHTML = html;
+          } else {
+            container.innerHTML = '<div style="color:red;padding:20px">' + (res.message || 'Gagal memuat data') + '</div>';
+          }
+        })
+        .getDashboardDetail(type, startDate, endDate);
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').style.display = 'none';
+    }
+
     window.onload = initApp;
   </script>
   
@@ -6436,6 +6595,22 @@ const google = {
   </script>
 </body>
 </html>  <!-- Modal Catalog Member Package -->
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal-overlay" style="display:none">
+      <div class="modal-container" style="max-width:900px; width:95%">
+        <div class="modal-header">
+          <h3 id="detailModalTitle">Detail Data</h3>
+          <button class="close-modal" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="detailModalBody" style="max-height:70vh; overflow-y:auto">
+          <!-- Content injected here -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeDetailModal()">Tutup</button>
+        </div>
+      </div>
+    </div>
+
   <div id="packageModal" class="modal-overlay" style="display:none">
     <div class="modal-container" style="max-width:600px">
       <div class="modal-header">
