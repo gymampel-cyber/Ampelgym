@@ -4868,17 +4868,30 @@ const google = {
     }
     
     function loadPTCatalogue() {
+      const sel = document.getElementById('pt_catalog');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Memuat Katalog... --</option>';
+      
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            const sel = document.getElementById('pt_catalog');
-            if (!sel) return;
+            if (res.packages.length === 0) {
+              sel.innerHTML = '<option value="">-- Tidak ada katalog PT aktif --</option>';
+              return;
+            }
             let html = '<option value="">-- Pilih Katalog PT --</option>';
             res.packages.forEach(p => {
               html += `<option value="${p.id}" data-sessions="${p.duration}" data-price="${p.price}" data-name="${p.name}">${p.name} (${p.duration} Sesi)</option>`;
             });
             sel.innerHTML = html;
+          } else {
+            sel.innerHTML = '<option value="">-- Gagal memuat katalog --</option>';
+            console.error('PT Catalogue Error:', res ? res.message : 'Unknown error');
           }
+        })
+        .withFailureHandler(function(err) {
+          sel.innerHTML = '<option value="">-- Error Koneksi --</option>';
+          console.error('PT Catalogue RPC Error:', err);
         })
         .getPTCatalogue();
     }
