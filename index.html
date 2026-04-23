@@ -631,7 +631,7 @@ const google = {
         <div class="menu-item" data-view="pt" onclick="showView('pt')">
           <i class="fas fa-dumbbell"></i><span>Personal Trainer</span>
         </div>
-        <div class="menu-item" data-view="approvals" onclick="showView('approvals')">
+        <div class="menu-item" id="pendingApprovalsMenu" data-view="approvals" onclick="showView('approvals')">
           <i class="fas fa-clock"></i><span>Pending Approvals</span>
           <span id="approvalBadge" class="badge badge-danger" style="margin-left:auto;display:none">0</span>
         </div>
@@ -3451,22 +3451,22 @@ const google = {
                   <tbody>
                     ${list.map(p => `
                       <tr>
-                        <td><code>${p['ID Produk']}</code></td>
-                        <td><small>${p['Barcode'] || '-'}</small></td>
-                        <td><b>${escapeHtml(p['Nama Produk'])}</b></td>
-                        <td>${p['Kategori']}</td>
-                        <td>${formatCurrency(p['Harga Jual'])}</td>
-                        <td style="color:${p['Stok'] <= 5 ? '#ef4444' : 'inherit'}"><b>${p['Stok']}</b> ${p['Satuan']}</td>
-                        <td><span class="badge badge-${p['Status'] === 'Aktif' ? 'success' : 'secondary'}">${p['Status'] || 'Aktif'}</span></td>
+                        <td><code>${p.id}</code></td>
+                        <td><small>${p.barcode || '-'}</small></td>
+                        <td><b>${escapeHtml(p.name)}</b></td>
+                        <td>${p.category}</td>
+                        <td>${formatCurrency(p.price)}</td>
+                        <td style="color:${p.stock <= 5 ? '#ef4444' : 'inherit'}"><b>${p.stock}</b> ${p.unit}</td>
+                        <td><span class="badge badge-${p.status === 'Aktif' ? 'success' : 'secondary'}">${p.status || 'Aktif'}</span></td>
                         <td>
                           <div style="display:flex; gap:4px">
-                            <button class="btn btn-sm btn-outline" onclick="openProductModal('${p['ID Produk']}')" title="Edit Data">
+                            <button class="btn btn-sm btn-outline" onclick="openProductModal('${p.id}')" title="Edit Data">
                               <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-success" onclick="openRestockModal('${p['ID Produk']}', '${escapeJs(p['Nama Produk'])}')" title="Restock / Kulakan">
+                            <button class="btn btn-sm btn-success" onclick="openRestockModal('${p.id}', '${escapeJs(p.name)}')" title="Restock / Kulakan">
                               <i class="fas fa-plus-circle"></i>
                             </button>
-                            <button class="btn btn-sm btn-warning" onclick="openAdjustModal('${p['ID Produk']}', '${escapeJs(p['Nama Produk'])}', ${p['Stok']})" title="Penyesuaian / Rusak">
+                            <button class="btn btn-sm btn-warning" onclick="openAdjustModal('${p.id}', '${escapeJs(p.name)}', ${p.stock})" title="Penyesuaian / Rusak">
                               <i class="fas fa-tools"></i>
                             </button>
                           </div>
@@ -3766,20 +3766,19 @@ const google = {
           .withSuccessHandler(function(res) {
             hideLoading();
             if (res.success) {
-              const p = res.products.find(x => x['ID Produk'] == id);
-              document.getElementById('prod_id').value = p['ID Produk'];
-              document.getElementById('prod_name').value = p['Nama Produk'];
-              document.getElementById('prod_barcode').value = p['Barcode'] || '';
-              document.getElementById('prod_category').value = p['Kategori'];
-              document.getElementById('prod_buyPrice').value = p['Harga Beli'];
-              document.getElementById('prod_price').value = p['Harga Jual'];
-              document.getElementById('prod_stock').value = p['Stok'];
-              document.getElementById('prod_unit').value = p['Satuan'];
-              document.getElementById('prod_photo_url').value = p['Foto URL'];
+              document.getElementById('prod_id').value = p.id;
+              document.getElementById('prod_name').value = p.name;
+              document.getElementById('prod_barcode').value = p.barcode || '';
+              document.getElementById('prod_category').value = p.category;
+              document.getElementById('prod_buyPrice').value = p.buyPrice;
+              document.getElementById('prod_price').value = p.price;
+              document.getElementById('prod_stock').value = p.stock;
+              document.getElementById('prod_unit').value = p.unit;
+              document.getElementById('prod_photo_url').value = p.photoUrl;
               
-              if (p['Foto URL']) {
+              if (p.photoUrl) {
                 const prev = document.getElementById('productPhotoPreview');
-                if (prev) prev.src = getDirectLink(p['Foto URL']);
+                if (prev) prev.src = getDirectLink(p.photoUrl);
                 document.getElementById('productPhotoUploadBox').classList.add('has-photo');
                 document.getElementById('productPhotoClearBtn').style.display = 'inline-flex';
                 document.getElementById('productPhotoLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i> Foto produk terpasang';
@@ -6481,8 +6480,11 @@ const google = {
         let visible = true;
         
         if (role === 'Staff' || role === 'Kasir') {
-          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos'];
+          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos', 'approvals'];
           if (!staffViews.includes(view)) visible = false;
+        } else if (role === 'Admin') {
+          // Hide pending approvals for Admin as requested
+          if (view === 'approvals') visible = false;
         }
         
         if (visible) {
@@ -7086,7 +7088,7 @@ const google = {
                          `_Laporan dikirim otomatis dari System AMPEL GYM_`;
             
             // Kirim ke nomor owner/manager
-            shareToWhatsApp('087795175243', text);
+            shareToWhatsApp('081809997575', text);
             showToast('Laporan berhasil dihasilkan!', 'success');
           } else {
             showToast('Gagal menghasilkan PDF: ' + res.message, 'error');
