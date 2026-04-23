@@ -498,12 +498,19 @@ const google = {
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Nama Pengunjung *</label>
-          <input id="visit_name" class="form-input" placeholder="Masukkan nama lengkap...">
+          <label class="form-label"><i class="fas fa-search"></i> Cari Data Visit (Nama/HP)</label>
+          <input id="visit_search" class="form-input" placeholder="Ketik nama atau nomor HP..." oninput="searchVisitorForVisit(this.value)">
+          <div id="visitSearchResults" style="margin-top:8px;max-height:200px;overflow-y:auto;border-radius:8px;"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Nomor HP *</label>
-          <input id="visit_phone" class="form-input" placeholder="Contoh: 081234567890">
+        <div style="border-top:1px dashed #cbd5e1;margin:16px 0;padding-top:16px">
+          <div class="form-group">
+            <label class="form-label">Nama Pengunjung *</label>
+            <input id="visit_name" class="form-input" placeholder="Masukkan nama lengkap...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nomor HP *</label>
+            <input id="visit_phone" class="form-input" placeholder="Contoh: 081234567890">
+          </div>
         </div>
         <div class="payment-info" style="margin-top:0">
           <div class="payment-row">
@@ -2420,6 +2427,90 @@ const google = {
           .searchMembers(searchInput);
       }, 300);
     }
+
+    function searchMemberForCheckin(query) {
+      if (window.ciSearchTimeout) clearTimeout(window.ciSearchTimeout);
+      const searchInput = query.trim();
+      if (searchInput.length < 2) {
+        document.getElementById('ciMemberResults').innerHTML = '';
+        return;
+      }
+      document.getElementById('ciMemberResults').innerHTML = '<div style="text-align:center;padding:10px;color:#94a3b8"><i class="fas fa-spinner fa-spin"></i> Mencari...</div>';
+      window.ciSearchTimeout = setTimeout(function() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            const el = document.getElementById('ciMemberResults');
+            if (!el) return;
+            if (res && res.success && res.members && res.members.length > 0) {
+              let html = '';
+              res.members.slice(0, 5).forEach(m => {
+                const statusClass = m.status === 'Aktif' ? 'success' : (m.status === 'Expired' ? 'danger' : 'warning');
+                html += `
+                  <div onclick="selectMemberForCheckin('${m.memberId}')" 
+                       style="padding:10px;background:white;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:12px">
+                    <div style="display:flex;justify-content:space-between">
+                      <b>${escapeHtml(m.fullName)}</b>
+                      <span class="badge badge-${statusClass}" style="font-size:10px">${m.status}</span>
+                    </div>
+                    <div style="color:#64748b;font-size:11px">ID: ${m.memberId} | HP: ${m.phone}</div>
+                  </div>
+                `;
+              });
+              el.innerHTML = html;
+            } else {
+              el.innerHTML = '<div style="padding:10px;text-align:center;font-size:12px;color:#94a3b8">Tidak ditemukan</div>';
+            }
+          })
+          .searchMembers(searchInput);
+      }, 300);
+    }
+
+    function selectMemberForCheckin(id) {
+      document.getElementById('ci_memberId').value = id;
+      document.getElementById('ciMemberResults').innerHTML = '';
+      previewMemberCheckin(id);
+    }
+
+    function searchMemberForPOS(query) {
+      if (window.posSearchTimeout) clearTimeout(window.posSearchTimeout);
+      const searchInput = query.trim();
+      if (searchInput.length < 2) {
+        document.getElementById('posMemberResults').innerHTML = '';
+        return;
+      }
+      document.getElementById('posMemberResults').innerHTML = '<div style="text-align:center;padding:10px;color:#94a3b8"><i class="fas fa-spinner fa-spin"></i></div>';
+      window.posSearchTimeout = setTimeout(function() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            const el = document.getElementById('posMemberResults');
+            if (!el) return;
+            if (res && res.success && res.members && res.members.length > 0) {
+              let html = '';
+              res.members.slice(0, 5).forEach(m => {
+                const memberJson = JSON.stringify(m).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+                html += `
+                  <div onclick="selectMemberForPOS('${memberJson}')" 
+                       style="padding:10px;background:white;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12px">
+                    <b>${escapeHtml(m.fullName)}</b> (${m.memberId})
+                    <div style="color:#64748b;font-size:11px">${m.phone}</div>
+                  </div>
+                `;
+              });
+              el.innerHTML = html;
+            } else {
+              el.innerHTML = '<div style="padding:10px;text-align:center;font-size:12px;color:#94a3b8">Tidak ditemukan</div>';
+            }
+          })
+          .searchMembers(searchInput);
+      }, 300);
+    }
+
+    function selectMemberForPOS(json) {
+      const m = JSON.parse(json);
+      document.getElementById('pos_memberId').value = m.memberId;
+      document.getElementById('posMemberResults').innerHTML = '';
+      lookupPOSMember();
+    }
     
     function escapeHtml(unsafe) {
       if (!unsafe) return '';
@@ -2780,9 +2871,9 @@ const google = {
             <div class="cart-footer">
               <div class="form-group">
                 <label class="form-label">Member / Customer (Opsional)</label>
-                <div style="display:flex; gap:8px">
-                  <input type="text" id="pos_memberId" class="form-input" placeholder="Scan ID..." onkeypress="if(event.key==='Enter') lookupPOSMember()">
-                  <button class="btn btn-info btn-sm" onclick="lookupPOSMember()">Cari</button>
+                <div style="position:relative">
+                  <input type="text" id="pos_memberId" class="form-input" placeholder="Cari Nama/ID/HP..." oninput="searchMemberForPOS(this.value)">
+                  <div id="posMemberResults" style="position:absolute;top:100%;left:0;right:0;z-index:100;max-height:250px;overflow-y:auto;background:white;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);border-radius:8px"></div>
                 </div>
                 <div id="pos_memberInfo" style="margin-top:8px; font-size:12px; color:#64748b">Guest Customer</div>
               </div>
@@ -3935,10 +4026,11 @@ const google = {
                   <i class="fas fa-keyboard"></i> Input Manual
                 </h4>
                 <div class="form-group">
-                  <label class="form-label">Member ID</label>
-                  <input id="ci_memberId" class="form-input" placeholder="Contoh: M2401001" onkeypress="if(event.key==='Enter') previewMemberCheckin()">
+                  <label class="form-label">Member ID / Nama / HP</label>
+                  <input id="ci_memberId" class="form-input" placeholder="Cari ID, Nama, atau No. HP..." oninput="searchMemberForCheckin(this.value)">
+                  <div id="ciMemberResults" style="margin-top:8px;max-height:250px;overflow-y:auto;border-radius:8px;"></div>
                 </div>
-                <p style="font-size:13px;color:#64748b;margin-bottom:12px">Setelah ID dibaca (scan/manual), data member akan muncul untuk konfirmasi.</p>
+                <p style="font-size:13px;color:#64748b;margin-bottom:12px">Setelah data dipilih, detail member akan muncul untuk konfirmasi.</p>
                 <button class="btn btn-info btn-block" onclick="openVisitModal()">
                   <i class="fas fa-walking"></i> Visit Harian (Rp 25.000)
                 </button>
@@ -4479,9 +4571,53 @@ const google = {
     }
     
     function openVisitModal() {
+      document.getElementById('visit_search').value = '';
+      document.getElementById('visitSearchResults').innerHTML = '';
       document.getElementById('visit_name').value = '';
       document.getElementById('visit_phone').value = '';
       document.getElementById('visitModal').style.display = 'flex';
+    }
+
+    function searchVisitorForVisit(query) {
+      if (window.visitSearchTimeout) clearTimeout(window.visitSearchTimeout);
+      const searchInput = query.trim();
+      if (searchInput.length < 2) {
+        document.getElementById('visitSearchResults').innerHTML = '';
+        return;
+      }
+      document.getElementById('visitSearchResults').innerHTML = '<div style="text-align:center;padding:10px;color:#94a3b8"><i class="fas fa-spinner fa-spin"></i></div>';
+      window.visitSearchTimeout = setTimeout(function() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            const el = document.getElementById('visitSearchResults');
+            if (!el) return;
+            if (res && res.success && res.visitors && res.visitors.length > 0) {
+              let html = '';
+              res.visitors.forEach(v => {
+                const visitorJson = JSON.stringify(v).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+                html += `
+                  <div onclick="selectVisitorForVisit('${visitorJson}')" 
+                       style="padding:10px;background:white;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:12px">
+                    <b>${escapeHtml(v.name)}</b>
+                    <div style="color:#64748b;font-size:11px">HP: ${v.phone}</div>
+                  </div>
+                `;
+              });
+              el.innerHTML = html;
+            } else {
+              el.innerHTML = '<div style="padding:10px;text-align:center;font-size:12px;color:#94a3b8">Tidak ditemukan</div>';
+            }
+          })
+          .searchPreviousVisitors(searchInput);
+      }, 300);
+    }
+
+    function selectVisitorForVisit(json) {
+      const v = JSON.parse(json);
+      document.getElementById('visit_name').value = v.name;
+      document.getElementById('visit_phone').value = v.phone;
+      document.getElementById('visitSearchResults').innerHTML = '';
+      document.getElementById('visit_search').value = v.name;
     }
     
     function closeVisitModal() {
@@ -4654,9 +4790,13 @@ const google = {
                 </div>
                 
                 <div class="form-group">
-                  <label class="form-label"><i class="fas fa-user-tie"></i> Nama Trainer *</label>
-                  <input id="pt_trainer" class="form-input" placeholder="Contoh: Coach Andi">
+                  <label class="form-label"><i class="fas fa-user-tie"></i> Katalog PT *</label>
+                  <select id="pt_catalog" class="form-input" onchange="onPTCatalogChange()">
+                    <option value="">-- Pilih Katalog PT --</option>
+                  </select>
                 </div>
+                
+                <input type="hidden" id="pt_trainer">
                 
                 <div class="form-row">
                   <div class="form-group">
@@ -4724,6 +4864,39 @@ const google = {
       document.getElementById('pt_price').addEventListener('input', updatePTSummary);
       
       loadActivePTSessions();
+      loadPTCatalogue();
+    }
+    
+    function loadPTCatalogue() {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            const sel = document.getElementById('pt_catalog');
+            if (!sel) return;
+            let html = '<option value="">-- Pilih Katalog PT --</option>';
+            res.packages.forEach(p => {
+              html += `<option value="${p.id}" data-sessions="${p.duration}" data-price="${p.price}" data-name="${p.name}">${p.name} (${p.duration} Sesi)</option>`;
+            });
+            sel.innerHTML = html;
+          }
+        })
+        .getPTCatalogue();
+    }
+
+    function onPTCatalogChange() {
+      const sel = document.getElementById('pt_catalog');
+      const opt = sel.options[sel.selectedIndex];
+      if (!opt || !opt.value) return;
+      
+      const sessions = parseInt(opt.getAttribute('data-sessions')) || 10;
+      const price = parseInt(opt.getAttribute('data-price')) || 150000;
+      const name = opt.getAttribute('data-name');
+      
+      document.getElementById('pt_sessions').value = sessions;
+      document.getElementById('pt_price').value = price;
+      document.getElementById('pt_trainer').value = name;
+      
+      updatePTSummary();
     }
     
     function updatePTSummary() {
