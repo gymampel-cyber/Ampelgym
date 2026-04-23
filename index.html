@@ -576,6 +576,28 @@ const google = {
     </div>
   </div>
 
+  <!-- Daily Report Modal -->
+  <div id="dailyReportModal" class="modal-overlay" style="display:none">
+    <div class="modal-container" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <i class="fas fa-file-invoice-dollar fa-lg"></i>
+        <h3>Laporan Harian Kasir</h3>
+        <button class="btn btn-sm btn-outline" style="margin-left: auto; color: white; border-color: white;" onclick="closeDailyReportModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="dailyReportContent" style="max-height: 70vh; overflow-y: auto; padding: 20px;">
+        <!-- Content will be injected here -->
+      </div>
+      <div class="modal-footer" id="dailyReportFooter">
+        <button class="btn btn-outline" onclick="closeDailyReportModal()">Tutup</button>
+        <button class="btn btn-success" id="btnShareWA" onclick="shareDailyReportToWA()">
+          <i class="fab fa-whatsapp"></i> Kirim WA (PDF)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Auth View -->
   <div id="authView" class="auth-layout">
     <div id="authCard" class="auth-card"></div>
@@ -1152,6 +1174,9 @@ const google = {
             </div>
             <button class="btn btn-primary btn-sm" onclick="refreshDashboard()"><i class="fas fa-sync-alt"></i> Update</button>
             <button class="btn btn-outline btn-sm" onclick="printDashboard()"><i class="fas fa-print"></i> Cetak</button>
+            <button class="btn btn-success btn-sm" onclick="showDailyReportModal()">
+              <i class="fas fa-file-invoice"></i> Laporan Harian
+            </button>
           </div>
         </div>
 
@@ -6923,6 +6948,151 @@ const google = {
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
+    }
+
+    // ================ DAILY REPORT MODAL ================
+    function showDailyReportModal() {
+      const modal = document.getElementById('dailyReportModal');
+      const content = document.getElementById('dailyReportContent');
+      modal.style.display = 'flex';
+      content.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px">Menyiapkan laporan harian...</p></div>';
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success) {
+            renderDailyReport(res.report);
+          } else {
+            content.innerHTML = '<div class="alert alert-error">Gagal memuat laporan: ' + res.message + '</div>';
+          }
+        })
+        .getDailyCashierReport(); // Default today
+    }
+
+    function closeDailyReportModal() {
+      document.getElementById('dailyReportModal').style.display = 'none';
+    }
+
+    function renderDailyReport(report) {
+      const content = document.getElementById('dailyReportContent');
+      
+      let html = `
+        <div style="margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:10px">
+          <h4 style="color:#6b46c1; margin-bottom:5px">Laporan Kasir - ${report.dateFormatted}</h4>
+          <p style="font-size:12px; color:#64748b">Ringkasan aktivitas keuangan per hari ini</p>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:24px">
+          <div class="stat-card" style="padding:15px; border-top-color:#6b46c1">
+            <div class="stat-label" style="font-size:11px">TOTAL REVENUE</div>
+            <div class="stat-value" style="font-size:18px; color:#6b46c1">${formatCurrency(report.summary.totalRevenue)}</div>
+          </div>
+          <div class="stat-card" style="padding:15px; border-top-color:#ef4444">
+            <div class="stat-label" style="font-size:11px">TOTAL PENGELUARAN</div>
+            <div class="stat-value" style="font-size:18px; color:#ef4444">${formatCurrency(report.summary.totalExpenses)}</div>
+          </div>
+          <div class="stat-card" style="padding:15px; border-top-color:#22c55e">
+            <div class="stat-label" style="font-size:11px">NET CASH ON HAND</div>
+            <div class="stat-value" style="font-size:18px; color:#22c55e">${formatCurrency(report.summary.netCash)}</div>
+          </div>
+        </div>
+
+        <div class="dashboard-section-title" style="font-size:14px; margin-top:20px">
+          <i class="fas fa-list"></i> Rincian Pendapatan per Kategori
+        </div>
+        <div class="table-container" style="margin-bottom:24px">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Kategori</th>
+                <th style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Membership & Registrasi</td><td style="text-align:right">${formatCurrency(report.summary.byCategory.Membership)}</td></tr>
+              <tr><td>Personal Trainer</td><td style="text-align:right">${formatCurrency(report.summary.byCategory.PT)}</td></tr>
+              <tr><td>POS (Retail)</td><td style="text-align:right">${formatCurrency(report.summary.byCategory.POS)}</td></tr>
+              <tr><td>Visit Harian</td><td style="text-align:right">${formatCurrency(report.summary.byCategory.Visit)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="dashboard-section-title" style="font-size:14px; margin-top:20px">
+          <i class="fas fa-history"></i> Log Transaksi Hari Ini
+        </div>
+        <div class="table-container">
+          <table class="data-table" style="font-size:12px">
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Nama</th>
+                <th>Jenis</th>
+                <th>Pembayaran</th>
+                <th style="text-align:right">Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${report.details.transactions.length > 0 ? report.details.transactions.map(t => `
+                <tr>
+                  <td>${t.time}</td>
+                  <td>${t.name}</td>
+                  <td><span class="badge ${t.type==='Registration'?'badge-primary':'badge-success'}">${t.type}</span></td>
+                  <td>${t.payment}</td>
+                  <td style="text-align:right">${formatCurrency(t.amount)}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="5" style="text-align:center">Tidak ada transaksi</td></tr>'}
+              ${report.details.pos.map(t => `
+                <tr>
+                  <td>${t.time}</td>
+                  <td>${t.name}</td>
+                  <td><span class="badge badge-warning">POS Sale</span></td>
+                  <td>${t.payment}</td>
+                  <td style="text-align:right">${formatCurrency(t.amount)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      content.innerHTML = html;
+    }
+
+    function shareDailyReportToWA() {
+      const btn = document.getElementById('btnShareWA');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
+      btn.disabled = true;
+      
+      showToast('Menghasilkan PDF Laporan...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          
+          if (res.success) {
+            const summary = res.summary;
+            const text = `*LAPORAN HARIAN KASIR - AMPEL GYM*\n` +
+                         `--------------------------------\n` +
+                         `Tanggal: ${res.fileName.replace('Laporan_Kasir_', '').replace('.pdf', '').replace(/_/g, ' ')}\n` +
+                         `--------------------------------\n` +
+                         `*Ringkasan Keuangan:*\n` +
+                         `- Total Revenue: ${formatCurrency(summary.totalRevenue)}\n` +
+                         `- Total Expenses: ${formatCurrency(summary.totalExpenses)}\n` +
+                         `- Net Cash On Hand: ${formatCurrency(summary.netCash)}\n` +
+                         `--------------------------------\n` +
+                         `Detail Lengkap (PDF):\n` +
+                         `${res.url}\n\n` +
+                         `_Laporan dikirim otomatis dari System AMPEL GYM_`;
+            
+            // Kirim ke nomor owner/manager
+            shareToWhatsApp('087795175243', text);
+            showToast('Laporan berhasil dihasilkan!', 'success');
+          } else {
+            showToast('Gagal menghasilkan PDF: ' + res.message, 'error');
+          }
+        })
+        .generateDailyReportPDF();
     }
   </script>
 </body>
