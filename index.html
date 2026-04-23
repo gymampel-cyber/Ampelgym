@@ -1378,8 +1378,8 @@ const google = {
             if (document.getElementById('statPOSNetProfit')) document.getElementById('statPOSNetProfit').textContent = formatCurrency(s.posNetProfit || 0);
             if (document.getElementById('statNetProfit')) document.getElementById('statNetProfit').textContent = formatCurrency(s.netProfit || 0);
 
-            // Hide financial stats for Staff
-            if (currentUser && currentUser.role === 'Staff') {
+            // Hide financial stats for Staff & Kasir
+            if (currentUser && (currentUser.role === 'Staff' || currentUser.role === 'Kasir')) {
                const financialStats = ['statFitnessRevenue', 'statPOSRevenue', 'statExpenses', 'statNetProfit', 'statFitnessNetProfit', 'statPOSNetProfit'];
                financialStats.forEach(id => {
                  const el = document.getElementById(id);
@@ -6455,7 +6455,7 @@ const google = {
         const view = item.dataset.view;
         let visible = true;
         
-        if (role === 'Staff') {
+        if (role === 'Staff' || role === 'Kasir') {
           const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos'];
           if (!staffViews.includes(view)) visible = false;
         }
@@ -6486,8 +6486,8 @@ const google = {
 
     function showDashboardDetail(type) {
       const financialTypes = ['fitness_revenue', 'pos_revenue', 'expenses', 'fitness_expenses', 'pos_expenses'];
-      if (currentUser && currentUser.role === 'Staff' && financialTypes.includes(type)) {
-        showToast('Akses ditolak: Staf tidak diizinkan melihat rincian keuangan.', 'warning');
+      if (currentUser && (currentUser.role === 'Staff' || currentUser.role === 'Kasir') && financialTypes.includes(type)) {
+        showToast('Akses ditolak: Staf/Kasir tidak diizinkan melihat rincian keuangan.', 'warning');
         return;
       }
 
