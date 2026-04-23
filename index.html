@@ -1247,7 +1247,7 @@ const google = {
             </div>
 
             <!-- 4. AKTIVITAS TERBARU -->
-            <div class="dashboard-section-title">
+            <div class="dashboard-section-title" id="checkinTableTitle">
               <i class="fas fa-history" style="color:#64748b"></i> Aktivitas Check-In Terbaru
             </div>
             <div class="table-container">
@@ -1348,14 +1348,15 @@ const google = {
             // Period Info
             const periodEl = document.getElementById('dashboardPeriod');
             const periodVal = document.getElementById('periodValue');
+            const titleEl = document.getElementById('checkinTableTitle');
             if (periodEl && periodVal) {
               if (s.isFiltered) {
-                periodEl.style.display = 'block';
+                periodEl.style.display = 'flex';
                 periodVal.textContent = s.period;
-                document.getElementById('checkinTableTitle').innerHTML = `<i class="fas fa-history"></i> Aktivitas Check-In (${s.period})`;
+                if (titleEl) titleEl.innerHTML = `<i class="fas fa-history" style="color:#64748b"></i> Aktivitas Check-In (${s.period})`;
               } else {
                 periodEl.style.display = 'none';
-                document.getElementById('checkinTableTitle').innerHTML = `<i class="fas fa-history"></i> Aktivitas Check-In Hari Ini`;
+                if (titleEl) titleEl.innerHTML = `<i class="fas fa-history" style="color:#64748b"></i> Aktivitas Check-In Terbaru`;
               }
             }
 
