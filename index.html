@@ -3003,7 +3003,7 @@ const google = {
         return `
           <div class="product-card" onclick="${outOfStock ? '' : `addToCart('${p.id}')`}" style="${outOfStock ? 'opacity:0.6; cursor:not-allowed' : ''}">
             <div class="product-image">
-              ${p.photoUrl ? `<img src="${p.photoUrl}">` : `<i class="fas fa-box fa-3x" style="color:#cbd5e1"></i>`}
+              ${p.photoUrl ? `<img src="${getDirectLink(p.photoUrl)}">` : `<i class="fas fa-box fa-3x" style="color:#cbd5e1"></i>`}
               ${outOfStock ? `<div style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); color:white; display:flex; align-items:center; justify-content:center; font-weight:700">STOK HABIS</div>` : ''}
             </div>
             <div class="product-info">
@@ -3766,6 +3766,11 @@ const google = {
           .withSuccessHandler(function(res) {
             hideLoading();
             if (res.success) {
+              const p = res.products.find(x => x.id == id);
+              if (!p) {
+                showToast('Produk tidak ditemukan', 'error');
+                return;
+              }
               document.getElementById('prod_id').value = p.id;
               document.getElementById('prod_name').value = p.name;
               document.getElementById('prod_barcode').value = p.barcode || '';
@@ -3788,9 +3793,14 @@ const google = {
             }
           })
           .getFullProducts();
-        ['prod_name','prod_barcode','prod_category','prod_buyPrice','prod_price','prod_stock','prod_unit','prod_photo_url'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.value = id.includes('Price') || id.includes('stock') ? 0 : '';
+      } else {
+        document.getElementById('productModalTitle').textContent = 'Tambah Produk';
+        if (scannerArea) scannerArea.style.display = 'block';
+        if (btnSave) btnSave.style.display = 'none'; // Show after input for new
+        
+        ['prod_id','prod_name','prod_barcode','prod_category','prod_buyPrice','prod_price','prod_stock','prod_unit','prod_photo_url'].forEach(fid => {
+          const el = document.getElementById(fid);
+          if (el) el.value = fid.includes('Price') || fid.includes('stock') ? 0 : '';
         });
         clearProductPhoto();
       }
