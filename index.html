@@ -1380,7 +1380,7 @@ const google = {
 
             // Hide financial stats for Staff
             if (currentUser && currentUser.role === 'Staff') {
-               const financialStats = ['statFitnessRevenue', 'statPOSRevenue', 'statExpenses', 'statNetProfit'];
+               const financialStats = ['statFitnessRevenue', 'statPOSRevenue', 'statExpenses', 'statNetProfit', 'statFitnessNetProfit', 'statPOSNetProfit'];
                financialStats.forEach(id => {
                  const el = document.getElementById(id);
                  if (el) el.textContent = '***';
@@ -6485,6 +6485,12 @@ const google = {
     }
 
     function showDashboardDetail(type) {
+      const financialTypes = ['fitness_revenue', 'pos_revenue', 'expenses', 'fitness_expenses', 'pos_expenses'];
+      if (currentUser && currentUser.role === 'Staff' && financialTypes.includes(type)) {
+        showToast('Akses ditolak: Staf tidak diizinkan melihat rincian keuangan.', 'warning');
+        return;
+      }
+
       const modal = document.getElementById('detailModal');
       const title = document.getElementById('detailModalTitle');
       const container = document.getElementById('detailModalBody');
