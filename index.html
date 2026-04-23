@@ -1595,7 +1595,7 @@ const google = {
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label">No. Telepon *</label>
-                    <input id="reg_phone" class="form-input" placeholder="08xxxxxxxxxx">
+                    <input id="reg_phone" class="form-input" placeholder="0xxxxxxxxxx">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Email</label>
@@ -1895,8 +1895,8 @@ const google = {
         showToast('Nama lengkap minimal 3 karakter', 'warning'); 
         return; 
       }
-      if (!phone || !/^08[0-9]{9,12}$/.test(phone)) { 
-        showToast('Format nomor telepon tidak valid (contoh: 081234567890)', 'warning'); 
+      if (!phone || !/^0[0-9]{9,13}$/.test(phone)) { 
+        showToast('Format nomor telepon tidak valid (contoh: 0812345678 atau 021xxxxxxx)', 'warning'); 
         return; 
       }
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -5617,7 +5617,7 @@ const google = {
                 </div>
                 <div class="form-group">
                   <label class="form-label">No. Telepon *</label>
-                  <input id="cu_phone" class="form-input" placeholder="08xxxxxxxxxx">
+                  <input id="cu_phone" class="form-input" placeholder="0xxxxxxxxxx">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Username *</label>
@@ -5950,8 +5950,8 @@ const google = {
         showAlert('createUserAlert', 'Nama minimal 3 karakter', 'warning'); 
         return; 
       }
-      if (!phone || !/^08[0-9]{9,12}$/.test(phone)) { 
-        showAlert('createUserAlert', 'Format no. telepon tidak valid', 'warning'); 
+      if (!phone || !/^0[0-9]{9,13}$/.test(phone)) { 
+        showAlert('createUserAlert', 'Format no. telepon tidak valid (contoh: 0812345678)', 'warning'); 
         return; 
       }
       if (!username || username.length < 3) { 
