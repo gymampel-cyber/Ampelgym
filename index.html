@@ -448,6 +448,33 @@ const google = {
     .cart-total { font-size: 18px; font-weight: 700; color: #1e293b; margin-top: 12px; padding-top: 12px; border-top: 2px dashed #cbd5e1; }
     .empty-cart { text-align: center; color: #94a3b8; padding-top: 40px; }
     .dashboard-section { margin-bottom: 32px; animation: fadeIn 0.5s ease; }
+    
+    /* Search Dropdown (Consistency with Check-in) */
+    .search-dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      z-index: 1000;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-top: 4px;
+    }
+    .search-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: #f8fafc; }
+    .search-item b { color: #334155; display: block; font-size: 14px; }
+    .search-item small { color: #64748b; font-size: 12px; }
     .dashboard-section-title { 
       font-size: 18px; font-weight: 700; color: #1e293b; 
       margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
@@ -3634,7 +3661,7 @@ const google = {
     function showInventoryTools() {
       const container = document.getElementById('catalogContent');
       container.innerHTML = `
-        <div class="form-card">
+        <div class="form-card" style="margin-bottom:24px">
           <div class="form-card-header">
             <h3><i class="fas fa-barcode"></i> Stock Opname & Update Harga</h3>
           </div>
@@ -3645,7 +3672,8 @@ const google = {
                 <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8"></i>
                 <input type="text" id="opnameSearch" class="form-input" style="padding-left:36px" placeholder="Ketik nama produk..." oninput="searchProductForOpname(this.value)">
               </div>
-              <div id="opnameSearchResults" style="margin-top:8px; text-align:left; max-height:200px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:white; position:absolute; left:0; right:0; z-index:100; display:none"></div>
+              <!-- Floating search results -->
+              <div id="opnameSearchResults" class="search-dropdown" style="display:none"></div>
             </div>
             
             <div style="margin:20px 0; display:flex; align-items:center; gap:12px; justify-content:center">
@@ -3663,7 +3691,19 @@ const google = {
             </button>
           </div>
         </div>
+
+        <div class="form-card">
+          <div class="form-card-header">
+            <h3><i class="fas fa-history"></i> Riwayat Update Inventaris (Restock/Harga)</h3>
+          </div>
+          <div class="form-card-body">
+            <div id="restockHistoryTable">
+              <div style="text-align:center; padding:20px"><i class="fas fa-spinner fa-spin"></i> Memuat riwayat...</div>
+            </div>
+          </div>
+        </div>
       `;
+      loadRestockHistory();
     }
 
     function searchProductForOpname(val) {
@@ -3686,7 +3726,7 @@ const google = {
       }
       
       resultsEl.innerHTML = filtered.map(p => `
-        <div style="padding:10px; border-bottom:1px solid #f1f5f9; cursor:pointer; transition:0.2s" onclick="selectProductForOpname('${p.id}')" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+        <div class="search-item" onclick="selectProductForOpname('${p.id}')">
           <div style="font-weight:600; font-size:13px">${escapeHtml(p.name)}</div>
           <div style="font-size:11px; color:#64748b">ID: ${p.id} | Stok: ${p.stock} ${p.unit}</div>
         </div>
@@ -3697,7 +3737,83 @@ const google = {
     function selectProductForOpname(id) {
       document.getElementById('opnameSearchResults').style.display = 'none';
       document.getElementById('opnameSearch').value = '';
-      onScanSuccess(id); // Use existing logic
+      
+      // Pastikan posProducts sudah dimuat (biasanya sudah dimuat saat POS atau Catalog dibuka)
+      const p = posProducts.find(x => x.id == id);
+      if (p) {
+        const mappedProd = {
+          'ID Produk': p.id,
+          'Nama Produk': p.name,
+          'Barcode': p.barcode,
+          'Stok': p.stock,
+          'Satuan': p.unit,
+          'Harga Jual': p.price
+        };
+        openQuickUpdateModal(mappedProd);
+      } else {
+        // Jika tidak ada di cache, ambil dari server
+        showLoading();
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideLoading();
+            if (res.success) {
+              const found = res.products.find(x => x.id == id);
+              if (found) {
+                // Konversi key header sheet ke yang diharapkan openQuickUpdateModal
+                const mapped = {
+                  'ID Produk': found['ID Produk'],
+                  'Nama Produk': found['Nama Produk'],
+                  'Barcode': found['Barcode'],
+                  'Stok': found['Stok'],
+                  'Satuan': found['Satuan'],
+                  'Harga Jual': found['Harga Jual']
+                };
+                openQuickUpdateModal(mapped);
+              }
+            }
+          })
+          .getFullProducts();
+      }
+    }
+
+    function loadRestockHistory() {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          const el = document.getElementById('restockHistoryTable');
+          if (res.success && res.history.length > 0) {
+            el.innerHTML = `
+              <div style="overflow-x:auto">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Waktu</th>
+                      <th>Produk</th>
+                      <th>Tipe</th>
+                      <th>Awal</th>
+                      <th>Baru</th>
+                      <th>Aksi Oleh</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${res.history.map(h => `
+                      <tr>
+                        <td><small>${formatTime(h['Waktu'])}</small></td>
+                        <td><b>${escapeHtml(h['Nama Produk'])}</b><br><small>${h['ID Produk']}</small></td>
+                        <td><span class="badge badge-${h['Tipe'] === 'Stok' ? 'info' : 'warning'}">${h['Tipe']}</span></td>
+                        <td>${h['Tipe'] === 'Stok' ? h['Stok Awal'] : formatCurrency(h['Harga Awal'])}</td>
+                        <td><b style="color:#10b981">${h['Tipe'] === 'Stok' ? h['Stok Baru'] : formatCurrency(h['Harga Baru'])}</b></td>
+                        <td><small>${h['User']}</small></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          } else {
+            el.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8">Belum ada riwayat update.</div>';
+          }
+        })
+        .getRestockHistory();
     }
 
     let html5QrReader = null;
