@@ -3472,9 +3472,14 @@ const google = {
         <div class="form-card">
           <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
             <h3 style="margin:0"><i class="fas fa-box"></i> Master Katalog Produk</h3>
-            <button class="btn btn-sm btn-success" onclick="openProductModal()">
-              <i class="fas fa-plus"></i> Tambah Produk
-            </button>
+            <div style="display:flex; gap:8px">
+              <button class="btn btn-sm btn-outline" onclick="loadProductList(true)" title="Perbarui Data">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <button class="btn btn-sm btn-success" onclick="openProductModal()">
+                <i class="fas fa-plus"></i> Tambah Produk
+              </button>
+            </div>
           </div>
           <div class="form-card-body">
             <div id="productListTable">
