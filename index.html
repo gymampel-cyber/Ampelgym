@@ -2351,7 +2351,7 @@ const google = {
                     <label class="form-label">Pilih Paket *</label>
                     <select id="trx_package" class="form-input">
                       <option value="">-- Pilih Paket --</option>
-                      ${pkgs.filter(p => p.type === 'Member').map(p => 
+                      ${pkgs.filter(p => p.type && p.type.toLowerCase().includes('member')).map(p => 
                         `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}" data-duration="${p.duration}">${escapeHtml(p.name)} - ${formatCurrency(p.price)} (${escapeHtml(p.duration)})</option>`
                       ).join('')}
                     </select>
