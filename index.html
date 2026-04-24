@@ -7434,20 +7434,15 @@ const google = {
         })
         .generateDailyReportPDF();
     }
-  </script>
-</body>
-</html>
 
     // ================ POS & STOCK HISTORY ================
     function showPOSTransactionHistory() {
-      const container = document.getElementById('catalogContent'); // Reuse container or create modal
-      // We will use a modal for cleaner UX in POS panel
       const modalHtml = `
         <div id="posHistoryModal" class="modal-overlay" style="display:flex">
           <div class="modal-container" style="max-width:900px">
             <div class="modal-header">
               <h3 style="margin:0"><i class="fas fa-history"></i> Riwayat Transaksi POS</h3>
-              <button onclick="closePOSHistoryModal()" class="btn btn-sm btn-outline"><i class="fas fa-times"></i></button>
+              <button onclick="closePOSHistoryModal()" class="btn btn-sm btn-outline" style="color:white; border-color:white"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
               <div class="filter-container" style="margin-bottom:16px">
@@ -7538,8 +7533,11 @@ const google = {
         .getFilteredPOSTransactions(start, end);
     }
 
-    // STOCK HISTORY (Already in showInventoryTools, but we improve it)
+    // STOCK HISTORY
     function showStockOpnameHistory() {
        // This is already inside showInventoryTools in index.html
        // We'll update the render part there.
     }
+  </script>
+</body>
+</html>
