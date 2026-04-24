@@ -1178,7 +1178,7 @@
             return;
           }
           
-          packages = res.packages.filter(p => p.type === 'Member');
+          packages = res.packages.filter(p => p.type && p.type.toUpperCase().includes('REGULAR'));
           
           container.innerHTML = `
             <div class="packages-grid">
