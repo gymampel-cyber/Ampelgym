@@ -2964,7 +2964,12 @@ const google = {
       loadPOSProducts();
     }
 
-    function loadPOSProducts() {
+    function loadPOSProducts(force = false) {
+      if (!force && posProducts && posProducts.length > 0) {
+        renderPOSCategories();
+        renderPOSProducts();
+        return;
+      }
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
@@ -3481,58 +3486,70 @@ const google = {
       loadProductList();
     }
 
-    function loadProductList() {
+    let __productsCache = null;
+    function loadProductList(force = false) {
+      if (!force && __productsCache) {
+        _renderProductTable(__productsCache);
+        return;
+      }
+      showLoading();
       google.script.run
         .withSuccessHandler(function(res) {
           if (res.success) {
-            const list = res.products;
-            document.getElementById('productListTable').innerHTML = `
-              <div style="overflow-x:auto">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Barcode</th>
-                      <th>Nama Produk</th>
-                      <th>Kategori</th>
-                      <th>Harga Jual</th>
-                      <th>Stok</th>
-                      <th>Status</th>
-                      <th>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${list.map(p => `
-                      <tr>
-                        <td><code>${p.id}</code></td>
-                        <td><small>${p.barcode || '-'}</small></td>
-                        <td><b>${escapeHtml(p.name)}</b></td>
-                        <td>${p.category}</td>
-                        <td>${formatCurrency(p.price)}</td>
-                        <td style="color:${p.stock <= 5 ? '#ef4444' : 'inherit'}"><b>${p.stock}</b> ${p.unit}</td>
-                        <td><span class="badge badge-${p.status === 'Aktif' ? 'success' : 'secondary'}">${p.status || 'Aktif'}</span></td>
-                        <td>
-                          <div style="display:flex; gap:4px">
-                            <button class="btn btn-sm btn-outline" onclick="openProductModal('${p.id}')" title="Edit Data">
-                              <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-success" onclick="openRestockModal('${p.id}', '${escapeJs(p.name)}')" title="Restock / Kulakan">
-                              <i class="fas fa-plus-circle"></i>
-                            </button>
-                            <button class="btn btn-sm btn-warning" onclick="openAdjustModal('${p.id}', '${escapeJs(p.name)}', ${p.stock})" title="Penyesuaian / Rusak">
-                              <i class="fas fa-tools"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            `;
+            __productsCache = res.products;
+            _renderProductTable(res.products);
           }
         })
+        .withFailureHandler(function() { hideLoading(); })
         .getFullProducts();
+    }
+
+    function _renderProductTable(list) {
+      hideLoading();
+      document.getElementById('productListTable').innerHTML = `
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Barcode</th>
+                <th>Nama Produk</th>
+                <th>Kategori</th>
+                <th>Harga Jual</th>
+                <th>Stok</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(p => `
+                <tr>
+                  <td><code>${p.id}</code></td>
+                  <td><small>${p.barcode || '-'}</small></td>
+                  <td><b>${escapeHtml(p.name)}</b></td>
+                  <td>${p.category}</td>
+                  <td>${formatCurrency(p.price)}</td>
+                  <td style="color:${p.stock <= 5 ? '#ef4444' : 'inherit'}"><b>${p.stock}</b> ${p.unit}</td>
+                  <td><span class="badge badge-${p.status === 'Aktif' ? 'success' : 'secondary'}">${p.status || 'Aktif'}</span></td>
+                  <td>
+                    <div style="display:flex; gap:4px">
+                      <button class="btn btn-sm btn-outline" onclick="openProductModal('${p.id}')" title="Edit Data">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-success" onclick="openRestockModal('${p.id}', '${escapeJs(p.name)}')" title="Restock / Kulakan">
+                        <i class="fas fa-plus-circle"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline" onclick="openAdjustModal('${p.id}', '${escapeJs(p.name)}', ${p.stock})" title="Penyesuaian Stok">
+                        <i class="fas fa-sliders-h"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
 
     function showInventoryTools() {
@@ -3814,38 +3831,48 @@ const google = {
         document.getElementById('productModalTitle').textContent = 'Edit Produk';
         if (scannerArea) scannerArea.style.display = 'none';
         if (btnSave) btnSave.style.display = 'block'; // Always show on edit
-        showLoading();
-        google.script.run
-          .withSuccessHandler(function(res) {
-            hideLoading();
-            if (res.success) {
-              const p = res.products.find(x => x.id == id);
-              if (!p) {
-                showToast('Produk tidak ditemukan', 'error');
-                return;
-              }
-              document.getElementById('prod_id').value = p.id;
-              document.getElementById('prod_name').value = p.name;
-              document.getElementById('prod_barcode').value = p.barcode || '';
-              document.getElementById('prod_category').value = p.category;
-              document.getElementById('prod_buyPrice').value = p.buyPrice;
-              document.getElementById('prod_price').value = p.price;
-              document.getElementById('prod_stock').value = p.stock;
-              document.getElementById('prod_unit').value = p.unit;
-              document.getElementById('prod_photo_url').value = p.photoUrl;
-              
-              if (p.photoUrl) {
-                const prev = document.getElementById('productPhotoPreview');
-                if (prev) prev.src = getDirectLink(p.photoUrl);
-                document.getElementById('productPhotoUploadBox').classList.add('has-photo');
-                document.getElementById('productPhotoClearBtn').style.display = 'inline-flex';
-                document.getElementById('productPhotoLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i> Foto produk terpasang';
-              } else {
-                clearProductPhoto();
-              }
-            }
-          })
-          .getFullProducts();
+        
+        const populateForm = (p) => {
+          if (!p) {
+            showToast('Produk tidak ditemukan', 'error');
+            return;
+          }
+          document.getElementById('prod_id').value = p.id;
+          document.getElementById('prod_name').value = p.name;
+          document.getElementById('prod_barcode').value = p.barcode || '';
+          document.getElementById('prod_category').value = p.category;
+          document.getElementById('prod_buyPrice').value = p.buyPrice;
+          document.getElementById('prod_price').value = p.price;
+          document.getElementById('prod_stock').value = p.stock;
+          document.getElementById('prod_unit').value = p.unit;
+          document.getElementById('prod_photo_url').value = p.photoUrl;
+          
+          if (p.photoUrl) {
+            const prev = document.getElementById('productPhotoPreview');
+            if (prev) prev.src = getDirectLink(p.photoUrl);
+            document.getElementById('productPhotoUploadBox').classList.add('has-photo');
+            document.getElementById('productPhotoClearBtn').style.display = 'inline-flex';
+            document.getElementById('productPhotoLabel').innerHTML = '<i class="fas fa-check-circle" style="color:#22c55e"></i> Foto produk terpasang';
+          } else {
+            clearProductPhoto();
+          }
+        };
+
+        if (__productsCache) {
+           const p = __productsCache.find(x => x.id == id);
+           populateForm(p);
+        } else {
+           showLoading();
+           google.script.run
+             .withSuccessHandler(function(res) {
+               hideLoading();
+               if (res.success) {
+                 __productsCache = res.products;
+                 populateForm(res.products.find(x => x.id == id));
+               }
+             })
+             .getFullProducts();
+        }
       } else {
         document.getElementById('productModalTitle').textContent = 'Tambah Produk';
         if (scannerArea) scannerArea.style.display = 'block';
@@ -3937,7 +3964,7 @@ const google = {
           if (res.success) {
             showToast('✅ Produk disimpan', 'success');
             closeProductModal();
-            loadProductList();
+            loadProductList(true); // Force reload to get updated data
           } else {
             showToast('❌ ' + res.message, 'error');
           }
