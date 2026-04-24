@@ -3006,9 +3006,14 @@ const google = {
         <div class="form-card" style="margin-top:20px">
           <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
             <h4 style="margin:0"><i class="fas fa-history"></i> Transaksi POS Hari Ini</h4>
-            <button class="btn btn-sm btn-outline" onclick="loadTodayPOSTransactions()">
-              <i class="fas fa-sync-alt"></i> Refresh
-            </button>
+            <div style="display:flex; gap:8px">
+              <button class="btn btn-sm btn-outline" onclick="loadTodayPOSTransactions()">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="showPOSTransactionHistory()">
+                <i class="fas fa-list"></i> Riwayat
+              </button>
+            </div>
           </div>
           <div class="form-card-body" id="posTodayTransactions" style="padding:0">
             <div style="text-align:center; padding:30px; color:#94a3b8">
@@ -3337,20 +3342,20 @@ const google = {
         .withSuccessHandler(function(res) {
           hideLoading();
           if (res.success) {
-            let itemsText = data.items.map(it => `• ${it.name} x${it.qty}`).join('%0A');
-            let text = `*STRUK PENJUALAN - AMPEL GYM*%0A` +
-                       `--------------------------------%0A` +
-                       `ID Trx: ${trxId}%0A` +
-                       `Tanggal: ${new Date().toLocaleString('id-ID')}%0A` +
-                       `Customer: ${data.customerName}%0A` +
-                       `--------------------------------%0A` +
-                       `${itemsText}%0A` +
-                       `--------------------------------%0A` +
-                       `Subtotal: ${formatCurrency(data.subtotal)}%0A` +
-                       `Diskon: ${data.discount}%%0A` +
-                       `*Total: ${formatCurrency(data.total)}*%0A` +
-                       `Pembayaran: ${data.paymentMethod}%0A%0A` +
-                       `Download Struk PDF:%0A${res.url}%0A%0A` +
+            let itemsText = data.items.map(it => `• ${it.name} x${it.qty}`).join('\n');
+            let text = `*STRUK PENJUALAN - AMPEL GYM*\n` +
+                       `--------------------------------\n` +
+                       `ID Trx: ${trxId}\n` +
+                       `Tanggal: ${new Date().toLocaleString('id-ID')}\n` +
+                       `Customer: ${data.customerName}\n` +
+                       `--------------------------------\n` +
+                       `${itemsText}\n` +
+                       `--------------------------------\n` +
+                       `Subtotal: ${formatCurrency(data.subtotal)}\n` +
+                       `Diskon: ${data.discount}%\n` +
+                       `*Total: ${formatCurrency(data.total)}*\n` +
+                       `Pembayaran: ${data.paymentMethod}\n\n` +
+                       `Download Struk PDF:\n${res.url}\n\n` +
                        `Terima kasih telah berbelanja di AMPEL GYM!`;
             
             const waNumber = data.whatsapp || '';
@@ -3684,8 +3689,13 @@ const google = {
         </div>
 
         <div class="form-card">
-          <div class="form-card-header">
-            <h3><i class="fas fa-history"></i> Riwayat Update Inventaris (Restock/Harga)</h3>
+          <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
+            <h3 style="margin:0"><i class="fas fa-history"></i> Riwayat Update Inventaris</h3>
+            <div style="display:flex; gap:8px">
+              <input type="date" id="restock_start" class="btn btn-sm btn-outline" style="padding:4px">
+              <input type="date" id="restock_end" class="btn btn-sm btn-outline" style="padding:4px">
+              <button class="btn btn-sm btn-primary" onclick="loadRestockHistory()"><i class="fas fa-filter"></i></button>
+            </div>
           </div>
           <div class="form-card-body">
             <div id="restockHistoryTable">
@@ -3694,6 +3704,12 @@ const google = {
           </div>
         </div>
       `;
+      // Set default dates
+      const today = new Date();
+      document.getElementById('restock_end').value = today.toISOString().split('T')[0];
+      const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+      document.getElementById('restock_start').value = monthAgo.toISOString().split('T')[0];
+      
       loadRestockHistory();
     }
 
@@ -3768,9 +3784,15 @@ const google = {
     }
 
     function loadRestockHistory() {
+      const start = document.getElementById('restock_start')?.value || '';
+      const end = document.getElementById('restock_end')?.value || '';
+      const el = document.getElementById('restockHistoryTable');
+      if (!el) return;
+      
+      el.innerHTML = '<div style="text-align:center; padding:20px"><i class="fas fa-spinner fa-spin"></i> Memuat riwayat...</div>';
+      
       google.script.run
         .withSuccessHandler(function(res) {
-          const el = document.getElementById('restockHistoryTable');
           if (res.success && res.history.length > 0) {
             el.innerHTML = `
               <div style="overflow-x:auto">
@@ -3782,13 +3804,13 @@ const google = {
                       <th>Tipe</th>
                       <th>Awal</th>
                       <th>Baru</th>
-                      <th>Aksi Oleh</th>
+                      <th>Oleh</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${res.history.map(h => `
                       <tr>
-                        <td><small>${formatTime(h['Waktu'])}</small></td>
+                        <td><small>${new Date(h['Waktu']).toLocaleString('id-ID', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</small></td>
                         <td><b>${escapeHtml(h['Nama Produk'])}</b><br><small>${h['ID Produk']}</small></td>
                         <td><span class="badge badge-${h['Tipe'] === 'Stok' ? 'info' : 'warning'}">${h['Tipe']}</span></td>
                         <td>${h['Tipe'] === 'Stok' ? h['Stok Awal'] : formatCurrency(h['Harga Awal'])}</td>
@@ -3801,10 +3823,10 @@ const google = {
               </div>
             `;
           } else {
-            el.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8">Belum ada riwayat update.</div>';
+            el.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8">Belum ada riwayat update pada periode ini.</div>';
           }
         })
-        .getRestockHistory();
+        .getFilteredRestockHistory(start, end);
     }
 
     let html5QrReader = null;
@@ -7374,10 +7396,8 @@ const google = {
     function shareDailyReportToWA() {
       const btn = document.getElementById('btnShareWA');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyiapkan...';
       btn.disabled = true;
-      
-      showToast('Menghasilkan PDF Laporan...', 'info');
       
       google.script.run
         .withSuccessHandler(function(res) {
@@ -7401,13 +7421,125 @@ const google = {
             
             // Kirim ke nomor owner/manager
             shareToWhatsApp('081809997575', text);
-            showToast('Laporan berhasil dihasilkan!', 'success');
+            showToast('Laporan berhasil dikirim!', 'success');
           } else {
-            showToast('Gagal menghasilkan PDF: ' + res.message, 'error');
+            showToast('Gagal: ' + res.message, 'error');
+            alert('Gagal menghasilkan laporan: ' + res.message);
           }
+        })
+        .withFailureHandler(function(err) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          showToast('Error: ' + err.message, 'error');
         })
         .generateDailyReportPDF();
     }
   </script>
 </body>
 </html>
+
+    // ================ POS & STOCK HISTORY ================
+    function showPOSTransactionHistory() {
+      const container = document.getElementById('catalogContent'); // Reuse container or create modal
+      // We will use a modal for cleaner UX in POS panel
+      const modalHtml = `
+        <div id="posHistoryModal" class="modal-overlay" style="display:flex">
+          <div class="modal-container" style="max-width:900px">
+            <div class="modal-header">
+              <h3 style="margin:0"><i class="fas fa-history"></i> Riwayat Transaksi POS</h3>
+              <button onclick="closePOSHistoryModal()" class="btn btn-sm btn-outline"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+              <div class="filter-container" style="margin-bottom:16px">
+                <div class="filter-item">
+                  <label class="filter-label">Mulai</label>
+                  <input type="date" id="pos_hist_start" class="filter-input">
+                </div>
+                <div class="filter-item">
+                  <label class="filter-label">Akhir</label>
+                  <input type="date" id="pos_hist_end" class="filter-input">
+                </div>
+                <button class="btn btn-primary" onclick="loadPOSTransactionHistory()"><i class="fas fa-filter"></i> Filter</button>
+              </div>
+              <div id="posHistoryTableContainer" style="overflow-x:auto; max-height:450px">
+                <div style="text-align:center; padding:40px; color:#94a3b8"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      let modalEl = document.getElementById('posHistoryModal');
+      if (modalEl) modalEl.remove();
+      
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      
+      // Default dates: current month
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      document.getElementById('pos_hist_start').value = firstDay.toISOString().split('T')[0];
+      document.getElementById('pos_hist_end').value = today.toISOString().split('T')[0];
+      
+      loadPOSTransactionHistory();
+    }
+
+    function closePOSHistoryModal() {
+      const modal = document.getElementById('posHistoryModal');
+      if (modal) modal.remove();
+    }
+
+    function loadPOSTransactionHistory() {
+      const start = document.getElementById('pos_hist_start').value;
+      const end = document.getElementById('pos_hist_end').value;
+      const container = document.getElementById('posHistoryTableContainer');
+      
+      container.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>';
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success) {
+            const list = res.history;
+            if (list.length === 0) {
+              container.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8">Tidak ada transaksi ditemukan</div>';
+              return;
+            }
+            
+            let html = `
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>ID</th>
+                    <th>Pelanggan</th>
+                    <th>Total</th>
+                    <th>Metode</th>
+                    <th>Kasir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${list.map(t => `
+                    <tr>
+                      <td><small>${new Date(t.Waktu).toLocaleString('id-ID', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</small></td>
+                      <td><code>${t['ID Transaksi']}</code></td>
+                      <td>${escapeHtml(t['Nama Pembeli'] || 'Guest')}</td>
+                      <td><b>${formatCurrency(t.Total)}</b></td>
+                      <td>${t['Metode Pembayaran']}</td>
+                      <td><small>${t.Kasir}</small></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+            container.innerHTML = html;
+          } else {
+            container.innerHTML = '<div class="alert alert-error">Gagal: ' + res.message + '</div>';
+          }
+        })
+        .getFilteredPOSTransactions(start, end);
+    }
+
+    // STOCK HISTORY (Already in showInventoryTools, but we improve it)
+    function showStockOpnameHistory() {
+       // This is already inside showInventoryTools in index.html
+       // We'll update the render part there.
+    }
