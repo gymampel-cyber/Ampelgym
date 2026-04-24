@@ -397,7 +397,12 @@ const google = {
     @keyframes spin    { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
     @keyframes scan    { 0% { top:0; } 50% { top:100%; } 100% { top:0; } }
     
-    /* Responsive */
+    @media (max-width:1024px) { 
+      .pos-layout { grid-template-columns: 1fr; height: auto; }
+      .pos-products { height: auto; max-height: 600px; }
+      .pos-cart { max-height: none; }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
     @media (max-width:768px) { 
       .dashboard-layout{flex-direction:column} 
       .sidebar{width:100%} 
@@ -1951,6 +1956,16 @@ const google = {
         showToast('Pilih paket terlebih dahulu', 'warning'); 
         return; 
       }
+
+      if (!adminMemberPhotoBase64) {
+        showToast('❌ Foto Profil Wajib Diambil/Diunggah!', 'danger');
+        const box = document.getElementById('adminPhotoUploadBox');
+        if (box) {
+          box.style.borderColor = '#ef4444';
+          box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
       if (!pay) { 
         showToast('Pilih metode pembayaran', 'warning'); 
         return; 
@@ -2960,8 +2975,67 @@ const google = {
             </div>
           </div>
         </div>
+        
+        <div class="form-card" style="margin-top:20px">
+          <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
+            <h4 style="margin:0"><i class="fas fa-history"></i> Transaksi POS Hari Ini</h4>
+            <button class="btn btn-sm btn-outline" onclick="loadTodayPOSTransactions()">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+          </div>
+          <div class="form-card-body" id="posTodayTransactions" style="padding:0">
+            <div style="text-align:center; padding:30px; color:#94a3b8">
+              <i class="fas fa-spinner fa-spin"></i> Memuat transaksi...
+            </div>
+          </div>
+        </div>
       `;
       loadPOSProducts();
+      loadTodayPOSTransactions();
+    }
+
+    function loadTodayPOSTransactions() {
+      const el = document.getElementById('posTodayTransactions');
+      if (!el) return;
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            const list = res.transactions || [];
+            if (list.length === 0) {
+              el.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8">Belum ada transaksi hari ini</div>';
+              return;
+            }
+            
+            el.innerHTML = `
+              <div style="overflow-x:auto">
+                <table class="data-table" style="font-size:13px">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Waktu</th>
+                      <th>Pelanggan</th>
+                      <th>Total</th>
+                      <th>Kasir</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${list.map(t => `
+                      <tr>
+                        <td><code>${t.id}</code></td>
+                        <td>${t.time}</td>
+                        <td>${escapeHtml(t.customer)}</td>
+                        <td><b>${formatCurrency(t.total)}</b></td>
+                        <td><small>${t.cashier}</small></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }
+        })
+        .getTodayPOSTransactions();
     }
 
     function loadPOSProducts(force = false) {
@@ -3565,6 +3639,21 @@ const google = {
             <h3><i class="fas fa-barcode"></i> Stock Opname & Update Harga</h3>
           </div>
           <div class="form-card-body" style="text-align:center">
+            <div class="form-group" style="max-width:500px; margin:0 auto 20px auto; position:relative">
+              <label class="form-label" style="text-align:left">Cari Nama atau ID Produk</label>
+              <div style="position:relative">
+                <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8"></i>
+                <input type="text" id="opnameSearch" class="form-input" style="padding-left:36px" placeholder="Ketik nama produk..." oninput="searchProductForOpname(this.value)">
+              </div>
+              <div id="opnameSearchResults" style="margin-top:8px; text-align:left; max-height:200px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:white; position:absolute; left:0; right:0; z-index:100; display:none"></div>
+            </div>
+            
+            <div style="margin:20px 0; display:flex; align-items:center; gap:12px; justify-content:center">
+              <span style="height:1px; background:#e2e8f0; flex:1"></span>
+              <span style="color:#64748b; font-size:13px; font-weight:600">ATAU SCAN BARCODE</span>
+              <span style="height:1px; background:#e2e8f0; flex:1"></span>
+            </div>
+
             <div id="invScannerContainer" style="max-width:500px; margin:0 auto; border:2px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:20px; background:#f1f5f9">
               <div id="inv-reader" style="width:100%"></div>
             </div>
@@ -3575,6 +3664,40 @@ const google = {
           </div>
         </div>
       `;
+    }
+
+    function searchProductForOpname(val) {
+      const resultsEl = document.getElementById('opnameSearchResults');
+      if (!val || val.length < 2) {
+        resultsEl.style.display = 'none';
+        return;
+      }
+      
+      const filtered = posProducts.filter(p => 
+        p.name.toLowerCase().includes(val.toLowerCase()) || 
+        p.id.toLowerCase().includes(val.toLowerCase()) ||
+        (p.barcode && p.barcode.includes(val))
+      );
+      
+      if (filtered.length === 0) {
+        resultsEl.innerHTML = '<div style="padding:10px; color:#94a3b8">Produk tidak ditemukan</div>';
+        resultsEl.style.display = 'block';
+        return;
+      }
+      
+      resultsEl.innerHTML = filtered.map(p => `
+        <div style="padding:10px; border-bottom:1px solid #f1f5f9; cursor:pointer; transition:0.2s" onclick="selectProductForOpname('${p.id}')" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+          <div style="font-weight:600; font-size:13px">${escapeHtml(p.name)}</div>
+          <div style="font-size:11px; color:#64748b">ID: ${p.id} | Stok: ${p.stock} ${p.unit}</div>
+        </div>
+      `).join('');
+      resultsEl.style.display = 'block';
+    }
+
+    function selectProductForOpname(id) {
+      document.getElementById('opnameSearchResults').style.display = 'none';
+      document.getElementById('opnameSearch').value = '';
+      onScanSuccess(id); // Use existing logic
     }
 
     let html5QrReader = null;
@@ -6304,7 +6427,7 @@ const google = {
               </div>
             </div>
             <div class="stat-value" id="expTotalValue">Rp 0</div>
-            <div class="stat-label">Periode Terpilih</div>
+            <div class="stat-label">Total Operasional</div>
           </div>
           <div class="stat-card" style="border-top-color:#3b82f6">
             <div class="stat-header">
@@ -6343,27 +6466,6 @@ const google = {
                     <option value="Promosi & Marketing">Promosi & Marketing</option>
                     <option value="Lain-lain">Lain-lain</option>
                   </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Jenis Pengeluaran</label>
-                  <select id="exp_type" class="form-input" required onchange="toggleExpenseSplit()">
-                    <option value="Gym">Gym / Fitness</option>
-                    <option value="Retail">Retail / POS</option>
-                    <option value="Global">Global (Bagi Beban)</option>
-                  </select>
-                </div>
-                <div id="split_section" style="display:none; background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #e2e8f0">
-                  <p style="font-size:12px; color:#64748b; margin-bottom:10px">Tentukan persentase pembagian beban biaya:</p>
-                  <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-                    <div class="form-group" style="margin-bottom:0">
-                      <label class="form-label" style="font-size:12px">Porsi Gym (%)</label>
-                      <input type="number" id="exp_gym_split" class="form-input" value="50" min="0" max="100" oninput="balanceSplit('gym')">
-                    </div>
-                    <div class="form-group" style="margin-bottom:0">
-                      <label class="form-label" style="font-size:12px">Porsi Retail (%)</label>
-                      <input type="number" id="exp_retail_split" class="form-input" value="50" min="0" max="100" oninput="balanceSplit('retail')">
-                    </div>
-                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Deskripsi / Keterangan</label>
