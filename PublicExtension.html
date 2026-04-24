@@ -397,7 +397,7 @@
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            packages = res.packages.filter(p => p.type === 'Member');
+            packages = res.packages.filter(p => p.type && p.type.toUpperCase().includes('REGULAR'));
           }
         })
         .getPackages();
