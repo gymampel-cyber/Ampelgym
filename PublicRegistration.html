@@ -763,7 +763,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label"><i class="fas fa-camera" style="color:var(--primary)"></i> Foto Member <span style="color:#94a3b8;font-weight:400">(Opsional)</span></label>
+              <label class="form-label"><i class="fas fa-camera" style="color:var(--primary)"></i> Foto Member <span style="color:#ef4444">*</span></label>
               <div class="photo-upload-container" id="regPhotoContainer">
                 <div class="photo-preview">
                   <img id="regPhotoPreview"
@@ -1122,6 +1122,13 @@
       }
       if (!email || !validateEmail(email)) {
         showAlert('Format email tidak valid', 'warning');
+        return;
+      }
+
+      const photoBase64 = document.getElementById('regPhotoBase64').value;
+      if (!photoBase64) {
+        showAlert('❌ Foto Profil Wajib Diambil/Diunggah!', 'error');
+        document.getElementById('regPhotoContainer').style.borderColor = '#ef4444';
         return;
       }
 
