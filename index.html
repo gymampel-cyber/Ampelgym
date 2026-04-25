@@ -95,15 +95,35 @@ const google = {
       --glass-bg: rgba(255, 255, 255, 0.85);
       --glass-border: rgba(255, 255, 255, 0.5);
       --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.04);
-      --shadow-widget: 0 10px 30px rgba(0, 0, 0, 0.06);
+      --primary: #5856d6;
+      --primary-light: #f0efff;
+      --secondary: #ff9500;
+      --bg-light: #f2f2f7;
+      --bg-card: #ffffff;
+      --text-main: #1c1c1e;
+      --text-secondary: #8e8e93;
+      --sidebar-bg: rgba(28, 28, 30, 0.85);
+      --border-color: #e5e5ea;
+      --shadow-premium: 0 10px 30px rgba(0,0,0,0.05);
+      --glass-bg: rgba(255, 255, 255, 0.7);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    body.dark-mode {
+      --bg-light: #000000;
+      --bg-card: #1c1c1e;
+      --text-main: #ffffff;
+      --text-secondary: #aeaeb2;
+      --sidebar-bg: rgba(44, 44, 46, 0.9);
+      --border-color: #38383a;
+      --shadow-premium: 0 10px 30px rgba(0,0,0,0.4);
+      --glass-bg: rgba(28, 28, 30, 0.7);
+    }
+
     body { 
-      background: var(--bg-light); 
-      min-height: 100vh; 
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-      color: #1C1C1E;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-light); color: var(--text-main); margin: 0; padding: 0; 
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
       line-height: 1.5;
       overflow-x: hidden;
@@ -145,8 +165,8 @@ const google = {
     
     .sidebar-trigger { position: fixed; left: 0; top: 0; width: 15px; height: 100vh; z-index: 9998; cursor: pointer; }
     .hamburger-btn { 
-      display: none; width: 44px; height: 44px; border-radius: 12px; background: white; 
-      border: 1px solid #e2e8f0; color: #334155; align-items: center; justify-content: center; 
+      display: none; width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card); 
+      border: 1px solid var(--border-color); color: var(--text-main); align-items: center; justify-content: center; 
       font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
       margin-right: 15px;
     }
@@ -155,6 +175,18 @@ const google = {
     @media (max-width: 1024px) { 
       .hamburger-btn { display: flex; }
       .dashboard-grid-2-1 { grid-template-columns: 1fr; }
+    }
+    
+    .top-bar {
+      position: sticky; top: 0; z-index: 990;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: -32px; margin-left: -32px; margin-right: -32px;
     }
 
     .sidebar-overlay { 
@@ -585,21 +617,35 @@ const google = {
     /* ===== Tablet (≤1024px) — Improved POS & Sidebar ===== */
     @media (max-width:1024px) { 
       .pos-layout { 
-        grid-template-columns: 1fr 320px; 
+        grid-template-columns: 1fr 340px; 
         gap: 16px; 
-        height: calc(100vh - 120px); 
+        height: calc(100vh - 100px); 
       }
-      .pos-products { height: 100%; box-shadow: var(--shadow-premium); }
-      .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); padding: 12px; }
-      .pos-cart { height: 100%; box-shadow: var(--shadow-premium); }
+      .pos-products { height: 100%; box-shadow: var(--shadow-premium); border-radius: 20px; }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 12px; gap: 12px; }
+      .pos-cart { height: 100%; box-shadow: var(--shadow-premium); border-radius: 20px; }
       .cart-header { padding: 15px; }
-      .cart-items { padding: 8px; }
-      .cart-item { padding: 10px; border-radius: 12px; }
+      .cart-items { padding: 8px; flex: 1; }
+      .cart-item { padding: 10px; border-radius: 12px; margin-bottom: 8px; }
       .cart-footer { padding: 15px; }
       
-      .main-content { padding: 20px; width: 100%; }
+      .main-content { padding: 32px; width: 100%; }
       .sidebar { width: 280px; z-index: 10000; left: -280px; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
       .sidebar.active { left: 0; }
+    }
+
+    /* Small Tablet & Large Mobile (≤820px) */
+    @media (max-width:820px) {
+      .pos-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .pos-products { height: 60vh; min-height: 500px; }
+      .pos-cart { height: 60vh; min-height: 400px; }
+      .top-bar { padding: 12px 16px; }
     }
     /* ===== Mobile (≤768px) ===== */
     @media (max-width:768px) { 
@@ -638,12 +684,13 @@ const google = {
     .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: var(--primary); }
     .product-img { 
       width: 100%; 
-      height: 180px; 
+      height: 160px; 
       object-fit: contain; 
       background: #f9f9f9; 
-      padding: 10px;
+      padding: 12px;
       transition: 0.3s;
     }
+    body.dark-mode .product-img { background: #2c2c2e; }
     .product-card:hover .product-img { transform: scale(1.05); }
     .product-info { padding: 12px; }
     .product-name { font-size: 14px; font-weight: 600; color: #1c1c1e; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -919,24 +966,30 @@ const google = {
         </div>
       </nav>
       <div style="padding:16px;border-top:1px solid rgba(255,255,255,0.1)">
+        <div class="menu-item" onclick="toggleDarkMode()">
+          <i class="fas fa-moon"></i><span id="darkModeText">Dark Mode</span>
+        </div>
         <div class="menu-item" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i><span>Logout</span>
         </div>
       </div>
     </div>
     
-    <div class="main-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div class="top-bar">
         <div style="display:flex; align-items:center; gap:12px">
           <button class="hamburger-btn" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
           </button>
           <div>
-            <h1 id="pageTitle" style="font-size:26px;color:#0f172a;font-weight:700;margin:0">Dashboard</h1>
-            <p id="pageSubtitle" style="color:#64748b;margin-top:4px;font-size:13px;margin:0"></p>
+            <div style="display:flex; align-items:center; gap:8px">
+              <h1 id="pageTitle" style="font-size:18px;color:var(--text-main);font-weight:700;margin:0">Dashboard</h1>
+              <div id="liveIndicator" style="width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e; display:none" title="Live Sync Active"></div>
+            </div>
+            <p id="pageSubtitle" style="color:var(--text-secondary);margin-top:2px;font-size:11px;margin:0"></p>
           </div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:12px; align-items:center">
+          <div id="lastSyncTime" style="font-size:10px; color:var(--text-secondary); font-family:monospace"></div>
           <button class="btn btn-outline btn-sm" onclick="refreshPage()">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
@@ -7079,9 +7132,71 @@ const google = {
           overlay.style.opacity = '0';
         }
       }
+    function toggleDarkMode() {
+      const body = document.body;
+      const isDark = body.classList.toggle('dark-mode');
+      localStorage.setItem('gym_theme', isDark ? 'dark' : 'light');
+      updateThemeUI();
     }
 
-    window.onload = initApp;
+    function updateThemeUI() {
+      const isDark = document.body.classList.contains('dark-mode');
+      const text = document.getElementById('darkModeText');
+      if (text) text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+      const icon = document.querySelector('.menu-item[onclick="toggleDarkMode()"] i');
+      if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    // Load theme on startup
+    const savedTheme = localStorage.getItem('gym_theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+    }
+
+    window.onload = function() {
+      initApp();
+      updateThemeUI();
+      // Start real-time polling (every 30 seconds)
+      setInterval(syncRealtimeData, 30000);
+    };
+
+    function syncRealtimeData() {
+      if (!currentUser || currentView !== 'dashboard') return;
+      const indicator = document.getElementById('liveIndicator');
+      if (indicator) indicator.style.display = 'block';
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success) {
+            updateDashboardCounters(res.stats);
+            const timeEl = document.getElementById('lastSyncTime');
+            if (timeEl) timeEl.textContent = 'LIVE: ' + new Date().toLocaleTimeString('id-ID');
+          }
+        })
+        .getDashboardStats();
+    }
+
+    function updateDashboardCounters(stats) {
+      if (!stats) return;
+      // Gently update counters without full refresh
+      const map = {
+        'totalMembers': stats.total,
+        'activeMembers': stats.active,
+        'expiredMembers': stats.expired,
+        'expiringMembers': stats.expiring
+      };
+      for (const [id, val] of Object.entries(map)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      }
+      
+      // Update pending approvals badge
+      const badge = document.getElementById('approvalBadge');
+      if (badge && stats.pendingApprovals !== undefined) {
+        badge.textContent = stats.pendingApprovals;
+        badge.style.display = stats.pendingApprovals > 0 ? 'flex' : 'none';
+      }
+    }
   </script>
   
   <!-- ================ FUNGSI GLOBAL UNTUK FITUR BARU ================ -->
