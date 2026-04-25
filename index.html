@@ -90,68 +90,67 @@ const google = {
       --primary-dark: #3634A3;
       --accent: #FFCC00; /* iOS Yellow */
       --dark: #1C1C1E; /* iOS Dark Gray */
-      --sidebar-bg: rgba(28, 28, 30, 0.9);
-      --bg-light: #F2F2F7; /* iOS Light Gray Background */
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.4);
-      --shadow-premium: 0 8px 30px rgba(0, 0, 0, 0.04);
-      --shadow-hover: 0 15px 45px rgba(0, 0, 0, 0.08);
+      --sidebar-bg: rgba(28, 28, 30, 0.95);
+      --bg-light: #F2F2F7; /* iOS Background Gray */
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.04);
+      --shadow-widget: 0 10px 30px rgba(0, 0, 0, 0.06);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
     body { 
       background: var(--bg-light); 
       min-height: 100vh; 
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       color: #1C1C1E;
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      line-height: 1.5;
     }
 
-    /* Custom Subtle Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* Subtle macOS Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #C7C7CC; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #8E8E93; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 
-    /* Sidebar - Premium macOS Sidebar */
+    /* Layout & Sidebar */
+    .dashboard-layout { display: flex; min-height: 100vh; }
     .sidebar { 
-      width:240px; 
+      width: 240px; 
       background: var(--sidebar-bg); 
-      backdrop-filter: blur(25px) saturate(180%);
-      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
       color: white; 
       display: flex; 
       flex-direction: column; 
       flex-shrink: 0; 
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), margin-left 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), margin-left 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
       z-index: 1000; 
       border-right: 0.5px solid rgba(255, 255, 255, 0.1);
     }
     .sidebar.hidden-sidebar { margin-left: -240px; }
-    .sidebar-header { padding:32px 24px 16px; border-bottom: none; display: flex; justify-content: space-between; align-items: center; }
-    .sidebar-menu { flex:1; padding:12px; overflow-y:auto; }
-    .menu-item { display:flex; align-items:center; gap:12px; padding:10px 16px; color:rgba(255,255,255,0.6); border-radius:10px; margin-bottom:2px; cursor:pointer; transition:all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); font-size: 14px; font-weight: 500; }
-    .menu-item i { width: 20px; font-size: 16px; opacity: 0.8; }
-    .menu-item:hover { background:rgba(255,255,255,0.08); color:white; }
-    .menu-item.active { background:rgba(255,255,255,0.15); color:white; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+    .sidebar-header { padding: 40px 24px 20px; text-align: center; }
+    .sidebar-menu { flex: 1; padding: 12px; }
+    .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: rgba(255,255,255,0.6); border-radius: 12px; margin-bottom: 2px; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; }
+    .menu-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .menu-item.active { background: rgba(255,255,255,0.15); color: white; font-weight: 600; }
     
-    .main-content { flex:1; padding:32px; background:var(--bg-light); overflow-y:auto; min-width:0; transition: all 0.3s ease; }
+    .main-content { flex: 1; padding: 32px; background: var(--bg-light); overflow-y: auto; transition: all 0.3s; }
     
-    /* Widget-like Cards */
+    /* Modern iOS Widgets */
     .stat-card { 
       background: white; 
-      border-radius: 18px; 
+      border-radius: 20px; 
       padding: 24px; 
       box-shadow: var(--shadow-premium); 
-      border: 1px solid rgba(255, 255, 255, 1);
-      transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      border: 1px solid rgba(255,255,255,1);
+      transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
-    .stat-card-clickable:hover { 
-      transform: translateY(-4px) scale(1.01); 
-      box-shadow: var(--shadow-hover); 
-    }
-    .stat-card-clickable:active { transform: scale(0.98); }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-widget); }
+    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 16px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: #000; margin-bottom: 4px; }
+    .stat-label { color: #8E8E93; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Inputs & Buttons - Apple Style */
     .form-input { 
@@ -234,12 +233,20 @@ const google = {
     
     .scroll-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     
-    /* Tables */
-    .table-container { background:white; border-radius:12px; overflow-x:auto; box-shadow:0 2px 8px rgba(0,0,0,0.05); -webkit-overflow-scrolling: touch; }
-    .data-table { width:100%; border-collapse:collapse; }
-    .data-table th { background:#f1f5f9; padding:14px 16px; text-align:left; font-weight:600; color:#334155; font-size:13px; }
-    .data-table td { padding:14px 16px; border-bottom:1px solid #f1f5f9; font-size:14px; }
-    .data-table tr:hover td { background:#f8fafc; }
+    /* Tables & Lists - iOS Grouped Style */
+    .list-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-premium); border: 0.5px solid #E5E5EA; }
+    .list-item { display: flex; align-items: center; padding: 14px 20px; border-bottom: 0.5px solid #E5E5EA; transition: 0.2s; cursor: pointer; }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: #F2F2F7; }
+    .list-item-content { flex: 1; }
+    .list-item-title { font-size: 15px; font-weight: 600; color: #000; margin-bottom: 2px; }
+    .list-item-subtitle { font-size: 13px; color: #8E8E93; }
+    .list-item-action { font-size: 15px; font-weight: 700; color: var(--primary); }
+    
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: #F9F9F9; padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; border-bottom: 0.5px solid #E5E5EA; }
+    .data-table td { padding: 14px 20px; border-bottom: 0.5px solid #E5E5EA; font-size: 14px; color: #1C1C1E; }
+    .data-table tr:hover td { background: #F2F2F7; }
     
     /* Alerts - Diubah menjadi Card Style seperti check-in */
     .alert, .result-card { 
@@ -1730,39 +1737,37 @@ const google = {
     
     function renderTodayCheckins(list) {
       const el = document.getElementById('todayCheckins');
-      if (!el) {
-        console.error('Element todayCheckins tidak ditemukan');
-        return;
-      }
-      
-      console.log('Rendering checkins:', list);
+      if (!el) return;
       
       if (!list || list.length === 0) { 
         el.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-inbox fa-2x"></i><p style="margin-top:12px">Belum ada check-in hari ini</p></div>'; 
         return; 
       }
       
-      let tableHtml = '<div style="overflow-x:auto"><table class="data-table"><thead><tr>';
-      tableHtml += '<th>#</th><th>Nama</th><th>Member ID</th><th>Waktu</th><th>Status</th><th>Tipe</th>';
-      tableHtml += '</tr></thead><tbody>';
-      
-      list.forEach((c, i) => {
+      let html = '<div class="list-container">';
+      list.forEach((c) => {
         const statusClass = c.status === 'Aktif' ? 'success' : 'warning';
         const typeClass = c.type === 'VISIT' ? 'primary' : 'success';
         const typeText = c.type === 'VISIT' ? 'Visit' : 'Member';
         
-        tableHtml += `<tr>`;
-        tableHtml += `<td>${i+1}</td>`;
-        tableHtml += `<td><b>${escapeHtml(c.memberName || '-')}</b></td>`;
-        tableHtml += `<td><code>${escapeHtml(c.memberId || '-')}</code></td>`;
-        tableHtml += `<td>${formatDateTime(c.checkInTime)}</td>`;
-        tableHtml += `<td><span class="badge badge-${statusClass}">${escapeHtml(c.status || '-')}</span></td>`;
-        tableHtml += `<td><span class="badge badge-${typeClass}">${typeText}</span></td>`;
-        tableHtml += `</tr>`;
+        html += `
+          <div class="list-item">
+            <div class="list-item-content">
+              <div class="list-item-title">${escapeHtml(c.memberName || '-')}</div>
+              <div class="list-item-subtitle">
+                <span class="badge badge-${typeClass}" style="font-size:10px">${typeText}</span> • 
+                <code>${escapeHtml(c.memberId || '-')}</code> • 
+                ${formatDateTime(c.checkInTime)}
+              </div>
+            </div>
+            <div class="list-item-action">
+              <span class="badge badge-${statusClass}">${escapeHtml(c.status || '-')}</span>
+            </div>
+          </div>
+        `;
       });
-      
-      tableHtml += '</tbody></table></div>';
-      el.innerHTML = tableHtml;
+      html += '</div>';
+      el.innerHTML = html;
     }
     
     // ================ MEMBER REGISTRATION ================
@@ -7578,30 +7583,26 @@ const google = {
             }
             
             let html = `
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Waktu</th>
-                    <th>ID</th>
-                    <th>Pelanggan</th>
-                    <th>Total</th>
-                    <th>Metode</th>
-                    <th>Kasir</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${list.map(t => `
-                    <tr>
-                      <td><small>${new Date(t.Waktu).toLocaleString('id-ID', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</small></td>
-                      <td><code>${t['ID Transaksi']}</code></td>
-                      <td>${escapeHtml(t['Nama Pembeli'] || 'Guest')}</td>
-                      <td><b>${formatCurrency(t.Total)}</b></td>
-                      <td>${t['Metode Pembayaran']}</td>
-                      <td><small>${t.Kasir}</small></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+              <div class="list-container">
+                ${list.map(t => `
+                  <div class="list-item" onclick="showPOSReceiptDetail('${t['ID Transaksi']}')">
+                    <div class="list-item-content">
+                      <div class="list-item-title">${escapeHtml(t['Nama Pembeli'] || 'Pelanggan Guest')}</div>
+                      <div class="list-item-subtitle">
+                        <span class="badge badge-primary" style="font-size:10px">${t['ID Transaksi']}</span> • 
+                        ${new Date(t.Waktu).toLocaleString('id-ID', {day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit'})} • 
+                        <i class="fas fa-user-tie"></i> ${t.Kasir}
+                      </div>
+                    </div>
+                    <div class="list-item-action">
+                      <div style="text-align:right">
+                        ${formatCurrency(t.Total)}
+                        <div style="font-size:11px; color:#8E8E93; font-weight:normal">${t['Metode Pembayaran']}</div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
             `;
             container.innerHTML = html;
           } else {
