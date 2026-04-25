@@ -143,13 +143,18 @@ const google = {
     /* Auto-hide Sidebar Logic */
     .dashboard-layout { display: flex; min-height: 100vh; overflow: hidden; }
     
-    .sidebar-trigger {
-      position: fixed;
-      top: 0; left: 0;
-      width: 20px;
-      height: 100vh;
-      z-index: 1001;
-      cursor: pointer;
+    .sidebar-trigger { position: fixed; left: 0; top: 0; width: 15px; height: 100vh; z-index: 9998; cursor: pointer; }
+    .hamburger-btn { 
+      display: none; width: 44px; height: 44px; border-radius: 12px; background: white; 
+      border: 1px solid #e2e8f0; color: #334155; align-items: center; justify-content: center; 
+      font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-right: 15px;
+    }
+    .hamburger-btn:active { transform: scale(0.9); }
+    
+    @media (max-width: 1024px) { 
+      .hamburger-btn { display: flex; }
+      .dashboard-grid-2-1 { grid-template-columns: 1fr; }
     }
 
     .sidebar { 
@@ -570,38 +575,24 @@ const google = {
     @keyframes spin    { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
     @keyframes scan    { 0% { top:0; } 50% { top:100%; } 100% { top:0; } }
     
-    /* ===== Tablet (≤1024px) — POS stacked, sidebar overlay ===== */
+    /* ===== Tablet (≤1024px) — Improved POS & Sidebar ===== */
     @media (max-width:1024px) { 
       .pos-layout { 
-        grid-template-columns: 1fr; 
-        height: auto; 
-        display: flex;
-        flex-direction: column;
+        grid-template-columns: 1fr 320px; 
         gap: 16px; 
+        height: calc(100vh - 120px); 
       }
-      .pos-products { 
-        height: 52vh; 
-        min-height: 380px; 
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-      .product-grid { 
-        flex: 1;
-        overflow-y: auto;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-      }
-      .pos-cart { 
-        height: auto; 
-        min-height: 340px;
-        max-height: 60vh;
-        overflow-y: auto;
-      }
-      .cart-items {
-        max-height: 220px;
-        overflow-y: auto;
-      }
-      .pos-header { flex-direction: row; flex-wrap: wrap; }
+      .pos-products { height: 100%; box-shadow: var(--shadow-premium); }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); padding: 12px; }
+      .pos-cart { height: 100%; box-shadow: var(--shadow-premium); }
+      .cart-header { padding: 15px; }
+      .cart-items { padding: 8px; }
+      .cart-item { padding: 10px; border-radius: 12px; }
+      .cart-footer { padding: 15px; }
+      
+      .main-content { padding: 20px; width: 100%; }
+      .sidebar { width: 280px; z-index: 10000; left: -280px; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+      .sidebar.active { left: 0; }
     }
     /* ===== Mobile (≤768px) ===== */
     @media (max-width:768px) { 
@@ -638,7 +629,15 @@ const google = {
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 20px; overflow-y: auto; flex: 1; }
     .product-card { background: #fff; border-radius: 16px; border: 1px solid #f2f2f7; overflow: hidden; transition: 0.3s; cursor: pointer; position: relative; }
     .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: var(--primary); }
-    .product-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #f9f9f9; }
+    .product-img { 
+      width: 100%; 
+      height: 180px; 
+      object-fit: contain; 
+      background: #f9f9f9; 
+      padding: 10px;
+      transition: 0.3s;
+    }
+    .product-card:hover .product-img { transform: scale(1.05); }
     .product-info { padding: 12px; }
     .product-name { font-size: 14px; font-weight: 600; color: #1c1c1e; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .product-price { font-size: 15px; font-weight: 700; color: var(--primary); }
@@ -921,9 +920,14 @@ const google = {
     
     <div class="main-content">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
-        <div>
-          <h1 id="pageTitle" style="font-size:26px;color:#0f172a;font-weight:700">Dashboard</h1>
-          <p id="pageSubtitle" style="color:#64748b;margin-top:4px;font-size:13px"></p>
+        <div style="display:flex; align-items:center; gap:12px">
+          <button class="hamburger-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <h1 id="pageTitle" style="font-size:26px;color:#0f172a;font-weight:700;margin:0">Dashboard</h1>
+            <p id="pageSubtitle" style="color:#64748b;margin-top:4px;font-size:13px;margin:0"></p>
+          </div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-outline btn-sm" onclick="refreshPage()">
@@ -6877,10 +6881,7 @@ const google = {
         description: document.getElementById('exp_description').value,
         amount: Number(document.getElementById('exp_amount').value),
         paymentMethod: document.getElementById('exp_payment').value,
-        'Jenis': document.getElementById('exp_type').value,
-        'Gym Split (%)': document.getElementById('exp_gym_split').value,
-        'Retail Split (%)': document.getElementById('exp_retail_split').value,
-        'User': currentUser?.name || 'Admin'
+        User: currentUser?.fullName || currentUser?.name || 'Admin'
       };
 
       if (!payload.category || !payload.amount || !payload.description) {
@@ -7615,6 +7616,10 @@ const google = {
                 <td style="text-align:right">${formatCurrency(report.summary.netCash)}</td>
                 <td style="text-align:right">${formatCurrency(report.summary.netTransfer)}</td>
                 <td style="text-align:right">${formatCurrency(report.summary.totalRevenue - report.summary.totalExpenses)}</td>
+              </tr>
+              <tr class="total-row" style="background: var(--primary); color: white;">
+                <td colspan="3" style="text-align:right; font-weight:800; font-size:16px">SALDO AKHIR GABUNGAN (NET)</td>
+                <td style="text-align:right; font-weight:800; font-size:16px">${formatCurrency(report.summary.grandNet)}</td>
               </tr>
             </tbody>
           </table>
