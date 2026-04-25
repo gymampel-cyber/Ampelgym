@@ -85,19 +85,12 @@ const google = {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary: #5856D6;
-      --primary-light: #AF52DE;
-      --primary-dark: #3634A3;
-      --accent: #FFCC00;
-      --dark: #1C1C1E;
-      --sidebar-bg: rgba(28, 28, 30, 0.95);
-      --bg-light: #F2F2F7;
-      --glass-bg: rgba(255, 255, 255, 0.85);
-      --glass-border: rgba(255, 255, 255, 0.5);
-      --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.04);
       --primary: #5856d6;
       --primary-light: #f0efff;
+      --primary-dark: #3634A3;
       --secondary: #ff9500;
+      --accent: #FFCC00;
+      --dark: #1C1C1E;
       --bg-light: #f2f2f7;
       --bg-card: #ffffff;
       --text-main: #1c1c1e;
@@ -139,7 +132,7 @@ const google = {
     .auth-layout {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: #F2F2F7;
+      background: var(--bg-light);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -148,13 +141,13 @@ const google = {
       padding: 20px;
     }
     .auth-card {
-      background: white;
+      background: var(--bg-card);
       padding: 40px;
       border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-premium);
       width: 100%;
       max-width: 400px;
-      border: 1px solid rgba(255, 255, 255, 1);
+      border: 1px solid var(--border-color);
       animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
       margin: auto;
     }
@@ -975,6 +968,7 @@ const google = {
       </div>
     </div>
     
+    <div class="main-content">
       <div class="top-bar">
         <div style="display:flex; align-items:center; gap:12px">
           <button class="hamburger-btn" onclick="toggleSidebar()">
@@ -1349,7 +1343,13 @@ const google = {
     
     // ================ AUTH ================
     function initApp() {
-      renderLoginForm();
+      try {
+        console.log('Initializing App...');
+        renderLoginForm();
+        console.log('Login form rendered.');
+      } catch(e) {
+        console.error('Init error:', e);
+      }
     }
     
     function renderLoginForm() {
