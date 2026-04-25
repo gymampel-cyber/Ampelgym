@@ -85,134 +85,101 @@ const google = {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary: #5856D6;
-      --primary-light: #AF52DE;
-      --primary-dark: #3634A3;
-      --accent: #FFCC00;
-      --dark: #1C1C1E;
-      --sidebar-bg: rgba(28, 28, 30, 0.95);
-      --bg-light: #F2F2F7;
-      --glass-bg: rgba(255, 255, 255, 0.85);
-      --glass-border: rgba(255, 255, 255, 0.5);
-      --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.04);
-      --shadow-widget: 0 10px 30px rgba(0, 0, 0, 0.06);
+      --primary: #6b46c1; /* Purple */
+      --primary-dark: #553c9a;
+      --accent: #ecc94b; /* Yellow */
+      --dark: #1a202c; /* Blackish */
+      --sidebar-bg: #111827;
+      --bg-light: #f8fafc;
+      --gradient-purple: linear-gradient(135deg, #6b46c1, #805ad5);
+      --gradient-yellow: linear-gradient(135deg, #ecc94b, #f6e05e);
+      --gradient-dark: linear-gradient(135deg, #1f2937, #111827);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-    body { 
-      background: var(--bg-light); 
-      min-height: 100vh; 
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-      color: #1C1C1E;
-      -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-
-    /* Subtle macOS Scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-
-    /* Login Page Centering */
-    .auth-layout {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #F2F2F7 0%, #E5E5EA 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-    }
-    .auth-card {
-      background: white;
-      padding: 40px;
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid rgba(255, 255, 255, 1);
-      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .auth-header { text-align: center; margin-bottom: 32px; }
-
-    /* Auto-hide Sidebar Logic */
-    .dashboard-layout { display: flex; min-height: 100vh; overflow: hidden; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+    body { background:var(--bg-light); min-height:100vh; }
     
-    .sidebar-trigger {
-      position: fixed;
-      top: 0; left: 0;
-      width: 20px;
-      height: 100vh;
-      z-index: 1001;
-      cursor: pointer;
-    }
-
-    .sidebar { 
-      width: 240px; 
-      background: var(--sidebar-bg); 
-      backdrop-filter: blur(25px) saturate(180%);
-      -webkit-backdrop-filter: blur(25px) saturate(180%);
-      color: white; 
-      display: flex; 
-      flex-direction: column; 
-      position: fixed;
-      height: 100vh;
-      left: -240px; 
-      transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
-      z-index: 1000;
-      border-right: 0.5px solid rgba(255, 255, 255, 0.1);
-    }
+    /* Auth Layout */
+    .auth-layout { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; background:var(--gradient-dark); }
+    .auth-card { background:white; border-radius:16px; width:100%; max-width:400px; box-shadow:0 20px 40px rgba(0,0,0,0.2); overflow:hidden; }
+    .auth-header { background:var(--gradient-purple); color:white; padding:30px; text-align:center; }
+    .auth-form { padding:30px; }
     
-    .sidebar-trigger:hover + .sidebar,
-    .sidebar:hover {
-      left: 0;
-      box-shadow: 20px 0 60px rgba(0,0,0,0.3);
-    }
-
-    .main-content { 
-      flex: 1; 
-      padding: 32px; 
-      margin-left: 0;
-      background: var(--bg-light); 
-      overflow-y: auto; 
-      transition: margin-left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      min-width: 0;
-    }
+    /* Dashboard Layout */
+    .dashboard-layout { display:flex; min-height:100vh; }
+    .sidebar { width:260px; background:var(--sidebar-bg); color:white; display:flex; flex-direction:column; flex-shrink:0; }
+    .sidebar-header { padding:24px; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .sidebar-menu { flex:1; padding:16px; overflow-y:auto; }
+    .menu-item { display:flex; align-items:center; gap:12px; padding:12px 16px; color:rgba(255,255,255,0.8); border-radius:8px; margin-bottom:4px; cursor:pointer; transition:0.2s; user-select:none; }
+    .menu-item:hover { background:rgba(255,255,255,0.1); color:white; }
+    .menu-item.active { background:var(--gradient-purple); color:white; }
+    .main-content { flex:1; padding:24px; background:var(--bg-light); overflow-y:auto; min-width:0; }
     
-    .sidebar:hover ~ .main-content {
-      margin-left: 240px;
-    }
-
-    /* Widgets & Form Elements */
-    .stat-card { 
-      background: white; border-radius: 20px; padding: 24px; 
-      box-shadow: var(--shadow-premium); border: 1px solid rgba(255,255,255,1);
-      transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-    }
-    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-widget); }
-    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 16px; }
-    .stat-value { font-size: 26px; font-weight: 700; color: #000; margin-bottom: 4px; }
-    .stat-label { color: #8E8E93; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .form-input { 
-      width:100%; padding:12px 14px; border: 1px solid #C7C7CC; border-radius: 10px; 
-      font-size: 15px; transition: all 0.2s ease; background: rgba(255, 255, 255, 0.8); color: #1C1C1E; 
-    }
-    .form-input:focus { outline:none; border-color:var(--primary); background:white; box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.15); }
+    /* Utility */
+    .hidden { display:none !important; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; margin-bottom:30px; }
+    .stat-card { background:white; border-radius:12px; padding:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border-top:4px solid var(--primary); }
+    .stat-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; background:var(--gradient-purple); }
+    .stat-value { font-size:28px; font-weight:700; margin-bottom:8px; }
+    .stat-label { color:#64748b; font-size:14px; }
+    .stat-card-clickable { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card-clickable:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .stat-card-clickable:active { transform: translateY(0); }
     
-    .btn { 
-      padding:12px 24px; border:none; border-radius:10px; font-size:14px; font-weight:600; 
-      cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; 
-      transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); text-decoration:none; 
+    .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 1rem; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+    .table th { background: #f8fafc; font-weight: 600; color: #475569; position: sticky; top: 0; }
+    .table tr:hover { background: #f1f5f9; }
+    .form-card { background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:24px; }
+    .form-card-header { background:var(--gradient-dark); color:white; padding:20px; border-radius:12px 12px 0 0; }
+    .form-card-body { padding:24px; }
+    .form-group { margin-bottom:20px; }
+    .form-label { display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:#334155; }
+    .form-input { width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-size:15px; transition:0.2s; background:white; }
+    .form-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(107,70,193,0.1); }
+    .form-input[readonly] { background:#f8fafc; color:#475569; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    
+    /* Buttons */
+    .btn { padding:12px 24px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:0.2s; text-decoration:none; }
+    .btn:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn:active { transform:translateY(0); }
+    .btn-sm { padding:7px 14px; font-size:13px; border-radius:6px; }
+    .btn-primary   { background:var(--gradient-purple); color:white; }
+    .btn-success   { background:linear-gradient(135deg,#22c55e,#16a34a); color:white; }
+    .btn-danger    { background:linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+    .btn-warning   { background:var(--gradient-yellow); color:var(--dark); }
+    .btn-info      { background:linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+    .btn-secondary { background:linear-gradient(135deg,#64748b,#475569); color:white; }
+    .btn-outline   { background:transparent; border:2px solid var(--primary); color:var(--primary); }
+    .btn-outline:hover { background:var(--primary); color:white; }
+    .btn-block { width:100%; }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 1024px) {
+      .sidebar { width: 80px; }
+      .sidebar .menu-text, .sidebar .sidebar-header h2 { display: none; }
+      .sidebar-header { padding: 16px; justify-content: center; }
+      .menu-item { justify-content: center; padding: 12px; }
+      .menu-item i { font-size: 20px; }
     }
-    .btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
-    .btn:active { transform: scale(0.97); }
-    .btn-primary   { background: var(--primary); color:white; }
-    .btn-success   { background: #34C759; color:white; }
-    .btn-danger    { background: #FF3B30; color:white; }
-    .btn-secondary { background: #8E8E93; color:white; }
+
+    @media (max-width: 768px) {
+      .dashboard-layout { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; padding: 12px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+      .sidebar-header { display: none; }
+      .sidebar-menu { display: flex; padding: 0; gap: 10px; width: 100%; }
+      .menu-item { margin-bottom: 0; white-space: nowrap; padding: 10px 16px; min-width: 120px; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 8px; }
+      .menu-item span { font-size: 13px; }
+      .main-content { padding: 16px; }
+      .form-row { grid-template-columns: 1fr !important; }
+      .stats-grid { grid-template-columns: 1fr !important; }
+      .dashboard-header-flex { flex-direction: column; align-items: flex-start; }
+    }
+
     /* Dashboard Enhanced */
     .dashboard-header-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
     .dashboard-section-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
@@ -225,20 +192,12 @@ const google = {
     
     .scroll-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     
-    /* Tables & Lists - iOS Grouped Style */
-    .list-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-premium); border: 0.5px solid #E5E5EA; }
-    .list-item { display: flex; align-items: center; padding: 14px 20px; border-bottom: 0.5px solid #E5E5EA; transition: 0.2s; cursor: pointer; }
-    .list-item:last-child { border-bottom: none; }
-    .list-item:hover { background: #F2F2F7; }
-    .list-item-content { flex: 1; }
-    .list-item-title { font-size: 15px; font-weight: 600; color: #000; margin-bottom: 2px; }
-    .list-item-subtitle { font-size: 13px; color: #8E8E93; }
-    .list-item-action { font-size: 15px; font-weight: 700; color: var(--primary); }
-    
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { background: #F9F9F9; padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; border-bottom: 0.5px solid #E5E5EA; }
-    .data-table td { padding: 14px 20px; border-bottom: 0.5px solid #E5E5EA; font-size: 14px; color: #1C1C1E; }
-    .data-table tr:hover td { background: #F2F2F7; }
+    /* Tables */
+    .table-container { background:white; border-radius:12px; overflow-x:auto; box-shadow:0 2px 8px rgba(0,0,0,0.05); -webkit-overflow-scrolling: touch; }
+    .data-table { width:100%; border-collapse:collapse; }
+    .data-table th { background:#f1f5f9; padding:14px 16px; text-align:left; font-weight:600; color:#334155; font-size:13px; }
+    .data-table td { padding:14px 16px; border-bottom:1px solid #f1f5f9; font-size:14px; }
+    .data-table tr:hover td { background:#f8fafc; }
     
     /* Alerts - Diubah menjadi Card Style seperti check-in */
     .alert, .result-card { 
@@ -439,124 +398,53 @@ const google = {
     @keyframes spin    { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
     @keyframes scan    { 0% { top:0; } 50% { top:100%; } 100% { top:0; } }
     
-    /* ===== Tablet (≤1024px) — POS stacked, sidebar overlay ===== */
     @media (max-width:1024px) { 
-      .pos-layout { 
-        grid-template-columns: 1fr; 
-        height: auto; 
-        display: flex;
-        flex-direction: column;
-        gap: 16px; 
-      }
-      .pos-products { 
-        height: 52vh; 
-        min-height: 380px; 
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-      .product-grid { 
-        flex: 1;
-        overflow-y: auto;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-      }
-      .pos-cart { 
-        height: auto; 
-        min-height: 340px;
-        max-height: 60vh;
-        overflow-y: auto;
-      }
-      .cart-items {
-        max-height: 220px;
-        overflow-y: auto;
-      }
-      .pos-header { flex-direction: row; flex-wrap: wrap; }
+      .pos-layout { grid-template-columns: 1fr; height: auto; display: block; }
+      .pos-products { height: auto; max-height: 500px; margin-bottom: 20px; }
+      .pos-cart { height: auto; max-height: none; }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+      .pos-header { flex-direction: column; }
     }
-    /* ===== Mobile (≤768px) ===== */
     @media (max-width:768px) { 
+      .dashboard-layout{flex-direction:column} 
+      .sidebar{width:100%} 
       .form-row{grid-template-columns:1fr !important} 
       .stats-grid{grid-template-columns:repeat(2,1fr) !important} 
-      .modal-container { width: 96%; max-width: 100%; }
+      .modal-container { width: 95%; max-width: 100%; }
       .data-table { font-size: 12px; }
-      .data-table th, .data-table td { padding: 8px 6px; }
-      .pos-products { height: 45vh; min-height: 320px; }
-      .pos-cart { max-height: none; }
-      .cart-items { max-height: 200px; }
+      .data-table th, .data-table td { padding: 10px 8px; }
     }
-    /* ===== Small Mobile (≤480px) ===== */
     @media (max-width:480px) { 
       .stats-grid{grid-template-columns:1fr !important} 
       .admin-photo-upload { flex-direction: column; text-align: center; }
       .admin-photo-btns { justify-content: center; width: 100%; }
+      .btn { width: 100%; margin-bottom: 8px; }
       .pos-categories { padding-bottom: 12px; }
-      .product-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     /* POS Styles */
-    /* POS Premium Styles */
-    /* POS Layout - Apple Store Style */
-    /* POS Stability Fix - Preventing Flickering */
-    .pos-layout { 
-      display: grid; 
-      grid-template-columns: 1fr 380px; 
-      gap: 32px; 
-      height: calc(100vh - 80px); 
-      overflow: hidden;
-      contain: layout paint; 
-    }
-    .pos-products { 
-      background: rgba(255, 255, 255, 0.4); 
-      border-radius: 24px; 
-      display: flex; 
-      flex-direction: column; 
-      overflow: hidden; 
-      min-height: 500px;
-    }
-    .pos-cart { 
-      background: white; 
-      border-radius: 24px; 
-      display: flex; 
-      flex-direction: column; 
-      overflow: hidden; 
-      box-shadow: var(--shadow-premium); 
-      border: 1px solid rgba(255, 255, 255, 1);
-    }
-    .product-grid { 
-      flex: 1; 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-      gap: 20px; 
-      overflow-y: auto; 
-      padding: 10px;
-      backface-visibility: hidden;
-      transform: translateZ(0);
-      will-change: transform;
-    }
-    .product-card { 
-      background: white;
-      border-radius: 16px; 
-      overflow: hidden; 
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    }
-    .product-card:hover { 
-      transform: translateY(-5px); 
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08); 
-    }
-    .product-image { 
-      height: 140px; 
-      background: #F2F2F7; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
-    .product-info { padding: 16px; }
-    .product-name { font-size: 15px; font-weight: 600; color: #1C1C1E; margin-bottom: 6px; }
-    .product-price { color: var(--primary); font-weight: 700; font-size: 16px; }
+    .pos-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 120px); }
+    .pos-products { background: white; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .pos-cart { background: white; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
-    .cart-header { padding: 24px; background: white; border-bottom: 0.5px solid #E5E5EA; }
+    .pos-header { display: flex; gap: 12px; margin-bottom: 20px; flex-shrink: 0; }
+    .pos-categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; flex-shrink: 0; }
+    .category-pill { padding: 8px 16px; background: #f1f5f9; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .category-pill.active { background: #667eea; color: white; }
+    
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; overflow-y: auto; padding-right: 4px; }
+    .product-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; cursor: pointer; transition: 0.2s; position: relative; }
+    .product-card:hover { border-color: #667eea; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .product-image { height: 120px; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .product-info { padding: 12px; }
+    .product-name { font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-price { color: #667eea; font-weight: 700; font-size: 15px; }
+    .product-stock { font-size: 11px; color: #64748b; margin-top: 4px; }
+    
+    .cart-header { padding: 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
     .cart-items { flex: 1; overflow-y: auto; padding: 20px; }
-    .cart-item { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; background: #F2F2F7; padding: 12px; border-radius: 14px; }
+    .cart-item { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
     .cart-item-info { flex: 1; }
     .cart-item-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
     .cart-item-price { font-size: 12px; color: #64748b; }
@@ -756,14 +644,7 @@ const google = {
   
   <!-- Dashboard View -->
   <div id="dashboardView" class="dashboard-layout" style="display:none">
-    
-    <!-- Sidebar Overlay -->
-    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
-    
-    <!-- Sidebar Trigger for Auto-hide -->
-    <div class="sidebar-trigger"></div>
-    
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar">
       <div class="sidebar-header">
         <div style="display:flex;align-items:center;gap:12px">
           <img src="https://i.imgur.com/TPoUeRJ.jpeg" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
@@ -772,9 +653,6 @@ const google = {
             <span id="userRole" style="font-size:11px;opacity:0.8;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:12px">-</span>
           </div>
         </div>
-        <button class="btn-close-sidebar" onclick="toggleSidebar()">
-          <i class="fas fa-times"></i>
-        </button>
       </div>
       <nav class="sidebar-menu">
         <div class="menu-item active" data-view="dashboard" onclick="showView('dashboard')">
@@ -971,6 +849,7 @@ const google = {
                `--------------------------------\n` +
                `*Rincian Pembayaran*\n` +
                `Harga Paket: ${formatCurrency(data.price)}\n` +
+               `Biaya Reg: ${formatCurrency(data.regFee)}\n` +
                `Total: ${formatCurrency(data.total)}\n` +
                `Metode: ${data.payment}\n` +
                `--------------------------------\n` +
@@ -1017,8 +896,11 @@ const google = {
       return text;
     }
 
-    // printReceipt removed
-    /*
+    function printReceipt(type, data) {
+      const now = formatDateTime(new Date());
+      let content = '';
+      if (type === 'registration') {
+        content = `
           <div style="text-align:center;margin-bottom:10px">
             <h2 style="margin:0">AMPEL GYM</h2>
             <p style="margin:2px 0;font-size:12px">Jln. K.H.M. Mansyur No. 88 Surabaya</p>
@@ -1115,7 +997,8 @@ const google = {
           </body>
         </html>
       `);
-    */
+      printWindow.document.close();
+    }
     
     function showToast(msg, type = 'info', duration = 3500) {
       const icons = { 
@@ -1329,6 +1212,7 @@ const google = {
               <input type="date" id="dash_end_date" class="filter-input" style="border:none; background:transparent">
             </div>
             <button class="btn btn-primary btn-sm" onclick="refreshDashboard()"><i class="fas fa-sync-alt"></i> Update</button>
+            <button class="btn btn-outline btn-sm" onclick="printDashboard()"><i class="fas fa-print"></i> Cetak</button>
             <button class="btn btn-success btn-sm" onclick="showDailyReportModal()">
               <i class="fas fa-file-invoice"></i> Laporan Harian
             </button>
@@ -1600,9 +1484,10 @@ const google = {
         .getDashboardStats(start, end);
     }
 
-    // printDashboard removed
-    /*
     function printDashboard() {
+      const start = document.getElementById('dash_start_date')?.value;
+      const end = document.getElementById('dash_end_date')?.value;
+      const period = (start && end) ? `${formatDate(start)} - ${formatDate(end)}` : 'Realtime / Bulan Ini';
       
       // Get values from DOM for Recapitulation
       const totalMembers = document.getElementById('statTotal')?.textContent || '0';
@@ -1726,41 +1611,43 @@ const google = {
         printTitle.remove();
         style.remove();
       }, 1000);
-    */
+    }
     
     function renderTodayCheckins(list) {
       const el = document.getElementById('todayCheckins');
-      if (!el) return;
+      if (!el) {
+        console.error('Element todayCheckins tidak ditemukan');
+        return;
+      }
+      
+      console.log('Rendering checkins:', list);
       
       if (!list || list.length === 0) { 
         el.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-inbox fa-2x"></i><p style="margin-top:12px">Belum ada check-in hari ini</p></div>'; 
         return; 
       }
       
-      let html = '<div class="list-container">';
-      list.forEach((c) => {
+      let tableHtml = '<div style="overflow-x:auto"><table class="data-table"><thead><tr>';
+      tableHtml += '<th>#</th><th>Nama</th><th>Member ID</th><th>Waktu</th><th>Status</th><th>Tipe</th>';
+      tableHtml += '</tr></thead><tbody>';
+      
+      list.forEach((c, i) => {
         const statusClass = c.status === 'Aktif' ? 'success' : 'warning';
         const typeClass = c.type === 'VISIT' ? 'primary' : 'success';
         const typeText = c.type === 'VISIT' ? 'Visit' : 'Member';
         
-        html += `
-          <div class="list-item">
-            <div class="list-item-content">
-              <div class="list-item-title">${escapeHtml(c.memberName || '-')}</div>
-              <div class="list-item-subtitle">
-                <span class="badge badge-${typeClass}" style="font-size:10px">${typeText}</span> • 
-                <code>${escapeHtml(c.memberId || '-')}</code> • 
-                ${formatDateTime(c.checkInTime)}
-              </div>
-            </div>
-            <div class="list-item-action">
-              <span class="badge badge-${statusClass}">${escapeHtml(c.status || '-')}</span>
-            </div>
-          </div>
-        `;
+        tableHtml += `<tr>`;
+        tableHtml += `<td>${i+1}</td>`;
+        tableHtml += `<td><b>${escapeHtml(c.memberName || '-')}</b></td>`;
+        tableHtml += `<td><code>${escapeHtml(c.memberId || '-')}</code></td>`;
+        tableHtml += `<td>${formatDateTime(c.checkInTime)}</td>`;
+        tableHtml += `<td><span class="badge badge-${statusClass}">${escapeHtml(c.status || '-')}</span></td>`;
+        tableHtml += `<td><span class="badge badge-${typeClass}">${typeText}</span></td>`;
+        tableHtml += `</tr>`;
       });
-      html += '</div>';
-      el.innerHTML = html;
+      
+      tableHtml += '</tbody></table></div>';
+      el.innerHTML = tableHtml;
     }
     
     // ================ MEMBER REGISTRATION ================
@@ -2269,6 +2156,12 @@ const google = {
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn btn-info btn-sm" onclick="const txt = generateReceiptText('registration', { memberId:'${res.memberId}', name:'${res.memberName || name}', package:'${res.currentPackage || pkg.name}', expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', price:${res.packagePrice || pkg.price}, regFee:${res.registrationFee || 0}, total:${res.totalAmount || totalAmount}, payment:'${res.paymentMethod || pay}', qr:'${res.qrCodeUrl || ''}' }); shareToWhatsApp('${res.memberPhone || phone}', txt)">
                       <i class="fab fa-whatsapp"></i> Kirim WA
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="printReceipt('registration', { memberId:'${res.memberId}', name:'${res.memberName || name}', package:'${res.currentPackage || pkg.name}', expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', price:${res.packagePrice || pkg.price}, regFee:${res.registrationFee || 0}, total:${res.totalAmount || totalAmount}, payment:'${res.paymentMethod || pay}', qr:'${res.qrCodeUrl || ''}' })">
+                      <i class="fas fa-print"></i> Cetak Resi
+                    </button>
+                    <button class="btn btn-success btn-sm" onclick="printMemberCard('${res.memberId}')">
+                      <i class="fas fa-id-card"></i> Cetak Kartu
                     </button>
                     <button class="btn btn-primary btn-sm" onclick="clearMemberForm()">
                       <i class="fas fa-user-plus"></i> Selesai
@@ -2959,6 +2852,9 @@ const google = {
                     <button class="btn btn-info btn-sm" onclick="const txt = generateReceiptText('extension', { memberId:'${r.memberId || selectedMember.memberId}', name:'${r.memberName || selectedMember.fullName}', package:'${r.packageName || pkgName}', expiry:'${r.newExpiry}', receipt:'${r.number}', total:${r.total || price}, payment:'${payEl.value}' }); shareToWhatsApp('${selectedMember.phone}', txt)">
                       <i class="fab fa-whatsapp"></i> Kirim WA
                     </button>
+                    <button class="btn btn-outline btn-sm" onclick="printReceipt('extension', { memberId:'${r.memberId || selectedMember.memberId}', name:'${r.memberName || selectedMember.fullName}', package:'${r.packageName || pkgName}', expiry:'${r.newExpiry}', receipt:'${r.number}', total:${r.total || price}, payment:'${payEl.value}' })">
+                      <i class="fas fa-print"></i> Cetak Resi
+                    </button>
                     <button class="btn btn-primary btn-sm" onclick="clearTrxForm()">
                       <i class="fas fa-plus"></i> Selesai
                     </button>
@@ -3419,8 +3315,14 @@ const google = {
                 if (waOk) {
                   sendPOSReceiptToWA(res.trxId, payload);
                 }
-                // Reset POS
-                resetPOS();
+                
+                showConfirm('Cetak Struk Fisik?', (printOk) => {
+                  if (printOk) {
+                    printPOSReceipt(res.trxId, payload);
+                  }
+                  // Reset POS
+                  resetPOS();
+                });
               });
               
             } else {
@@ -3475,8 +3377,72 @@ const google = {
         })
         .generatePOSReceiptPDF(trxId);
     }
-    // printPOSReceipt function removed.
-    
+    function printPOSReceipt(trxId, data) {
+      const now = formatDateTime(new Date());
+      let itemsHtml = data.items.map(item => `
+        <tr>
+          <td colspan="2" style="padding-top:8px">${item.name}</td>
+        </tr>
+        <tr>
+          <td style="color:#666">${item.qty} x ${formatCurrency(item.price)}</td>
+          <td style="text-align:right">${formatCurrency(item.price * item.qty)}</td>
+        </tr>
+      `).join('');
+      
+      const discount = (data.subtotal * data.discount) / 100;
+      
+      const content = `
+        <div style="text-align:center;margin-bottom:10px">
+          <h2 style="margin:0">AMPEL GYM</h2>
+          <p style="margin:2px 0;font-size:12px">Jln. K.H.M. Mansyur No. 88 Surabaya</p>
+          <p style="margin:2px 0;font-size:12px">HP: 087795175243</p>
+          <p style="margin:5px 0">Point of Sale Receipt</p>
+        </div>
+        <hr>
+        <div style="font-size:12px;margin-bottom:10px">
+          Trx ID: ${trxId}<br>
+          Waktu: ${now}<br>
+          Kasir: ${data.cashier}<br>
+          Pelanggan: ${data.customerName}
+        </div>
+        <hr>
+        <table style="width:100%;font-size:13px">
+          ${itemsHtml}
+        </table>
+        <hr>
+        <table style="width:100%;font-size:14px">
+          <tr><td>Subtotal</td><td style="text-align:right">${formatCurrency(data.subtotal)}</td></tr>
+          ${data.discount > 0 ? `<tr><td>Diskon (${data.discount}%)</td><td style="text-align:right">-${formatCurrency(discount)}</td></tr>` : ''}
+          <tr style="font-weight:bold;font-size:16px">
+            <td style="padding-top:8px">TOTAL</td>
+            <td style="text-align:right;padding-top:8px">${formatCurrency(data.total)}</td>
+          </tr>
+          <tr><td>Metode</td><td style="text-align:right">${data.paymentMethod}</td></tr>
+        </table>
+      `;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>POS Receipt</title>
+            <style>
+              body { font-family: monospace; padding: 10px; width: 280px; margin: auto; }
+              hr { border: none; border-top: 1px dashed #000; margin: 10px 0; }
+              table { width: 100%; border-collapse: collapse; }
+            </style>
+          </head>
+          <body onload="window.print();window.close();">
+            ${content}
+            <div style="text-align:center;margin-top:20px;font-size:10px">
+              <p>Terima Kasih</p>
+              <p>AMPEL GYM MANAGEMENT</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
 
     function startBarcodeScannerForPOS() {
       const modal = document.createElement('div');
@@ -5107,9 +5073,6 @@ const google = {
             `;
             loadTodayCheckins();
             showToast('Visit harian berhasil dicatat', 'success');
-            document.getElementById('visit_name').value = '';
-            document.getElementById('visit_phone').value = '';
-            document.getElementById('visit_search').value = '';
           } else {
             showToast('Gagal: ' + (res.message || 'Error tidak diketahui'), 'error');
           }
@@ -5686,6 +5649,9 @@ const google = {
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
                     <button class="btn btn-info btn-sm" onclick="const txt = generateReceiptText('pt', { name:'${ptSelectedMember.fullName}', trainer:'${trainer}', sessions:${sessions}, expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', total:${res.totalAmount || total}, payment:'${payment}' }); shareToWhatsApp('${ptSelectedMember.phone}', txt)">
                       <i class="fab fa-whatsapp"></i> Kirim WA
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="printReceipt('pt', { name:'${ptSelectedMember.fullName}', trainer:'${trainer}', sessions:${sessions}, expiry:'${res.expiryDate}', receipt:'${res.receiptNumber}', total:${res.totalAmount || total}, payment:'${payment}' })">
+                      <i class="fas fa-print"></i> Cetak Resi
                     </button>
                     <button class="btn btn-primary btn-sm" onclick="showView('pt')">
                       <i class="fas fa-plus"></i> Selesai
@@ -6955,18 +6921,6 @@ const google = {
       document.getElementById('detailModal').style.display = 'none';
     }
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      if (window.innerWidth <= 1024) {
-        const isOpen = sidebar.classList.toggle('active');
-        if (overlay) overlay.style.display = isOpen ? 'block' : 'none';
-      } else {
-        sidebar.classList.toggle('hidden-sidebar');
-        if (overlay) overlay.style.display = 'none';
-      }
-    }
-
     window.onload = initApp;
   </script>
   
@@ -7371,34 +7325,17 @@ const google = {
         </div>
 
         <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:24px">
-          <!-- Total Revenue Box -->
           <div class="stat-card" style="padding:15px; border-top-color:#6b46c1">
-            <div class="stat-label" style="font-size:11px; margin-bottom:4px">TOTAL REVENUE</div>
+            <div class="stat-label" style="font-size:11px">TOTAL REVENUE</div>
             <div class="stat-value" style="font-size:18px; color:#6b46c1">${formatCurrency(report.summary.totalRevenue)}</div>
-            <div style="font-size:11px; color:#64748b; margin-top:8px; display:flex; justify-content:space-between">
-              <span>Cash: <b style="color:#1e293b">${formatCurrency(report.summary.cashIn || 0)}</b></span>
-              <span>Trf: <b style="color:#1e293b">${formatCurrency(report.summary.transferIn || 0)}</b></span>
-            </div>
           </div>
-          
-          <!-- Total Expenses Box -->
           <div class="stat-card" style="padding:15px; border-top-color:#ef4444">
-            <div class="stat-label" style="font-size:11px; margin-bottom:4px">TOTAL PENGELUARAN</div>
+            <div class="stat-label" style="font-size:11px">TOTAL PENGELUARAN</div>
             <div class="stat-value" style="font-size:18px; color:#ef4444">${formatCurrency(report.summary.totalExpenses)}</div>
-            <div style="font-size:11px; color:#64748b; margin-top:8px; display:flex; justify-content:space-between">
-              <span>Cash: <b style="color:#1e293b">${formatCurrency(report.summary.cashOut || 0)}</b></span>
-              <span>Trf: <b style="color:#1e293b">${formatCurrency(report.summary.transferOut || 0)}</b></span>
-            </div>
           </div>
-
-          <!-- Net Cash Box -->
           <div class="stat-card" style="padding:15px; border-top-color:#22c55e">
-            <div class="stat-label" style="font-size:11px; margin-bottom:4px">KAS KOMBINASI (NET)</div>
-            <div class="stat-value" style="font-size:18px; color:#22c55e">${formatCurrency((report.summary.totalRevenue || 0) - (report.summary.totalExpenses || 0))}</div>
-            <div style="font-size:11px; color:#64748b; margin-top:8px; display:flex; justify-content:space-between">
-              <span>Cash: <b style="color:#1e293b">${formatCurrency(report.summary.netCash || 0)}</b></span>
-              <span>Trf: <b style="color:#1e293b">${formatCurrency(report.summary.netTransfer || 0)}</b></span>
-            </div>
+            <div class="stat-label" style="font-size:11px">NET CASH ON HAND</div>
+            <div class="stat-value" style="font-size:18px; color:#22c55e">${formatCurrency(report.summary.netCash)}</div>
           </div>
         </div>
 
@@ -7482,14 +7419,8 @@ const google = {
                          `--------------------------------\n` +
                          `*Ringkasan Keuangan:*\n` +
                          `- Total Revenue: ${formatCurrency(summary.totalRevenue)}\n` +
-                         `  • Cash: ${formatCurrency(summary.cashIn || 0)}\n` +
-                         `  • Trf: ${formatCurrency(summary.transferIn || 0)}\n` +
                          `- Total Expenses: ${formatCurrency(summary.totalExpenses)}\n` +
-                         `  • Cash: ${formatCurrency(summary.cashOut || 0)}\n` +
-                         `  • Trf: ${formatCurrency(summary.transferOut || 0)}\n` +
-                         `- Kas Kombinasi (Net): ${formatCurrency((summary.totalRevenue || 0) - (summary.totalExpenses || 0))}\n` +
-                         `  • Cash Net: ${formatCurrency(summary.netCash || 0)}\n` +
-                         `  • Trf Net: ${formatCurrency(summary.netTransfer || 0)}\n` +
+                         `- Net Cash On Hand: ${formatCurrency(summary.netCash)}\n` +
                          `--------------------------------\n` +
                          `Detail Lengkap (PDF):\n` +
                          `${res.url}\n\n` +
@@ -7576,26 +7507,30 @@ const google = {
             }
             
             let html = `
-              <div class="list-container">
-                ${list.map(t => `
-                  <div class="list-item" onclick="showPOSReceiptDetail('${t['ID Transaksi']}')">
-                    <div class="list-item-content">
-                      <div class="list-item-title">${escapeHtml(t['Nama Pembeli'] || 'Pelanggan Guest')}</div>
-                      <div class="list-item-subtitle">
-                        <span class="badge badge-primary" style="font-size:10px">${t['ID Transaksi']}</span> • 
-                        ${new Date(t.Waktu).toLocaleString('id-ID', {day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit'})} • 
-                        <i class="fas fa-user-tie"></i> ${t.Kasir}
-                      </div>
-                    </div>
-                    <div class="list-item-action">
-                      <div style="text-align:right">
-                        ${formatCurrency(t.Total)}
-                        <div style="font-size:11px; color:#8E8E93; font-weight:normal">${t['Metode Pembayaran']}</div>
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>ID</th>
+                    <th>Pelanggan</th>
+                    <th>Total</th>
+                    <th>Metode</th>
+                    <th>Kasir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${list.map(t => `
+                    <tr>
+                      <td><small>${new Date(t.Waktu).toLocaleString('id-ID', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</small></td>
+                      <td><code>${t['ID Transaksi']}</code></td>
+                      <td>${escapeHtml(t['Nama Pembeli'] || 'Guest')}</td>
+                      <td><b>${formatCurrency(t.Total)}</b></td>
+                      <td>${t['Metode Pembayaran']}</td>
+                      <td><small>${t.Kasir}</small></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
             `;
             container.innerHTML = html;
           } else {
