@@ -248,6 +248,48 @@ const google = {
     }
     .btn-close-sidebar {
       background: rgba(255,255,255,0.1);
+      border: none; color: white; width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* Navigation Helper Button (Mobile/Tablet) */
+    .btn-nav-helper {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 8px 25px rgba(107, 70, 193, 0.5);
+      z-index: 9999;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: pulseBtn 2s infinite;
+    }
+    .btn-nav-helper:active { transform: scale(0.9) translateY(5px); }
+    .btn-nav-helper i { transition: transform 0.3s; }
+    .btn-nav-helper:hover i { transform: rotate(90deg); }
+
+    @keyframes pulseBtn {
+      0% { box-shadow: 0 0 0 0 rgba(107, 70, 193, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(107, 70, 193, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(107, 70, 193, 0); }
+    }
+
+    @media (max-width: 1024px) {
+      .btn-nav-helper { display: flex; }
+    }
+    
+    @media (max-width: 768px) {
+      .btn-nav-helper { bottom: 20px; left: 20px; width: 50px; height: 50px; font-size: 20px; }
+    }
       border: none;
       color: white;
       width: 32px;
@@ -962,6 +1004,11 @@ const google = {
     <!-- Sidebar Overlay -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     
+    <!-- Floating Nav Help Button (For Tablet/Mobile) -->
+    <button class="btn-nav-helper" onclick="toggleSidebar()" title="Tampilkan Menu Navigasi">
+      <i class="fas fa-bars"></i>
+    </button>
+    
     <!-- Sidebar Trigger for Auto-hide -->
     <div class="sidebar-trigger"></div>
     
@@ -1439,8 +1486,81 @@ const google = {
           <button class="btn btn-outline btn-block" onclick="window.open('PublicRegistration.html', '_blank')">
           <i class="fas fa-user-plus"></i> Registrasi Online
           </button>
+          <div style="margin-top:12px; text-align:center">
+            <a href="javascript:void(0)" onclick="renderMemberCheckForm()" style="font-size:13px; color:var(--primary); font-weight:600; text-decoration:none">
+              <i class="fas fa-search"></i> Cek Status Member
+            </a>
+          </div>
         </div>
       `;
+    }
+
+    function renderMemberCheckForm() {
+      document.getElementById('authCard').innerHTML = `
+        <div class="auth-header">
+          <h2 style="font-size:22px;font-weight:700">Cek Status Member</h2>
+          <p style="opacity:0.85;margin-top:4px;font-size:13px">Masukkan ID Member Anda</p>
+        </div>
+        <div class="auth-form">
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-id-card"></i> Member ID</label>
+            <input id="checkMid" class="form-input" placeholder="Contoh: M2301001" 
+                   onkeypress="if(event.key==='Enter') doPublicCheckMember()">
+          </div>
+          <div id="publicCheckResult"></div>
+          <button id="btnCheckMember" class="btn btn-primary btn-block" onclick="doPublicCheckMember()">
+            <i class="fas fa-search"></i> Periksa Status
+          </button>
+          <button class="btn btn-ghost btn-block" onclick="renderLoginForm()" style="margin-top:12px">
+            <i class="fas fa-arrow-left"></i> Kembali ke Login
+          </button>
+        </div>
+      `;
+    }
+
+    function doPublicCheckMember() {
+      const mid = document.getElementById('checkMid').value.trim().toUpperCase();
+      if (!mid) { showToast('Masukkan Member ID', 'warning'); return; }
+      
+      const btn = document.getElementById('btnCheckMember');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengecek...';
+      btn.disabled = true;
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.innerHTML = '<i class="fas fa-search"></i> Periksa Status';
+          btn.disabled = false;
+          const resultEl = document.getElementById('publicCheckResult');
+          
+          if (res && res.success) {
+            const m = res.member;
+            const statusClass = m.status === 'Aktif' ? 'success' : (m.status === 'Expired' ? 'danger' : 'warning');
+            const photoUrl = m.profilePic ? getDirectLink(m.profilePic) : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="1.5"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/%3E%3Ccircle cx="12" cy="7" r="4"/%3E%3C/svg%3E';
+            
+            resultEl.innerHTML = `
+              <div style="padding:15px; background:var(--bg-light); border-radius:12px; border:1px solid var(--border-color); margin-bottom:15px; animation: slideUp 0.3s ease">
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px">
+                  <img src="${photoUrl}" style="width:60px; height:60px; border-radius:10px; object-fit:cover; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                  <div>
+                    <div style="font-weight:700; font-size:15px; color:var(--text-main)">${escapeHtml(m.name)}</div>
+                    <span class="badge badge-${statusClass}" style="font-size:10px; padding:2px 8px">${escapeHtml(m.status)}</span>
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:var(--text-secondary)">
+                  <div>Paket:<br><b style="color:var(--text-main)">${escapeHtml(m.package)}</b></div>
+                  <div>Berlaku s/d:<br><b style="color:var(--text-main)">${formatDate(m.expiry)}</b></div>
+                </div>
+              </div>
+            `;
+          } else {
+            resultEl.innerHTML = `
+              <div class="alert alert-danger" style="margin-bottom:15px; font-size:12px">
+                <i class="fas fa-exclamation-circle"></i> ${escapeHtml(res.message || 'Member tidak ditemukan')}
+              </div>
+            `;
+          }
+        })
+        .getMemberDetail(mid);
     }
     
     function doLogin() {
@@ -2026,11 +2146,11 @@ const google = {
           ${members.map(m => `
             <div class="stat-card gallery-item" style="padding:20px; align-items:center; text-align:center; animation: fadeIn 0.4s ease forwards">
               <div style="width:140px; height:140px; border-radius:50%; overflow:hidden; margin-bottom:16px; border:4px solid var(--primary-light); background:var(--bg-light); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.1)">
-                ${m.photoUrl ? `<img src="${m.photoUrl}" style="width:100%; height:100%; object-fit:cover">` : `<i class="fas fa-user fa-4x" style="color:var(--text-secondary)"></i>`}
+                ${m.photoUrl ? `<img src="${getDirectLink(m.photoUrl)}" style="width:100%; height:100%; object-fit:cover">` : `<i class="fas fa-user fa-4x" style="color:var(--text-secondary)"></i>`}
               </div>
               <div style="font-weight:700; color:var(--text-main); margin-bottom:4px; font-size:16px">${escapeHtml(m.fullName)}</div>
               <div style="font-size:12px; color:var(--text-secondary); margin-bottom:16px; font-family:monospace; background:var(--bg-light); padding:4px 8px; border-radius:6px">ID: ${escapeHtml(m.memberId)}</div>
-              ${m.photoUrl ? `<a href="${m.photoUrl}" target="_blank" class="btn btn-outline" style="padding:8px 16px; font-size:12px; width:100%; border-radius:10px">Buka Foto <i class="fas fa-external-link-alt"></i></a>` : `<button class="btn btn-secondary" style="padding:8px 16px; font-size:12px; width:100%; border-radius:10px" disabled>Tidak Ada Foto</button>`}
+              ${m.photoUrl ? `<a href="${getDirectLink(m.photoUrl)}" target="_blank" class="btn btn-outline" style="padding:8px 16px; font-size:12px; width:100%; border-radius:10px">Buka Foto <i class="fas fa-external-link-alt"></i></a>` : `<button class="btn btn-secondary" style="padding:8px 16px; font-size:12px; width:100%; border-radius:10px" disabled>Tidak Ada Foto</button>`}
             </div>
           `).join('')}
         </div>
@@ -7244,8 +7364,13 @@ const google = {
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
+      const helperBtn = document.querySelector('.btn-nav-helper');
+      
       if (window.innerWidth <= 1024) {
         const isOpen = sidebar.classList.toggle('active');
+        if (helperBtn) helperBtn.style.opacity = isOpen ? '0' : '1';
+        if (helperBtn) helperBtn.style.pointerEvents = isOpen ? 'none' : 'auto';
+        
         if (overlay) {
           overlay.style.display = isOpen ? 'block' : 'none';
           setTimeout(() => overlay.style.opacity = isOpen ? '1' : '0', 10);
