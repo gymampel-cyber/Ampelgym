@@ -1791,20 +1791,27 @@ const google = {
             // Low Stock Widget
             const lsEl = document.getElementById('lowStockWidget');
             if (lsEl) {
-              if (s.lowStock > 0 && s.lowStockItems) {
+              if (s.lowStock && s.lowStock.length > 0) {
                 lsEl.innerHTML = `
                   <div style="display:flex; flex-direction:column; gap:8px">
-                    ${s.lowStockItems.map(item => `
-                      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:#fff1f2; border-radius:8px">
-                        <span style="font-size:13px; font-weight:600">${escapeHtml(item.name)}</span>
-                        <span class="badge badge-danger" style="font-size:11px">Sisa: ${item.stock} ${item.unit}</span>
-                      </div>
-                    `).join('')}
+                    ${s.lowStock.map(item => {
+                      const isOutOfStock = item.stock <= 0;
+                      return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:${isOutOfStock ? '#fef2f2' : '#fffbeb'}; border-radius:10px; border-left:4px solid ${isOutOfStock ? '#ef4444' : '#f59e0b'}">
+                          <div style="display:flex; flex-direction:column">
+                            <span style="font-size:13px; font-weight:700; color:${isOutOfStock ? '#991b1b' : '#92400e'}">${escapeHtml(item.name)}</span>
+                            <span style="font-size:11px; color:#64748b">ID: ${item.id}</span>
+                          </div>
+                          <span class="badge ${isOutOfStock ? 'badge-danger' : 'badge-warning'}" style="font-size:11px">
+                            ${isOutOfStock ? 'HABIS' : 'Sisa: ' + item.stock} ${item.unit}
+                          </span>
+                        </div>
+                      `;
+                    }).join('')}
                   </div>
-                  ${s.lowStock > 5 ? `<div style="text-align:center; margin-top:10px; font-size:12px; color:#ef4444">+${s.lowStock - 5} item lainnya</div>` : ''}
                 `;
               } else {
-                lsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#10b981"><i class="fas fa-check-circle"></i> Stok aman</div>';
+                lsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#10b981;background:#f0fdf4;border-radius:10px"><i class="fas fa-check-circle"></i> Stok aman & tersedia</div>';
               }
             }
             
@@ -1954,28 +1961,24 @@ const google = {
       if (!el) return;
       
       if (!list || list.length === 0) { 
-        el.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-inbox fa-2x"></i><p style="margin-top:12px">Belum ada check-in hari ini</p></div>'; 
+        el.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8"><i class="fas fa-inbox fa-2x"></i><p style="margin-top:12px">Belum ada check-in untuk periode ini</p></div>'; 
         return; 
       }
       
-      let html = '<div class="list-container">';
+      let html = '<div class="list-container" style="border:none; box-shadow:none; background:transparent">';
       list.forEach((c) => {
-        const statusClass = c.status === 'Aktif' ? 'success' : 'warning';
         const typeClass = c.type === 'VISIT' ? 'primary' : 'success';
         const typeText = c.type === 'VISIT' ? 'Visit' : 'Member';
         
         html += `
-          <div class="list-item">
+          <div class="list-item" style="background:white; margin-bottom:8px; border-radius:12px; border:1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02)">
             <div class="list-item-content">
-              <div class="list-item-title">${escapeHtml(c.memberName || '-')}</div>
+              <div class="list-item-title">${escapeHtml(c.name || '-')}</div>
               <div class="list-item-subtitle">
                 <span class="badge badge-${typeClass}" style="font-size:10px">${typeText}</span> • 
-                <code>${escapeHtml(c.memberId || '-')}</code> • 
-                ${formatDateTime(c.checkInTime)}
+                <code>${escapeHtml(c.id || '-')}</code> • 
+                <span style="color:#64748b"><i class="far fa-clock"></i> ${formatDateTime(c.time)}</span>
               </div>
-            </div>
-            <div class="list-item-action">
-              <span class="badge badge-${statusClass}">${escapeHtml(c.status || '-')}</span>
             </div>
           </div>
         `;
