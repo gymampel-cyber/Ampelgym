@@ -147,6 +147,21 @@
       border-radius: 16px;
       padding: 20px;
       margin-bottom: 24px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .member-photo {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 3px solid white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      background: #f8fafc;
+    }
+    .member-details-grid {
+      flex: 1;
     }
     .info-row {
       display: flex;
@@ -287,30 +302,33 @@
 
       <div id="memberInfoSection" style="display:none">
         <div class="member-info">
-          <h4 style="margin-bottom:16px;color:#0f172a"><i class="fas fa-user-circle" style="color:#667eea"></i> Informasi Member</h4>
-          <div class="info-row">
-            <span class="info-label">Member ID</span>
-            <span class="info-value" id="memberIdDisplay">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Nama</span>
-            <span class="info-value" id="memberNameDisplay">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Email</span>
-            <span class="info-value" id="memberEmailDisplay">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Paket Saat Ini</span>
-            <span class="info-value" id="memberPackageDisplay">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Masa Berlaku</span>
-            <span class="info-value" id="memberExpiryDisplay">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Status</span>
-            <span class="info-value" id="memberStatusDisplay">-</span>
+          <img id="memberPhotoDisplay" class="member-photo" src="" onerror="this.src='https://via.placeholder.com/100?text=No+Photo'">
+          <div class="member-details-grid">
+            <h4 style="margin-bottom:12px;color:#0f172a"><i class="fas fa-user-circle" style="color:#667eea"></i> Informasi Member</h4>
+            <div class="info-row">
+              <span class="info-label">Member ID</span>
+              <span class="info-value" id="memberIdDisplay">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Nama</span>
+              <span class="info-value" id="memberNameDisplay">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email</span>
+              <span class="info-value" id="memberEmailDisplay">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Paket Saat Ini</span>
+              <span class="info-value" id="memberPackageDisplay">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Masa Berlaku</span>
+              <span class="info-value" id="memberExpiryDisplay">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status</span>
+              <span class="info-value" id="memberStatusDisplay">-</span>
+            </div>
           </div>
         </div>
       </div>
@@ -397,7 +415,7 @@
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            packages = res.packages.filter(p => p.type && p.type.toUpperCase().includes('REGULAR'));
+            packages = res.packages.filter(p => p.type && p.type.toLowerCase().includes('regular'));
           }
         })
         .getPackages();
@@ -453,6 +471,29 @@
       const statusEl = document.getElementById('memberStatusDisplay');
       statusEl.textContent = currentMember.status;
       statusEl.className = `badge ${currentMember.status === 'Aktif' ? 'badge-success' : 'badge-warning'}`;
+
+      // Update Photo
+      const photoEl = document.getElementById('memberPhotoDisplay');
+      if (currentMember.profilePic) {
+        photoEl.src = getDirectLink(currentMember.profilePic);
+        photoEl.style.display = 'block';
+      } else {
+        photoEl.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="1.5"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/%3E%3Ccircle cx="12" cy="7" r="4"/%3E%3C/svg%3E';
+      }
+    }
+
+    function getDirectLink(url) {
+      if (!url) return '';
+      if (url.startsWith('http://')) url = url.replace('http://', 'https://');
+      if (!url.includes('.google.com')) return url;
+      
+      let fileId = '';
+      const patterns = [/\/d\/([a-zA-Z0-9_-]+)/, /id=([a-zA-Z0-9_-]+)/, /\/file\/d\/([a-zA-Z0-9_-]+)/, /open\?id=([a-zA-Z0-9_-]+)/];
+      for (let p of patterns) {
+        const m = url.match(p);
+        if (m && m[1]) { fileId = m[1]; break; }
+      }
+      return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w600` : url;
     }
 
     function renderPackages() {
