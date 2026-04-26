@@ -164,6 +164,7 @@ const google = {
       z-index: 10001;
     }
     .auth-header { text-align: center; margin-bottom: 32px; }
+    .hidden { display: none !important; }
 
     /* Auto-hide Sidebar Logic */
     .dashboard-layout { display: flex; min-height: 100vh; overflow: hidden; }
@@ -3428,8 +3429,8 @@ const google = {
 
     function loadPOSView() {
       document.getElementById('contentArea').innerHTML = `
-        <div class="pos-container">
-          <div class="pos-left-area">
+        <div class="pos-container" style="grid-template-columns: 1fr;">
+          <div class="pos-left-area" style="display:flex; flex-direction:column; gap:24px; max-width: 1200px; margin: 0 auto; width: 100%;">
             <div id="posMainArea" class="pos-products">
               <div class="pos-header">
                 <div class="form-group" style="flex:1; margin-bottom:0">
@@ -3465,6 +3466,70 @@ const google = {
                <!-- Riwayat Transaksi POS akan muncul di sini -->
             </div>
 
+            <!-- CART MOVED HERE -->
+            <div class="pos-cart" style="height:auto; min-height:400px">
+              <div class="cart-header">
+                <h4 style="margin:0"><i class="fas fa-shopping-basket"></i> Keranjang Belanja</h4>
+                <button class="btn btn-sm btn-outline" style="color:#ef4444; border-color:#ef4444" onclick="clearCart()">
+                  <i class="fas fa-trash"></i> Kosongkan
+                </button>
+              </div>
+              <div id="cartItems" class="cart-items" style="max-height:400px">
+                <div class="empty-cart">
+                  <i class="fas fa-shopping-cart fa-3x" style="margin-bottom:16px; opacity:0.3"></i>
+                  <p>Keranjang masih kosong</p>
+                </div>
+              </div>
+              <div class="cart-footer">
+                <div class="form-row" style="margin-bottom:0">
+                  <div class="form-group">
+                    <label class="form-label">Member / Customer</label>
+                    <div style="position:relative">
+                      <input type="text" id="pos_memberId" class="form-input" placeholder="Cari Nama/ID/HP..." oninput="searchMemberForPOS(this.value)">
+                      <div id="posMemberResults" class="search-dropdown"></div>
+                    </div>
+                    <div id="pos_memberInfo" style="margin-top:8px; font-size:12px; color:#64748b">Guest Customer</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">WhatsApp Customer</label>
+                    <input type="text" id="pos_wa_number" class="form-input" placeholder="08xxxxxxxxxx">
+                  </div>
+                </div>
+                
+                <div class="cart-summary">
+                  <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <span id="pos_subtotal">Rp 0</span>
+                  </div>
+                  <div class="cart-summary-row" style="align-items:center">
+                    <span>Diskon (%)</span>
+                    <input type="number" id="pos_discount" class="form-input" style="width:80px; padding:6px 12px; font-size:14px; margin:0" value="0" oninput="updateCartUI()">
+                  </div>
+                  <div class="cart-total">
+                    <div class="cart-summary-row" style="margin-bottom:0">
+                      <span>Total Bayar</span>
+                      <span id="pos_total" style="font-size:24px; color:var(--primary)">Rp 0</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="display:flex; gap:16px; margin-top:20px; align-items:flex-end">
+                  <div class="form-group" style="flex:1; margin-bottom:0">
+                    <label class="form-label">Metode Pembayaran</label>
+                    <select id="pos_payment" class="form-input">
+                      <option value="Tunai">Tunai / Cash</option>
+                      <option value="Transfer">Transfer Bank</option>
+                      <option value="QRIS">QRIS</option>
+                      <option value="Kartu">Debit / Kredit</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-primary" style="flex:1.5; height:50px; font-size:16px" onclick="checkoutPOS()">
+                    <i class="fas fa-cash-register"></i> BAYAR SEKARANG
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="form-card" style="margin-top:0">
               <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
                 <h4 style="margin:0"><i class="fas fa-clock"></i> Transaksi Terakhir</h4>
@@ -3477,67 +3542,6 @@ const google = {
                   <i class="fas fa-spinner fa-spin"></i>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div class="pos-cart">
-            <div class="cart-header">
-              <h4 style="margin:0"><i class="fas fa-shopping-basket"></i> Keranjang</h4>
-              <button class="btn btn-sm btn-outline" style="color:#ef4444; border-color:#ef4444" onclick="clearCart()">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-            <div id="cartItems" class="cart-items">
-              <div class="empty-cart">
-                <i class="fas fa-shopping-cart fa-3x" style="margin-bottom:16px; opacity:0.3"></i>
-                <p>Keranjang masih kosong</p>
-              </div>
-            </div>
-            <div class="cart-footer">
-              <div class="form-group">
-                <label class="form-label">Member / Customer (Opsional)</label>
-                <div style="position:relative">
-                  <input type="text" id="pos_memberId" class="form-input" placeholder="Cari Nama/ID/HP..." oninput="searchMemberForPOS(this.value)">
-                  <div id="posMemberResults" style="position:absolute;top:100%;left:0;right:0;z-index:100;max-height:250px;overflow-y:auto;background:white;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);border-radius:8px"></div>
-                </div>
-                <div id="pos_memberInfo" style="margin-top:8px; font-size:12px; color:#64748b">Guest Customer</div>
-              </div>
-              
-              <div class="cart-summary">
-                <div class="cart-summary-row">
-                  <span>Subtotal</span>
-                  <span id="pos_subtotal">Rp 0</span>
-                </div>
-                <div class="cart-summary-row">
-                  <span>Diskon (%)</span>
-                  <input type="number" id="pos_discount" class="form-input" style="width:70px; padding:4px 8px; font-size:12px" value="0" oninput="updateCartUI()">
-                </div>
-                <div class="cart-total">
-                  <div class="cart-summary-row" style="margin-bottom:0">
-                    <span>Total</span>
-                    <span id="pos_total">Rp 0</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-group" style="margin-top:16px">
-                <label class="form-label">WhatsApp Customer</label>
-                <input type="text" id="pos_wa_number" class="form-input" placeholder="08xxxxxxxxxx">
-              </div>
-              
-              <div class="form-group" style="margin-top:12px">
-                <label class="form-label">Metode Pembayaran</label>
-                <select id="pos_payment" class="form-input">
-                  <option value="Tunai">Tunai / Cash</option>
-                  <option value="Transfer">Transfer Bank</option>
-                  <option value="QRIS">QRIS</option>
-                  <option value="Kartu">Debit / Kredit</option>
-                </select>
-              </div>
-              
-              <button class="btn btn-primary btn-block" style="height:50px; font-size:16px" onclick="checkoutPOS()">
-                <i class="fas fa-cash-register"></i> BAYAR SEKARANG
-              </button>
             </div>
           </div>
         </div>
@@ -7020,47 +7024,51 @@ const google = {
           </div>
         </div>
 
-        <div class="pos-layout" style="grid-template-columns: 1fr 2fr; height: auto;">
+        <div style="display:flex; flex-direction:column; gap:24px">
           <!-- FORM ADD EXPENSE -->
-          <div class="form-card">
+          <div class="form-card" style="margin-bottom:0">
             <div class="form-card-header">
               <h4><i class="fas fa-plus-circle"></i> Catat Pengeluaran Baru</h4>
             </div>
             <div class="form-card-body">
               <form id="expenseForm" onsubmit="event.preventDefault(); submitExpenseForm();">
-                <div class="form-group">
-                  <label class="form-label">Tanggal</label>
-                  <input type="date" id="exp_date" class="form-input" required>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Tanggal</label>
+                    <input type="date" id="exp_date" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Kategori</label>
+                    <select id="exp_category" class="form-input" required>
+                      <option value="">-- Pilih Kategori --</option>
+                      <option value="Operasional">Operasional</option>
+                      <option value="Gaji & Upah">Gaji & Upah</option>
+                      <option value="Listrik, Air & Wifi">Listrik, Air & Wifi</option>
+                      <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
+                      <option value="Pembelian Barang / Stok">Pembelian Barang / Stok</option>
+                      <option value="Sewa Tempat">Sewa Tempat</option>
+                      <option value="Promosi & Marketing">Promosi & Marketing</option>
+                      <option value="Lain-lain">Lain-lain</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Kategori</label>
-                  <select id="exp_category" class="form-input" required>
-                    <option value="">-- Pilih Kategori --</option>
-                    <option value="Operasional">Operasional</option>
-                    <option value="Gaji & Upah">Gaji & Upah</option>
-                    <option value="Listrik, Air & Wifi">Listrik, Air & Wifi</option>
-                    <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
-                    <option value="Pembelian Barang / Stok">Pembelian Barang / Stok</option>
-                    <option value="Sewa Tempat">Sewa Tempat</option>
-                    <option value="Promosi & Marketing">Promosi & Marketing</option>
-                    <option value="Lain-lain">Lain-lain</option>
-                  </select>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Jumlah (Rp)</label>
+                    <input type="number" id="exp_amount" class="form-input" placeholder="Masukkan angka saja" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Metode Pembayaran</label>
+                    <select id="exp_payment" class="form-input" required>
+                      <option value="Tunai">Tunai</option>
+                      <option value="Transfer">Transfer</option>
+                      <option value="QRIS">QRIS</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Deskripsi / Keterangan</label>
-                  <textarea id="exp_description" class="form-input" rows="3" placeholder="Contoh: Bayar tagihan listrik bulan April" required></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Jumlah (Rp)</label>
-                  <input type="number" id="exp_amount" class="form-input" placeholder="Masukkan angka saja" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Metode Pembayaran</label>
-                  <select id="exp_payment" class="form-input" required>
-                    <option value="Tunai">Tunai</option>
-                    <option value="Transfer">Transfer</option>
-                    <option value="QRIS">QRIS</option>
-                  </select>
+                  <textarea id="exp_description" class="form-input" rows="2" placeholder="Contoh: Bayar tagihan listrik bulan April" required></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">
                   <i class="fas fa-save"></i> Simpan Pengeluaran
@@ -7070,9 +7078,9 @@ const google = {
           </div>
 
           <!-- LIST EXPENSES -->
-          <div class="table-container">
-            <div class="cart-header" style="background:#fff; border-bottom:1px solid #f1f5f9">
-              <h4 style="color:#334155"><i class="fas fa-history"></i> Riwayat Pengeluaran</h4>
+          <div class="table-container list-container">
+            <div class="cart-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:20px 24px">
+              <h4 style="color:#334155; margin:0"><i class="fas fa-history"></i> Riwayat Pengeluaran</h4>
             </div>
             <div id="expensesTableContainer" style="overflow-x:auto">
               <div style="text-align:center; padding:40px; color:#94a3b8">
@@ -7253,7 +7261,7 @@ const google = {
         let visible = true;
         
         if (role === 'Staff' || role === 'Kasir') {
-          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos', 'approvals'];
+          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos', 'approvals', 'expenses'];
           if (!staffViews.includes(view)) visible = false;
           
           // Hide specific dashboard cards
