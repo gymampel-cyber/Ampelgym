@@ -1815,7 +1815,7 @@ const google = {
               }
             }
             
-            renderTodayCheckins(res.todayCheckinList || []);
+            renderTodayCheckins(s.todayCheckinList || []);
           } else {
             console.error('Dashboard data error:', res?.message);
             showToast('Gagal memuat data dashboard', 'error');
