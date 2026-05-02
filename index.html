@@ -41,52 +41,44 @@
       }
     };
 
-    // ================ IMPROVED PROXY FOR google.script.run ================
     const google = {
       script: {
-        run: new Proxy({}, {
-          get: function(target, methodName) {
-            let successHandler = null;
-            let failureHandler = null;
-
-            const runner = {
-              withSuccessHandler: function(callback) {
-                successHandler = callback;
-                return runner;
-              },
-              withFailureHandler: function(callback) {
-                failureHandler = callback;
-                return runner;
+        get run() {
+          let successHandler = null;
+          let failureHandler = null;
+          const runner = new Proxy({}, {
+            get(target, prop) {
+              if (prop === 'withSuccessHandler') {
+                return (callback) => { successHandler = callback; return runner; };
               }
-            };
-
-            // Catch the actual function call
-            return function(...args) {
-              const body = JSON.stringify({ action: methodName, args: args });
-              
-              fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: body,
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  if (successHandler) successHandler(data.result);
-                } else {
-                  if (failureHandler) failureHandler(data.message);
-                  else console.error('Backend Error:', data.message);
-                }
-              })
-              .catch(err => {
-                if (failureHandler) failureHandler(err);
-                else console.error('Network Error:', err);
-              });
-
-              return runner; // Allow chaining if needed (though redundant here)
-            };
-          }
-        })
+              if (prop === 'withFailureHandler') {
+                return (callback) => { failureHandler = callback; return runner; };
+              }
+              return (...args) => {
+                const s = successHandler, f = failureHandler;
+                fetch(SCRIPT_URL, {
+                  method: 'POST',
+                  body: JSON.stringify({ action: prop, args: args }),
+                  headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    if (s) s(data.result);
+                  } else {
+                    if (f) f(data.message);
+                    else console.error('Backend Error:', data.message);
+                  }
+                })
+                .catch(err => {
+                  if (f) f(err);
+                  else console.error('Network Error:', err);
+                });
+              };
+            }
+          });
+          return runner;
+        }
       }
     };
   </script>
