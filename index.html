@@ -84,7 +84,6 @@
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-  <style>
     :root {
       /* iOS System Colors */
       --ios-blue: #007aff;
@@ -985,10 +984,20 @@
       try {
         console.log('Initializing App...');
         renderLoginForm();
-        console.log('Login form rendered.');
       } catch(e) {
         console.error('Init error:', e);
-        alert('Init Error: ' + e.message);
+      }
+    }
+    
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      if (!input) return;
+      const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+      input.setAttribute('type', type);
+      const icon = event.currentTarget.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
       }
     }
     
@@ -1228,7 +1237,6 @@
       if (active) showView(active.dataset.view);
     }
     
-        </div>
     function loadDashboard() {
       const container = document.getElementById('contentArea');
       container.innerHTML = `
