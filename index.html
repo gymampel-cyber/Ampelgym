@@ -87,53 +87,44 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      /* Apple System Colors - Precise HSL Values */
-      --ios-blue: #007AFF;
-      --ios-green: #34C759;
-      --ios-indigo: #5856D6;
-      --ios-orange: #FF9500;
-      --ios-pink: #FF2D55;
-      --ios-purple: #AF52DE;
-      --ios-red: #FF3B30;
-      --ios-teal: #5AC8FA;
-      --ios-yellow: #FFCC00;
-      --ios-gray: #8E8E93;
-      --ios-bg: #F2F2F7;
-      --ios-card-bg: #FFFFFF;
-      --ios-text: #1C1C1E;
-      --ios-text-secondary: #636366;
-      --ios-separator: rgba(60, 60, 67, 0.12);
-      
-      --primary: var(--ios-blue);
-      --bg-light: var(--ios-bg);
-      --bg-card: var(--ios-card-bg);
-      --text-main: var(--ios-text);
-      --text-secondary: var(--ios-text-secondary);
-      --sidebar-bg: rgba(28, 28, 30, 0.82);
-      --border-color: var(--ios-separator);
-      --shadow-premium: 0 8px 32px rgba(0,0,0,0.06);
-      --glass-bg: rgba(255, 255, 255, 0.7);
+      /* UGYM Gold & Black Premium Palette */
+      --primary: #d4af37;
+      --primary-light: #fdf8e7;
+      --primary-dark: #b5952f;
+      --secondary: #000000;
+      --accent: #d4af37;
+      --dark: #000000;
+      --bg-light: #f9f9f9;
+      --bg-card: #ffffff;
+      --text-main: #000000;
+      --text-secondary: #555555;
+      --sidebar-bg: #000000;
+      --border-color: #e5e5ea;
+      --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.05);
+      --glass-bg: rgba(255, 255, 255, 0.9);
       --transition-main: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
       --font-heading: 'Outfit', sans-serif;
+
+      /* iOS-compatible mappings for existing components */
+      --ios-blue: var(--primary);
+      --ios-green: #34C759;
+      --ios-red: #FF3B30;
+      --ios-gray: #8E8E93;
     }
 
     body.dark-mode {
-      --ios-bg: #000000;
-      --ios-card-bg: #1C1C1E;
-      --ios-text: #FFFFFF;
-      --ios-text-secondary: #8E8E93;
-      --ios-separator: rgba(84, 84, 88, 0.6);
-      
-      --bg-light: var(--ios-bg);
-      --bg-card: var(--ios-card-bg);
-      --text-main: var(--ios-text);
-      --text-secondary: var(--ios-text-secondary);
-      --sidebar-bg: rgba(44, 44, 46, 0.88);
-      --border-color: var(--ios-separator);
-      --shadow-premium: 0 12px 48px rgba(0,0,0,0.4);
-      --glass-bg: rgba(28, 28, 30, 0.7);
+      --bg-light: #000000;
+      --bg-card: #1c1c1e;
+      --text-main: #ffffff;
+      --text-secondary: #aeaeb2;
+      --sidebar-bg: rgba(28, 28, 30, 0.95);
+      --border-color: #38383a;
+      --shadow-premium: 0 10px 40px rgba(0, 0, 0, 0.5);
+      --glass-bg: rgba(28, 28, 30, 0.75);
     }
+    body.dark-mode .pos-products, body.dark-mode .pos-cart { background: var(--bg-card); border-color: var(--border-color); }
+    body.dark-mode .product-card { background: #2c2c2e; }
     
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     
@@ -160,18 +151,21 @@
     .auth-layout {
       position: fixed;
       inset: 0;
-      background: var(--bg-light);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       display: flex; align-items: center; justify-content: center;
       z-index: 10000; padding: 20px;
     }
     .auth-card {
-      background: var(--bg-card);
+      background: rgba(255, 255, 255, 0.95);
       padding: 48px 40px;
       border-radius: 32px;
       box-shadow: var(--shadow-premium);
       width: 100%; max-width: 440px;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       animation: authIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
     }
     @keyframes authIn {
       from { opacity: 0; transform: scale(0.94) translateY(20px); }
@@ -221,8 +215,8 @@
     .menu-item i { width: 24px; font-size: 18px; margin-right: 12px; opacity: 0.8; }
     .menu-item:hover { background: rgba(255, 255, 255, 0.1); color: white; }
     .menu-item.active { 
-      background: var(--ios-blue); color: white; 
-      box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+      background: var(--primary); color: white; 
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
     }
 
     /* Cards & Widgets */
@@ -247,7 +241,7 @@
       display: flex; align-items: center; padding: 16px 20px; 
       border-bottom: 0.5px solid var(--border-color); transition: 0.3s; 
     }
-    .list-item:hover { background: rgba(0,122,255,0.03); }
+    .list-item:hover { background: rgba(212, 175, 55, 0.03); }
     .list-item:last-child { border-bottom: none; }
 
     /* Form Elements */
@@ -257,8 +251,8 @@
       font-size: 16px; transition: all 0.3s; font-family: inherit;
     }
     .form-input:focus {
-      background: var(--bg-card); border-color: var(--ios-blue);
-      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+      background: var(--bg-card); border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
     }
 
     /* Buttons */
@@ -267,16 +261,16 @@
       transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center;
       gap: 10px; cursor: pointer; border: none; font-family: inherit;
     }
-    .btn-primary { background: var(--ios-blue); color: white; box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25); }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0, 122, 255, 0.35); }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(212, 175, 55, 0.35); }
     .btn-primary:active { transform: scale(0.96); }
     
-    .btn-outline { background: transparent; border: 1.5px solid var(--ios-blue); color: var(--ios-blue); }
-    .btn-outline:hover { background: rgba(0, 122, 255, 0.05); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-outline:hover { background: rgba(212, 175, 55, 0.05); }
 
     /* Badges */
     .badge { padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-    .badge-primary { background: rgba(0,122,255,0.1); color: var(--ios-blue); }
+    .badge-primary { background: rgba(212, 175, 55, 0.1); color: var(--primary); }
     .badge-success { background: rgba(52,199,89,0.1); color: var(--ios-green); }
     .badge-danger { background: rgba(255,59,48,0.1); color: var(--ios-red); }
     .badge-warning { background: rgba(255,204,0,0.1); color: var(--ios-yellow); }
@@ -285,6 +279,49 @@
     .hidden { display: none !important; }
     .hidden-mobile { display: inline; }
     @media (max-width: 768px) { .hidden-mobile { display: none; } .main-content { padding: 24px; } }
+
+    /* Mobile Navigation */
+    .btn-nav-helper {
+      position: fixed; bottom: 32px; left: 32px; width: 64px; height: 64px; border-radius: 50%;
+      background: var(--primary); color: white; display: none; align-items: center; justify-content: center;
+      font-size: 24px; box-shadow: 0 8px 32px rgba(212, 175, 55, 0.4); z-index: 9999;
+      border: 3px solid rgba(255, 255, 255, 0.2); cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-nav-helper:active { transform: scale(0.9); }
+    .sidebar-overlay { 
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); 
+      -webkit-backdrop-filter: blur(8px); z-index: 1000; display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .hamburger-btn {
+      display: none; width: 44px; height: 44px; border-radius: 12px; background: var(--bg-card);
+      border: 1px solid var(--border-color); color: var(--text-main); align-items: center; justify-content: center;
+      font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    @media (max-width: 1024px) {
+      .hamburger-btn { display: flex; }
+      .btn-nav-helper { display: flex; }
+      .main-content { padding: 32px; }
+    }
+
+    /* POS Premium Layout */
+    .pos-container { display: grid; grid-template-columns: 1fr 400px; gap: 32px; min-height: calc(100vh - 160px); }
+    .pos-products { background: var(--bg-card); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; border: 0.5px solid var(--border-color); box-shadow: var(--shadow-premium); }
+    .pos-cart { background: var(--bg-card); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; border: 0.5px solid var(--border-color); box-shadow: var(--shadow-premium); position: sticky; top: 100px; height: calc(100vh - 160px); }
+    
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 24px; overflow-y: auto; }
+    .product-card { 
+      background: var(--bg-light); border-radius: 20px; overflow: hidden; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+      cursor: pointer; border: 1px solid transparent;
+    }
+    .product-card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 12px 24px rgba(0,0,0,0.1); background: var(--bg-card); }
+    .product-image { width: 100%; aspect-ratio: 1; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+    .product-card:hover .product-image img { transform: scale(1.1); }
+    .product-info { padding: 12px; }
+    .product-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
+    .product-price { font-size: 15px; font-weight: 800; color: var(--primary); }
+
+    @media (max-width: 1200px) { .pos-container { grid-template-columns: 1fr; } .pos-cart { height: auto; position: static; } }
 
     /* Modern Toast */
     .toast-container { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 11000; display: flex; flex-direction: column; gap: 10px; }
@@ -424,7 +461,15 @@
 
   <!-- Auth View -->
   <div id="authView" class="auth-layout">
-    <div id="authCard" class="auth-card">Memuat Form Login...</div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+      <div id="authCard" class="auth-card">Memuat Form Login...</div>
+      <!-- Developer Branding -->
+      <div class="developer-branding" style="text-align: center; cursor: pointer; opacity: 0.9; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center;" onclick="window.open('https://wa.me/6285777723458', '_blank')">
+        <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 80px; height: auto; margin-bottom: 6px; object-fit: contain;">
+        <div style="font-weight: 800; color: #1e293b; font-size: 16px; letter-spacing: 2px; text-align: center; text-transform: uppercase;">KIZIY</div>
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 11px; color: #64748b; margin-top: 2px; text-align: center; letter-spacing: 1px;">key to easy</div>
+      </div>
+    </div>
   </div>
   
   <!-- Dashboard View -->
@@ -1148,7 +1193,7 @@
               <p style="color:var(--text-secondary); font-size:15px; font-weight:500; margin-top:4px">Pantau performa operasional hari ini</p>
             </div>
             <div style="display:flex; gap:12px; align-items:center">
-              <div id="dashboardPeriod" style="display:none; align-items:center; gap:8px; background:var(--ios-blue); color:white; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:600">
+              <div id="dashboardPeriod" style="display:none; align-items:center; gap:8px; background:var(--primary); color:white; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:600">
                 <i class="fas fa-calendar-alt"></i> <span id="periodValue">-</span>
                 <button onclick="resetDashboardFilter()" style="background:none; border:none; color:white; cursor:pointer; margin-left:4px"><i class="fas fa-times-circle"></i></button>
               </div>
@@ -1173,14 +1218,14 @@
           </div>
 
           <div class="dashboard-section-title">
-            <i class="fas fa-users" style="color:var(--ios-blue)"></i>
+            <i class="fas fa-users" style="color:var(--primary)"></i>
             <span>Statistik Member</span>
           </div>
           
           <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))">
             <div class="stat-card" onclick="showDashboardDetail('total')">
               <div class="stat-header">
-                <div class="stat-icon" style="background:rgba(0,122,255,0.1); color:var(--ios-blue)"><i class="fas fa-users"></i></div>
+                <div class="stat-icon" style="background:rgba(212,175,55,0.1); color:var(--primary)"><i class="fas fa-users"></i></div>
                 <div class="badge badge-primary">TOTAL</div>
               </div>
               <div class="stat-value" id="statTotal">0</div>
