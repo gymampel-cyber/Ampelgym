@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perpanjangan Member AMPEL GYM</title>
+  <title>Perpanjangan Member Ampel Gym</title>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyCbtuJIB5VqEx0komvoxV_fngSCRk7w9iiEs4PWgu2umgllXkdYywilPlP7rJBNnp/exec';
     const google = {
@@ -54,291 +54,230 @@
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --primary: #5856d6;
-      --primary-light: #f0efff;
-      --primary-dark: #3634A3;
-      --secondary: #ff9500;
-      --accent: #FFCC00;
-      --dark: #1C1C1E;
-      --bg-light: #f2f2f7;
-      --bg-card: #ffffff;
-      --text-main: #1c1c1e;
-      --text-secondary: #8e8e93;
-      --border-color: #e5e5ea;
-      --shadow-premium: 0 10px 30px rgba(0,0,0,0.05);
-      --glass-bg: rgba(255, 255, 255, 0.7);
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     body { 
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg-light); 
-      color: var(--text-main); 
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
     }
-
     .extension-container {
-      max-width: 500px;
+      max-width: 600px;
       width: 100%;
-      background: var(--bg-card);
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       overflow: hidden;
-      border: 1px solid var(--border-color);
-      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: slideUp 0.5s ease;
     }
-
     .header {
-      padding: 40px 30px 20px;
+      background: linear-gradient(135deg, #000000, #333333);
+      color: white;
+      padding: 30px;
       text-align: center;
     }
-    
-    .header img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      margin: 0 auto 16px;
-      display: block;
-      object-fit: cover;
-      border: 3px solid var(--primary-light);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .header h1 { 
-      font-size: 24px; 
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-    
-    .header p { 
-      color: var(--text-secondary); 
-      font-size: 14px; 
-    }
-
+    .header h1 { font-size: 28px; margin-bottom: 8px; }
+    .header p { opacity: 0.9; font-size: 14px; }
     .content { padding: 30px; }
-
-    .form-group { margin-bottom: 24px; }
-    
+    .form-group { margin-bottom: 20px; }
     .form-label { 
       display: block; 
-      font-size: 13px; 
-      font-weight: 600; 
-      color: var(--text-secondary); 
       margin-bottom: 8px; 
-      margin-left: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
+      font-weight: 600; 
+      font-size: 14px; 
+      color: #334155; 
     }
-
     .form-input { 
       width: 100%; 
-      padding: 14px 16px; 
-      border: 1px solid var(--border-color); 
-      border-radius: 14px; 
-      font-size: 16px; 
-      transition: all 0.25s ease; 
-      background: var(--bg-card); 
-      color: var(--text-main); 
+      padding: 12px 16px; 
+      border: 2px solid #e2e8f0; 
+      border-radius: 10px; 
+      font-size: 15px; 
+      transition: 0.2s; 
     }
-    
     .form-input:focus { 
       outline: none; 
-      border-color: var(--primary); 
-      box-shadow: 0 0 0 4px rgba(88, 86, 214, 0.15); 
+      border-color: #d4af37; 
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.1); 
     }
-
     .form-input:read-only {
-      background: var(--bg-light);
-      color: var(--text-secondary);
+      background: #f8fafc;
+      color: #475569;
     }
-
     .btn {
       padding: 14px 24px;
       border: none;
-      border-radius: 14px;
-      font-size: 15px;
+      border-radius: 10px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      gap: 8px;
+      transition: 0.2s;
       width: 100%;
     }
-    
-    .btn:hover { transform: translateY(-1px); opacity: 0.9; }
-    .btn:active { transform: scale(0.96); }
-
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-success { background: #34C759; color: white; }
-
+    .btn-primary { 
+      background: linear-gradient(135deg, #000000, #333333); 
+      color: white; 
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
+    .btn-success { 
+      background: linear-gradient(135deg, #22c55e, #16a34a); 
+      color: white; 
+    }
     .alert {
-      padding: 16px 20px;
-      border-radius: 16px;
-      margin-bottom: 24px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      font-size: 14px;
-      border: 1px solid transparent;
     }
-    
-    .alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-    .alert-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
-    .alert-warning { background: #fffbeb; border-color: #fef3c7; color: #92400e; }
-    .alert-info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
-
+    .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
     .member-info {
-      background: var(--bg-light);
-      border-radius: 20px;
+      background: #fdf8e7;
+      border: 1px solid #d4af37;
+      border-radius: 16px;
       padding: 20px;
       margin-bottom: 24px;
       display: flex;
-      flex-direction: column;
       gap: 20px;
-      border: 1px solid var(--border-color);
+      align-items: center;
     }
-
-    @media (min-width: 400px) {
-      .member-info { flex-direction: row; align-items: center; }
-    }
-
     .member-photo {
-      width: 80px;
-      height: 80px;
-      border-radius: 16px;
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
       object-fit: cover;
       border: 3px solid white;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      background: white;
-      flex-shrink: 0;
+      background: #f8fafc;
     }
-
-    .member-details-grid { flex: 1; }
-    
+    .member-details-grid {
+      flex: 1;
+    }
     .info-row {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 0.5px solid var(--border-color);
+      padding: 8px 0;
+      border-bottom: 1px dashed #cbd5e1;
     }
-    
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: var(--text-secondary); font-size: 12px; font-weight: 500; }
-    .info-value { font-weight: 600; color: var(--text-main); font-size: 13px; }
-
+    .info-label { color: #64748b; font-size: 13px; }
+    .info-value { font-weight: 600; color: #000000; }
     .badge {
       display: inline-block;
-      padding: 2px 10px;
+      padding: 4px 12px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
     }
-    
     .badge-success { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
     .badge-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-
-    .package-list { display: grid; gap: 12px; }
-
+    .badge-danger { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
     .package-card {
-      background: var(--bg-card);
-      border: 1.5px solid var(--border-color);
-      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       padding: 16px;
+      margin-bottom: 12px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: 0.2s;
     }
-    
-    .package-card:hover { border-color: var(--primary); background: var(--primary-light); }
+    .package-card:hover { border-color: #d4af37; background: #f1f5f9; }
     .package-card.selected { 
-      border-color: var(--primary); 
-      background: var(--primary-light); 
-      box-shadow: 0 8px 20px rgba(88, 86, 214, 0.1);
+      border: 2px solid #d4af37; 
+      background: #fdf8e7; 
+      box-shadow: 0 4px 12px rgba(102,126,234,0.2);
     }
-
-    .package-name { font-weight: 700; font-size: 15px; color: var(--text-main); }
-    .package-price { color: var(--primary); font-weight: 700; font-size: 16px; }
-
+    .package-name { font-weight: 700; font-size: 16px; color: #000000; }
+    .package-price { color: #d4af37; font-weight: 700; font-size: 18px; }
+    .file-upload {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
     .file-upload-label {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 20px;
-      background: var(--bg-light);
-      border: 2px dashed var(--border-color);
-      border-radius: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .file-upload-label:hover { border-color: var(--primary); background: white; }
-    .file-upload-input { display: none; }
-
-    .bank-info {
-      background: #fdfcf0;
-      border-radius: 16px;
+      gap: 10px;
       padding: 16px;
-      margin-bottom: 24px;
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .file-upload-label:hover { border-color: #d4af37; background: #f1f5f9; }
+    .file-upload-input {
+      position: absolute;
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
+    .file-name {
+      margin-top: 8px;
       font-size: 13px;
-      border: 1px solid #fde68a;
-      color: #92400e;
+      color: #475569;
     }
-
+    .bank-info {
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 14px;
+      border-left: 4px solid #d4af37;
+    }
     .total-section {
-      background: var(--primary);
+      background: linear-gradient(135deg, #000000, #000000);
       color: white;
-      border-radius: 20px;
+      border-radius: 16px;
       padding: 20px;
-      margin: 24px 0;
+      margin: 20px 0;
       text-align: center;
-      box-shadow: 0 10px 20px rgba(88, 86, 214, 0.2);
     }
-    
     .total-amount {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 800;
-      color: white;
+      color: #fbbf24;
     }
-
     .footer {
       text-align: center;
-      padding: 24px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      border-top: 1px solid var(--border-color);
-      background: #fafafa;
+      padding: 20px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      font-size: 13px;
+      color: #64748b;
     }
-
     .loading-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(5px);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.9);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
     }
-
     .spinner {
       width: 40px;
       height: 40px;
       border: 4px solid #e2e8f0;
-      border-top: 4px solid var(--primary);
+      border-top: 4px solid #d4af37;
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -353,9 +292,9 @@
 
   <div class="extension-container">
     <div class="header">
-      <img src="https://i.imgur.com/TPoUeRJ.jpeg" alt="Logo">
-      <h1>AMPEL GYM</h1>
-      <p>Management System • Perpanjangan Member</p>
+      <img src="https://i.imgur.com/TPoUeRJ.jpeg" style="width:80px;height:80px;border-radius:50%;margin-bottom:16px;border:3px solid rgba(255,255,255,0.3)">
+      <h1>🔄 Perpanjangan Member</h1>
+      <p>Form perpanjangan keanggotaan Ampel Gym</p>
     </div>
 
     <div class="content">
@@ -363,9 +302,9 @@
 
       <div id="memberInfoSection" style="display:none">
         <div class="member-info">
-          <img id="memberPhotoDisplay" class="member-photo" src="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23cbd5e1\' stroke-width=\'1.5\'%3E%3Cpath d=\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\'/%3E%3Ccircle cx=\'12\' cy=\'7\' r=\'4\'/%3E%3C/svg%3E'">
+          <img id="memberPhotoDisplay" class="member-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E">
           <div class="member-details-grid">
-            <h4 style="margin-bottom:12px;color:#0f172a"><i class="fas fa-user-circle" style="color:#667eea"></i> Informasi Member</h4>
+            <h4 style="margin-bottom:12px;color:#000000"><i class="fas fa-user-circle" style="color:#d4af37"></i> Informasi Member</h4>
             <div class="info-row">
               <span class="info-label">Member ID</span>
               <span class="info-value" id="memberIdDisplay">-</span>
@@ -408,7 +347,7 @@
 
       <div id="extensionForm" style="display:none; margin-top:24px">
         <div class="bank-info">
-          <i class="fas fa-university" style="color:#667eea;margin-right:8px"></i>
+          <i class="fas fa-university" style="color:#d4af37;margin-right:8px"></i>
           <strong>Transfer Pembayaran ke:</strong><br>
       BCA 183-118-0001 a.n. MUHAMMAD R MASCATY<br>
           <small style="color:#64748b">*Upload bukti transfer setelah pembayaran</small>
@@ -428,7 +367,7 @@
           <label class="form-label"><i class="fas fa-image"></i> Upload Bukti Pembayaran <span style="color:#ef4444">*</span></label>
           <div class="file-upload">
             <label for="paymentProof" class="file-upload-label" id="fileUploadLabel">
-              <i class="fas fa-cloud-upload-alt fa-2x" style="color:#667eea"></i>
+              <i class="fas fa-cloud-upload-alt fa-2x" style="color:#d4af37"></i>
               <div>
                 <strong>Pilih file</strong><br>
                 <span style="font-size:12px;color:#64748b">Format: JPG, PNG (max 5MB)</span>
@@ -450,11 +389,21 @@
     </div>
 
     <div class="footer">
-      <i class="fas fa-phone"></i> 087795175243 | <i class="fas fa-envelope"></i> ampelgym@gmail.com
+      <div style="margin-bottom: 15px;">
+        <i class="fas fa-phone"></i> 087795175243 | <i class="fas fa-envelope"></i> ampelgym@gmail.com
+      </div>
+      
+      <!-- Developer Branding -->
+      <div class="developer-branding" style="text-align: center; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" onclick="window.open('https://wa.me/6285777723458', '_blank')" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+        <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 36px; height: 36px; margin-bottom: 4px; object-fit: contain;">
+        <div style="font-weight: bold; color: #1e293b; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">KIZIY</div>
+        <div style="font-family: 'Comic Sans MS', 'Comic Sans', cursive; font-size: 11px; color: #64748b; margin-top: 2px;">key to easy</div>
+      </div>
     </div>
   </div>
 
   <script>
+    var MEDIA_FOLDER_URL = "https://drive.google.com/drive/folders/1r1wZxeB8SkaCLQDvSHoe6LDyyY0pQWjS";
     var packages = [];
     var selectedPackage = null;
     var currentMember = null;
@@ -476,8 +425,12 @@
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            packages = res.packages;
+            packages = res.packages.filter(p => p.type && p.type.toLowerCase().includes('regular'));
+            if (currentMember) renderPackages();
           }
+        })
+        .withFailureHandler(function(err) {
+          console.error('Gagal memuat paket:', err);
         })
         .getPackages();
     }
@@ -567,12 +520,13 @@
           <div class="package-card" onclick="selectPackage('${pkg.id}')" id="pkg-${pkg.id}">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <span class="package-name">${pkg.name}</span>
-              <span class="package-price">${formatCurrency(pkg.total)}</span>
+              <span class="package-price">${formatCurrency(pkg.price || pkg.total)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:4px">
               <span class="package-duration"><i class="far fa-clock"></i> ${pkg.duration}</span>
-              <span style="color:#94a3b8;font-size:13px">Diskon: ${formatCurrency(pkg.discount)}</span>
+              <span style="color:#94a3b8;font-size:13px">${pkg.discount > 0 ? 'Diskon: ' + formatCurrency(pkg.discount) : ''}</span>
             </div>
+            ${pkg.benefits ? `<div style="margin-top:8px;font-size:11px;color:#64748b;border-top:1px dashed #eee;padding-top:4px"><i class="fas fa-check-circle" style="color:#22c55e"></i> ${pkg.benefits}</div>` : ''}
           </div>`;
       });
       container.innerHTML = html;
