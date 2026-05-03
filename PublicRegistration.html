@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registrasi Member - AMPEL GYM</title>
+  <title>Registrasi Member - Ampel Gym</title>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyCbtuJIB5VqEx0komvoxV_fngSCRk7w9iiEs4PWgu2umgllXkdYywilPlP7rJBNnp/exec';
     const google = {
@@ -54,14 +54,15 @@
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --primary: #6b46c1;
-      --primary-dark: #553c9a;
-      --accent: #ecc94b;
-      --dark: #1a202c;
-      --bg-gradient: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-      --card-header-gradient: linear-gradient(135deg, #6b46c1, #805ad5);
+        :root {
+      --primary: #d4af37;
+      --primary-dark: #b5952f;
+      --accent: #000000;
+      --dark: #000000;
+      --bg-gradient: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+      --card-header-gradient: linear-gradient(135deg, #000000, #333333);
     }
+
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
     body { 
       background: var(--bg-gradient);
@@ -153,7 +154,7 @@
       transition: 0.3s;
     }
     .step.active .step-circle {
-      background: linear-gradient(135deg, var(--primary), #805ad5);
+      background: var(--primary);
       border-color: var(--primary);
       color: white;
     }
@@ -312,7 +313,7 @@
       transform: none; 
     }
     .btn-primary { 
-      background: linear-gradient(135deg, var(--primary), #805ad5); 
+      background: var(--primary); 
       color: white; 
     }
     .btn-success { 
@@ -574,7 +575,7 @@
     }
     .pub-webcam-hdr {
       padding: 16px 20px;
-      background: linear-gradient(135deg, var(--primary), #805ad5);
+      background: var(--primary);
       color: white; display: flex; justify-content: space-between; align-items: center;
     }
     .pub-webcam-hdr h4 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
@@ -599,7 +600,7 @@
     }
     .pub-webcam-snap {
       width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), #805ad5);
+      background: var(--primary);
       border: 4px solid white; color: white; cursor: pointer;
       font-size: 22px; display: flex; align-items: center; justify-content: center;
       transition: transform 0.15s, box-shadow 0.15s;
@@ -689,7 +690,7 @@
     <div class="header">
       <img id="gymLogoHeader" src="https://i.imgur.com/TPoUeRJ.jpeg" 
            style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px;display:block;border:4px solid rgba(255,255,255,0.3);object-fit:cover">
-      <h1>AMPEL GYM</h1>
+      <h1>Ampel Gym</h1>
       <p>Daftar Membership Online — Cepat, Mudah, dan Aman</p>
     </div>
 
@@ -864,9 +865,9 @@
                 <span>Harga Paket</span>
                 <span id="summaryPackagePrice">Rp 0</span>
               </div>
-              <div class="payment-row" style="display:none">
+              <div class="payment-row" style="display:flex">
                 <span>Biaya Registrasi</span>
-                <span>Rp 0</span>
+                <span id="summaryRegFee">Rp 0</span>
               </div>
               <div class="payment-row payment-total">
                 <span>TOTAL</span>
@@ -914,12 +915,20 @@
     <div class="footer">
       <i class="fas fa-phone"></i> 087795175243 | 
       <i class="fas fa-envelope"></i> ampelgym@gmail.com
-      <p style="margin-top:8px">© AMPEL GYM · Pertanyaan? Hubungi admin kami</p>
+      <p style="margin-top:8px; margin-bottom: 20px;">© Ampel Gym · Pertanyaan? Hubungi admin kami</p>
+      
+      <!-- Developer Branding -->
+      <div class="developer-branding" style="text-align: center; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" onclick="window.open('https://wa.me/6285777723458', '_blank')" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+        <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 36px; height: 36px; margin-bottom: 4px; object-fit: contain;">
+        <div style="font-weight: bold; color: #1e293b; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">KIZIY</div>
+        <div style="font-family: 'Comic Sans MS', 'Comic Sans', cursive; font-size: 11px; color: #64748b; margin-top: 2px;">key to easy</div>
+      </div>
     </div>
   </div>
 
   <script>
     // ================ GLOBAL VARIABLES ================
+    var MEDIA_FOLDER_URL = "https://drive.google.com/drive/folders/1U0in53hDPuhRXAHnDxvTt7SuGRGjS7f0";
     var selectedPackage = null;
     var paymentProofBase64 = null;
     var packages = [];
@@ -1156,9 +1165,7 @@
       // Update payment summary
       document.getElementById('summaryName').textContent = formData.fullName;
       document.getElementById('summaryPackage').textContent = selectedPackage.name;
-      document.getElementById('summaryPackagePrice').textContent = formatCurrency(selectedPackage.price);
-      
-      const total = selectedPackage.price + 0;
+      const total = selectedPackage.price;
       document.getElementById('summaryTotal').textContent = formatCurrency(total);
 
       // Show payment section
@@ -1287,7 +1294,7 @@
         return; 
       }
 
-      const totalAmount = selectedPackage.price + 0;
+      const totalAmount = selectedPackage.price;
 
       const btn = document.getElementById('btnSubmit');
       btn.innerHTML = '<span class="spinner"></span> Mengirim...'; 
@@ -1323,6 +1330,7 @@
               `Paket           : ${selectedPackage.name}\n` +
               `Metode Bayar    : ${paymentMethod}\n` +
               `Harga Paket     : ${formatCurrency(selectedPackage.price)}\n` +
+              `Biaya Registrasi: Rp 0\n` +
               `TOTAL           : ${formatCurrency(totalAmount)}\n\n` +
               `⏳ Admin akan memverifikasi dalam 1×24 jam.\n` +
               `📧 Cek email ${formData.email} untuk konfirmasi.`,
