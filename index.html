@@ -9186,17 +9186,68 @@
       const modal = document.getElementById('dailyReportModal');
       const content = document.getElementById('dailyReportContent');
       modal.style.display = 'flex';
+      
+      const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Super Admin');
+      
+      // Initial loading state
       content.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px">Menyiapkan laporan harian...</p></div>';
+
+      // Default filter for staff is their own name
+      let defaultFilter = isAdmin ? '' : currentUser.name;
+      
+      if (isAdmin) {
+        // If admin, we show the filter first
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              const staffUsers = res.users.filter(u => u.role === 'Staff' || u.role === 'Kasir');
+              let filterHtml = `
+                <div style="margin-bottom:20px; padding:15px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+                  <div style="flex:1; min-width:200px">
+                    <label style="font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px">Filter Laporan per Staff</label>
+                    <select id="reportUserFilter" class="form-input" style="padding:8px" onchange="refreshDailyReport()">
+                      <option value="">-- LAPORAN GLOBAL (GABUNGAN) --</option>
+                      ${staffUsers.map(u => `<option value="${u.name}">${u.name}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="width:150px">
+                    <label style="font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px">Tanggal</label>
+                    <input type="date" id="reportDateFilter" class="form-input" style="padding:8px" value="${new Date().toISOString().split('T')[0]}" onchange="refreshDailyReport()">
+                  </div>
+                </div>
+                <div id="reportDataArea">
+                  <div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px">Memuat data laporan...</p></div>
+                </div>
+              `;
+              content.innerHTML = filterHtml;
+              refreshDailyReport();
+            } else {
+              content.innerHTML = '<div class="alert alert-error">Gagal memuat daftar user: ' + res.message + '</div>';
+            }
+          })
+          .getAllUsers();
+      } else {
+        // For staff, just show their report
+        refreshDailyReport(null, currentUser.name);
+      }
+    }
+
+    function refreshDailyReport(date, user) {
+      const dataArea = document.getElementById('reportDataArea') || document.getElementById('dailyReportContent');
+      const dateVal = date || (document.getElementById('reportDateFilter') ? document.getElementById('reportDateFilter').value : null);
+      const userVal = user !== undefined ? user : (document.getElementById('reportUserFilter') ? document.getElementById('reportUserFilter').value : (currentUser.role === 'Staff' ? currentUser.name : ''));
+      
+      if (dataArea) dataArea.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px">Memuat data laporan...</p></div>';
 
       google.script.run
         .withSuccessHandler(function (res) {
           if (res.success) {
             renderDailyReport(res.report);
           } else {
-            content.innerHTML = '<div class="alert alert-error">Gagal memuat laporan: ' + res.message + '</div>';
+            if (dataArea) dataArea.innerHTML = '<div class="alert alert-error">Gagal memuat laporan: ' + res.message + '</div>';
           }
         })
-        .getDailyCashierReport(); // Default today
+        .getDailyCashierReport(dateVal, userVal);
     }
 
     function closeDailyReportModal() {
@@ -9204,12 +9255,17 @@
     }
 
     function renderDailyReport(report) {
-      const content = document.getElementById('dailyReportContent');
+      const content = document.getElementById('reportDataArea') || document.getElementById('dailyReportContent');
 
       let html = `
-        <div style="margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:10px">
-          <h4 style="color:#6b46c1; margin-bottom:5px">Laporan Kasir - ${report.dateFormatted}</h4>
-          <p style="font-size:12px; color:#64748b">Ringkasan aktivitas keuangan per hari ini</p>
+        <div style="margin-bottom:20px; border-bottom:1px solid #e2e8f0; padding-bottom:10px; display:flex; justify-content:space-between; align-items:flex-end">
+          <div>
+            <h4 style="color:#6b46c1; margin-bottom:5px">Laporan Kasir - ${report.dateFormatted}</h4>
+            <p style="font-size:12px; color:#64748b">User: <b style="color:#1e293b">${report.filterUser}</b></p>
+          </div>
+          <div style="text-align:right; font-size:11px; color:#64748b">
+            Ringkasan aktivitas keuangan per hari ini
+          </div>
         </div>
 
         <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:24px">
@@ -9412,6 +9468,9 @@
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyiapkan...';
       btn.disabled = true;
 
+      const dateVal = document.getElementById('reportDateFilter') ? document.getElementById('reportDateFilter').value : null;
+      const userVal = document.getElementById('reportUserFilter') ? document.getElementById('reportUserFilter').value : (currentUser.role === 'Staff' ? currentUser.name : '');
+
       google.script.run
         .withSuccessHandler(function (res) {
           btn.innerHTML = originalText;
@@ -9419,9 +9478,10 @@
 
           if (res.success) {
             const summary = res.summary;
-            const text = `*LAPORAN HARIAN KASIR - Ampel Gym*\n` +
+            const text = `*LAPORAN HARIAN KASIR - UGYM*\n` +
               `--------------------------------\n` +
-              `Tanggal: ${res.fileName.replace('Laporan_Kasir_', '').replace('.pdf', '').replace(/_/g, ' ')}\n` +
+              `Tanggal: ${res.fileName.replace('Laporan_Kasir_', '').split('_')[0].replace('.pdf', '').replace(/_/g, ' ')}\n` +
+              `User: ${userVal || 'Global'}\n` +
               `--------------------------------\n` +
               `*Ringkasan Keuangan:*\n` +
               `- Total Revenue: ${formatCurrency(summary.totalRevenue)}\n` +
@@ -9451,7 +9511,7 @@
           btn.disabled = false;
           showToast('Error: ' + err.message, 'error');
         })
-        .generateDailyReportPDF();
+        .generateDailyReportPDF(dateVal, userVal);
     }
 
     // ================ POS & STOCK HISTORY ================
