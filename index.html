@@ -2940,6 +2940,14 @@
 
     // ================ NAVIGATION ================
     function showView(view) {
+      // Security check for gallery access
+      if (view === 'gallery' && currentUser && (currentUser.role === 'Staff' || currentUser.role === 'Kasir')) {
+        showToast('Anda tidak memiliki akses ke Galeri Member', 'error');
+        if (currentView !== 'gallery') return; // Stay on current view
+        showView('dashboard');
+        return;
+      }
+
       document.querySelectorAll('.menu-item').forEach(el =>
         el.classList.toggle('active', el.dataset.view === view)
       );
@@ -5992,7 +6000,8 @@
         'Satuan': document.getElementById('prod_unit').value,
         'Foto URL': document.getElementById('prod_photo_url').value,
         'productPhoto': productPhotoBase64,
-        'Status': 'Aktif'
+        'Status': 'Aktif',
+        'user': currentUser ? currentUser.name : 'System'
       };
 
       if (!data['Nama Produk']) { showToast('Nama produk wajib diisi', 'warning'); return; }
@@ -8775,7 +8784,7 @@
         let visible = true;
 
         if (role === 'Staff' || role === 'Kasir') {
-          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos', 'approvals', 'expenses', 'birthdays', 'gallery'];
+          const staffViews = ['dashboard', 'members', 'transactions', 'checkin', 'pt', 'pos', 'approvals', 'expenses', 'birthdays'];
           if (!staffViews.includes(view)) visible = false;
 
           // Dashboard card visibility for Kasir
@@ -8786,15 +8795,25 @@
             if (cardTotal) cardTotal.style.display = 'flex';
             if (cardAktif) cardAktif.style.display = 'flex';
             
-            // New Gallery and Birthday cards are also visible
+            // New Gallery hidden and Birthday card visible
             const cardGallery = document.getElementById('cardGallery');
             const cardBirthday = document.getElementById('cardBirthday');
-            if (cardGallery) cardGallery.style.display = 'flex';
+            if (cardGallery) cardGallery.style.display = 'none'; // Hide gallery for staff
             if (cardBirthday) cardBirthday.style.display = 'flex';
           }
         } else if (role === 'Admin') {
           // Hide pending approvals for Admin as requested
           if (view === 'approvals') visible = false;
+          
+          if (view === 'dashboard') {
+            const cardGallery = document.getElementById('cardGallery');
+            if (cardGallery) cardGallery.style.display = 'flex';
+          }
+        } else if (role === 'Super Admin') {
+          if (view === 'dashboard') {
+            const cardGallery = document.getElementById('cardGallery');
+            if (cardGallery) cardGallery.style.display = 'flex';
+          }
         }
 
         if (visible) {
