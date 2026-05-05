@@ -7345,7 +7345,7 @@
 
               if (res && res.success) {
                 const checkinTime = new Date();
-                const daysLeft = res.expiryDate ? Math.ceil((new Date(res.expiryDate) - new Date()) / 86400000) : 0;
+                const daysLeft = res.daysLeft !== undefined ? res.daysLeft : (res.expiryDate ? Math.round((new Date(new Date(res.expiryDate).setHours(0,0,0,0)) - new Date(new Date().setHours(0,0,0,0))) / 86400000) : 0);
 
                 resultEl.className = 'result-card success';
                 resultEl.style.display = 'block';
