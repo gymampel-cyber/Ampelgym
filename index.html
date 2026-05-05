@@ -404,18 +404,6 @@
       }
     }
 
-    border: none;
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    }
-
     .btn-close-sidebar:hover {
       background: rgba(255, 255, 255, 0.2);
       transform: scale(1.1);
@@ -5596,6 +5584,7 @@
           if (res.success) {
             showToast('✅ Berhasil diupdate', 'success');
             loadProductList();
+            if (typeof loadPOSProducts === 'function') loadPOSProducts(true);
           } else {
             showToast('❌ ' + res.message, 'error');
           }
@@ -5636,6 +5625,7 @@
             showToast('✅ ' + res.message, 'success');
             closeRestockModal();
             loadProductList();
+            if (typeof loadPOSProducts === 'function') loadPOSProducts(true);
             if (currentView === 'expenses') refreshExpenses();
             if (currentView === 'dashboard') refreshDashboard();
           } else {
@@ -5673,6 +5663,7 @@
             if (res.success) {
               showToast('✅ ' + res.message, 'success');
               loadProductList(true);
+              if (typeof loadPOSProducts === 'function') loadPOSProducts(true);
             } else {
               showToast('❌ ' + res.message, 'error');
             }
@@ -5708,6 +5699,7 @@
             showToast('✅ ' + res.message, 'success');
             closeAdjustModal();
             loadProductList();
+            if (typeof loadPOSProducts === 'function') loadPOSProducts(true);
           } else {
             showToast('❌ ' + res.message, 'error');
           }
@@ -5944,7 +5936,8 @@
           if (res.success) {
             showToast('✅ Produk disimpan', 'success');
             closeProductModal();
-            loadProductList(true); // Force reload to get updated data
+            loadProductList(true);
+            if (typeof loadPOSProducts === 'function') loadPOSProducts(true); // Force reload to get updated data
           } else {
             showToast('❌ ' + res.message, 'error');
           }
