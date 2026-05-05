@@ -2724,9 +2724,19 @@
     }
 
     function showConfirm(msg, cb) {
+      showConfirmModal('Konfirmasi', msg, cb);
+    }
+
+    function showConfirmModal(title, msg, cb) {
       confirmCallback = cb;
-      document.getElementById('confirmMessage').textContent = msg;
-      document.getElementById('confirmModal').style.display = 'flex';
+      const modal = document.getElementById('confirmModal');
+      if (modal) {
+        const titleEl = modal.querySelector('h3');
+        if (titleEl) titleEl.textContent = title || 'Konfirmasi';
+        const msgEl = document.getElementById('confirmMessage');
+        if (msgEl) msgEl.textContent = msg;
+        modal.style.display = 'flex';
+      }
     }
 
     function hideConfirmModal(result) {
