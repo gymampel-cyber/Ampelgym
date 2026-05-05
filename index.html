@@ -7845,27 +7845,34 @@
     }
 
     function fixPackageIds() {
-      showConfirm('Apakah Anda ingin merapikan ID Katalog Paket?\n\nID akan diperbarui berdasarkan tipe (M untuk Member, PT untuk Trainer, V untuk Visit) dan dipastikan unik.', function(ok) {
-        if (!ok) return;
-        showLoading();
-        google.script.run
-          .withSuccessHandler(function(res) {
-            hideLoading();
-            if (res.success) {
-              showToast('✅ ' + res.message, 'success');
-              if (currentView === 'catalog') loadPackageList();
-            } else {
-              showToast('❌ ' + res.message, 'error');
-            }
-          })
-          .fixPackageCatalogueIds();
-      });
+      showConfirmModal(
+        'Rapikan ID Katalog',
+        'Sistem akan merapikan ID paket berdasarkan tipe (M untuk Member, PT untuk Personal Trainer, V untuk Visit).\nLanjutkan?',
+        function () {
+          showLoading();
+          google.script.run
+            .withSuccessHandler(function (res) {
+              hideLoading();
+              if (res && res.success) {
+                showToast('✅ ' + res.message, 'success');
+                if (currentView === 'catalog') loadPackageList();
+              } else {
+                showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function (err) {
+              hideLoading();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .fixPackageCatalogueIds();
+        }
+      );
     }
 
     function triggerSetupLeveling() {
       showConfirmModal(
         'Setup Leveling User',
-        'Sistem akan membuat 3 akun default: Super Admin, Admin, dan Staff.\nLanjutkan?',
+        'Sistem akan membuat/memastikan akun default (Super Admin, Admin, Staff) tersedia.\nLanjutkan?',
         function () {
           showLoading();
           google.script.run
@@ -7874,11 +7881,11 @@
               if (res && res.success) {
                 showToast('✅ ' + res.message, 'success');
                 showAlert('Informasi Login',
-                  'Akun berhasil dibuat:\n\n' +
+                  'Akun default telah disiapkan:\n\n' +
                   '1. Super Admin: superadmin / superadmin123\n' +
                   '2. Admin: admin / admin123\n' +
                   '3. Staff: staff / staff123\n\n' +
-                  'Silakan simpan informasi ini.',
+                  'Segera ubah password Anda setelah login.',
                   'success'
                 );
               } else {
@@ -7897,14 +7904,14 @@
     function syncDatabase() {
       showConfirmModal(
         'Sinkronisasi Database',
-        'Sistem akan memeriksa dan membuat sheet yang belum ada (termasuk sheet Pengeluaran).\nLanjutkan?',
+        'Sistem akan memeriksa dan membuat sheet yang belum ada untuk memastikan semua fitur berjalan.\nLanjutkan?',
         function () {
           showLoading();
           google.script.run
             .withSuccessHandler(function (res) {
               hideLoading();
               if (res && res.success) {
-                showToast('✅ ' + res.message, 'success');
+                showToast('✅ Database tersinkronisasi', 'success');
               } else {
                 showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
               }
@@ -7918,13 +7925,16 @@
       );
     }
 
-
     function clearCache() {
       showLoading();
       google.script.run
         .withSuccessHandler(function (res) {
           hideLoading();
-          showToast(res?.success ? 'Cache berhasil dibersihkan' : 'Gagal', 'success');
+          if (res && res.success) {
+            showToast('✅ ' + (res.message || 'Cache berhasil dibersihkan'), 'success');
+          } else {
+            showToast('❌ Gagal membersihkan cache', 'error');
+          }
         })
         .withFailureHandler(function (err) {
           hideLoading();
@@ -7934,13 +7944,18 @@
     }
 
     function sendTestEmail() {
-      const email = prompt('Masukkan email tujuan:');
+      const email = prompt('Masukkan alamat email untuk test:');
       if (!email) return;
+      
       showLoading();
       google.script.run
         .withSuccessHandler(function (res) {
           hideLoading();
-          showToast(res?.success ? 'Email terkirim!' : 'Gagal: ' + (res?.message || ''), 'success');
+          if (res && res.success) {
+            showToast('✅ Email test berhasil dikirim!', 'success');
+          } else {
+            showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
+          }
         })
         .withFailureHandler(function (err) {
           hideLoading();
@@ -7949,28 +7964,51 @@
         .sendTestEmail(email);
     }
 
+    function reactivatePending() {
+      showConfirmModal(
+        'Reaktivasi Approval',
+        'Sistem akan mengaktifkan kembali data approval yang sudah expired/lama untuk diproses ulang jika perlu.\nLanjutkan?',
+        function () {
+          showLoading();
+          google.script.run
+            .withSuccessHandler(function (res) {
+              hideLoading();
+              if (res && res.success) {
+                showToast('✅ ' + res.message, 'success');
+                loadApprovals();
+              } else {
+                showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
+              }
+            })
+            .withFailureHandler(function (err) {
+              hideLoading();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .reactivatePendingApprovals();
+        }
+      );
+    }
+
     function loadMemberList() {
-      document.getElementById('adminDataView').innerHTML = `
-        <div style="text-align:center;padding:20px;color:#94a3b8">
-          <i class="fas fa-spinner fa-spin"></i> Memuat...
-        </div>
-      `;
+      const el = document.getElementById('adminDataView');
+      el.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat data member...</div>';
 
       google.script.run
         .withSuccessHandler(function (res) {
-          const el = document.getElementById('adminDataView');
-          if (!el) return;
-          const list = (res && res.success) ? res.members : [];
-
-          if (!list || !list.length) {
-            el.innerHTML = '<p class="text-muted" style="padding:20px;text-align:center">Tidak ada data member</p>';
+          if (!res || !res.success) {
+            el.innerHTML = '<div class="alert alert-error">Gagal memuat data member.</div>';
+            return;
+          }
+          const list = res.members || [];
+          if (list.length === 0) {
+            el.innerHTML = '<div class="alert alert-info">Tidak ada data member.</div>';
             return;
           }
 
           el.innerHTML = `
             <div class="table-container">
-              <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
-                <h4 style="font-weight:600">Semua Member (${list.length})</h4>
+              <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
+                <h4 style="font-weight:600">Daftar Member (${list.length})</h4>
               </div>
               <div style="overflow-x:auto">
                 <table class="data-table">
@@ -7979,22 +8017,20 @@
                       <th>ID</th>
                       <th>Nama</th>
                       <th>Telepon</th>
-                      <th>Email</th>
                       <th>Paket</th>
-                      <th>Expire</th>
                       <th>Status</th>
+                      <th>Expire</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${list.map(m => `
                       <tr>
-                        <td><code>${escapeHtml(m.memberId || '-')}</code></td>
-                        <td><b>${escapeHtml(m.fullName || '-')}</b></td>
-                        <td>${escapeHtml(m.phone || '-')}</td>
-                        <td>${escapeHtml(m.email || '-')}</td>
-                        <td>${escapeHtml(m.currentPackage || '-')}</td>
+                        <td><code>${m.memberId}</code></td>
+                        <td><b>${escapeHtml(m.fullName)}</b></td>
+                        <td>${m.phone}</td>
+                        <td>${m.currentPackage}</td>
+                        <td><span class="badge badge-${m.status === 'Aktif' ? 'success' : (m.status === 'Expired' ? 'danger' : 'warning')}">${m.status}</span></td>
                         <td>${formatDate(m.expiryDate)}</td>
-                        <td><span class="badge badge-${m.status === 'Aktif' ? 'success' : 'warning'}">${escapeHtml(m.status || '-')}</span></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -8003,35 +8039,24 @@
             </div>
           `;
         })
-        .withFailureHandler(function (err) {
-          const el = document.getElementById('adminDataView');
-          if (el) el.innerHTML = '<p class="text-muted">Error: ' + err.message + '</p>';
-        })
         .getAllMembers();
     }
 
     function loadTransactionList() {
-      document.getElementById('adminDataView').innerHTML = `
-        <div style="text-align:center;padding:20px;color:#94a3b8">
-          <i class="fas fa-spinner fa-spin"></i> Memuat...
-        </div>
-      `;
+      const el = document.getElementById('adminDataView');
+      el.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat riwayat transaksi...</div>';
 
       google.script.run
         .withSuccessHandler(function (res) {
-          const el = document.getElementById('adminDataView');
-          if (!el) return;
-          const list = (res && res.success) ? res.transactions : [];
-
-          if (!list || !list.length) {
-            el.innerHTML = '<p class="text-muted" style="padding:20px;text-align:center">Tidak ada data transaksi</p>';
+          if (!res || !res.success) {
+            el.innerHTML = '<div class="alert alert-error">Gagal memuat data transaksi.</div>';
             return;
           }
-
+          const list = res.transactions || [];
           el.innerHTML = `
             <div class="table-container">
               <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
-                <h4 style="font-weight:600">Riwayat Transaksi (${list.length})</h4>
+                <h4 style="font-weight:600">Riwayat Transaksi Terakhir (${list.length})</h4>
               </div>
               <div style="overflow-x:auto">
                 <table class="data-table">
@@ -8048,12 +8073,12 @@
                   <tbody>
                     ${list.map(t => `
                       <tr>
-                        <td><code>${escapeHtml(t.receiptNumber || '-')}</code></td>
-                        <td>${escapeHtml(t.memberName || '-')}</td>
-                        <td>${escapeHtml(t.packageName || '-')}</td>
-                        <td><b style="color:#22c55e">${formatCurrency(t.totalAmount || 0)}</b></td>
+                        <td><code>${t.receiptNumber}</code></td>
+                        <td>${escapeHtml(t.memberName)}</td>
+                        <td>${t.packageName}</td>
+                        <td style="color:#22c55e;font-weight:600">${formatCurrency(t.totalAmount)}</td>
                         <td>${formatDateTime(t.transactionDate)}</td>
-                        <td><span class="badge badge-success">${escapeHtml(t.status || 'Berhasil')}</span></td>
+                        <td><span class="badge badge-success">${t.status}</span></td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -8062,11 +8087,90 @@
             </div>
           `;
         })
-        .withFailureHandler(function (err) {
-          const el = document.getElementById('adminDataView');
-          if (el) el.innerHTML = '<p class="text-muted">Error: ' + err.message + '</p>';
-        })
         .getTransactionHistory();
+    }
+
+    function loadUserList() {
+      if (currentUser.role !== 'Super Admin') {
+        showToast('Akses ditolak. Hanya Super Admin.', 'error');
+        return;
+      }
+
+      const el = document.getElementById('adminDataView');
+      el.innerHTML = '<div style="text-align:center;padding:40px"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat daftar pengguna...</div>';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (!res || !res.success) {
+            el.innerHTML = '<div class="alert alert-error">Gagal memuat data user.</div>';
+            return;
+          }
+          const list = res.users || [];
+          el.innerHTML = `
+            <div class="table-container">
+              <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
+                <h4 style="font-weight:600">Daftar Pengguna Sistem (${list.length})</h4>
+                <small class="text-muted">Hanya Super Admin yang dapat mengelola akun.</small>
+              </div>
+              <div style="overflow-x:auto">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>Username</th>
+                      <th>Role</th>
+                      <th>Last Login</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${list.map(u => `
+                      <tr>
+                        <td><b>${escapeHtml(u.name)}</b></td>
+                        <td><code>${u.username}</code></td>
+                        <td><span class="badge badge-${u.role === 'Super Admin' ? 'danger' : (u.role === 'Admin' ? 'primary' : 'secondary')}">${u.role}</span></td>
+                        <td>${u.lastLogin ? formatDateTime(u.lastLogin) : '-'}</td>
+                        <td>
+                          ${u.username !== 'superadmin' ? `
+                            <button class="btn btn-sm btn-danger" onclick="confirmDeleteUser('${u.id}', '${u.username}')">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          ` : '-'}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        })
+        .getAllUsers();
+    }
+
+    function confirmDeleteUser(id, username) {
+      showConfirmModal(
+        'Hapus Akun User',
+        `Apakah Anda yakin ingin menghapus akun "${username}"?\n\nAkun ini tidak akan dapat login lagi ke sistem.`,
+        function () {
+          showLoading();
+          google.script.run
+            .withSuccessHandler(function (res) {
+              hideLoading();
+              if (res && res.success) {
+                showToast('✅ ' + res.message, 'success');
+                loadUserList();
+              } else {
+                showToast('❌ ' + (res?.message || 'Gagal menghapus'), 'error');
+              }
+            })
+            .withFailureHandler(function (err) {
+              hideLoading();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .deleteUserAccount(id, currentUser.name);
+        }
+      );
     }
 
     function triggerShowSysInfo() {
@@ -8147,6 +8251,7 @@
               const el = document.getElementById(id);
               if (el) el.value = '';
             });
+            if (currentUser.role === 'Super Admin') loadUserList();
           } else {
             showAlert('createUserAlert', '❌ ' + (res?.message || 'Gagal membuat akun'), 'error');
           }
@@ -8209,206 +8314,6 @@
         })[fn]();
     }
 
-    function loadUserList() {
-      if (currentUser.role !== 'Super Admin') {
-        showToast('Akses ditolak. Hanya Super Admin.', 'error');
-        return;
-      }
-
-      document.getElementById('adminDataView').innerHTML = `
-        <div style="text-align:center;padding:20px;color:#94a3b8">
-          <i class="fas fa-spinner fa-spin"></i> Memuat Daftar User...
-        </div>
-      `;
-
-      google.script.run
-        .withSuccessHandler(function (res) {
-          const el = document.getElementById('adminDataView');
-          if (!el) return;
-
-          if (res.success) {
-            const list = res.users;
-            el.innerHTML = `
-              <div class="table-container">
-                <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center">
-                  <h4 style="font-weight:600">Daftar Pengguna Sistem (${list.length})</h4>
-                  <small style="color:#64748b">Hanya Super Admin yang dapat melihat & mengelola akun.</small>
-                </div>
-                <div style="overflow-x:auto">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>Nama</th>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Kontak</th>
-                        <th>Last Login</th>
-                        <th>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${list.map(u => `
-                        <tr>
-                          <td><b>${escapeHtml(u.name)}</b></td>
-                          <td><code>${u.username}</code></td>
-                          <td><span class="badge badge-${u.role === 'Super Admin' ? 'danger' : (u.role === 'Admin' ? 'primary' : 'secondary')}">${u.role}</span></td>
-                          <td><small>${u.email || '-'}<br>${u.phone || '-'}</small></td>
-                          <td><small>${u.lastLogin ? format.date(new Date(u.lastLogin), true) : '-'}</small></td>
-                          <td>
-                            ${u.username !== 'superadmin' ? `
-                              <button class="btn btn-sm btn-danger" onclick="confirmDeleteUser('${u.id}', '${u.username}')">
-                                <i class="fas fa-trash"></i>
-                              </button>
-                            ` : '-'}
-                          </td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            `;
-          } else {
-            el.innerHTML = '<div class="alert alert-error">' + res.message + '</div>';
-          }
-        })
-        .getAllUsers();
-    }
-
-    function fixPackageIds() {
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res && res.success) {
-            showToast('✅ ' + res.message, 'success');
-          } else {
-            showToast('❌ Gagal: ' + (res?.message || 'Error Unknown'), 'error');
-          }
-        })
-        .withFailureHandler(function (err) {
-          hideLoading();
-          showToast('Error: ' + err.message, 'error');
-        })
-        .fixPackageCatalogueIds();
-    }
-
-    function syncDatabase() {
-      showConfirm(
-        'Sinkronisasi Database\n\nTindakan ini akan menginisialisasi ulang struktur sheet jika belum ada. Lanjutkan?',
-        function (ok) {
-          if (!ok) return;
-          showLoading();
-          google.script.run
-            .withSuccessHandler(function (res) {
-              hideLoading();
-              if (res && res.success) {
-                showToast('✅ Database tersinkronisasi', 'success');
-              } else {
-                showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
-              }
-            })
-            .withFailureHandler(function (err) {
-              hideLoading();
-              showToast('Error: ' + err.message, 'error');
-            })
-            .initializeSheets();
-        }
-      );
-    }
-
-    function triggerSetupLeveling() {
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res && res.success) {
-            showToast('✅ ' + res.message, 'success');
-          } else {
-            showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
-          }
-        })
-        .withFailureHandler(function (err) {
-          hideLoading();
-          showToast('Error: ' + err.message, 'error');
-        })
-        .triggerSetupLeveling();
-    }
-
-    function clearCache() {
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res && res.success) {
-            showToast('✅ ' + res.message, 'success');
-          } else {
-            showToast('❌ Gagal', 'error');
-          }
-        })
-        .withFailureHandler(function (err) {
-          hideLoading();
-          showToast('Error: ' + err.message, 'error');
-        })
-        .clearStatsCache();
-    }
-
-    function sendTestEmail() {
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res && res.success) {
-            showToast('✅ ' + res.message, 'success');
-          } else {
-            showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
-          }
-        })
-        .withFailureHandler(function (err) {
-          hideLoading();
-          showToast('Error: ' + err.message, 'error');
-        })
-        .sendTestEmail();
-    }
-
-    function reactivatePending() {
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res && res.success) {
-            showToast('✅ ' + res.message, 'success');
-          } else {
-            showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
-          }
-        })
-        .withFailureHandler(function (err) {
-          hideLoading();
-          showToast('Error: ' + err.message, 'error');
-        })
-        .reactivatePendingApprovals();
-    }
-
-    function confirmDeleteUser(id, username) {
-      showConfirmModal(
-        'Hapus Akun User',
-        `Apakah Anda yakin ingin menghapus akun "${username}"?\n\nAkun ini tidak akan dapat login lagi.`,
-        function () {
-          showLoading();
-          google.script.run
-            .withSuccessHandler(function (res) {
-              hideLoading();
-              if (res.success) {
-                showToast('✅ ' + res.message, 'success');
-                loadUserList();
-              } else {
-                showToast('❌ ' + res.message, 'error');
-              }
-            })
-            .deleteUserAccount(id, currentUser.name);
-        }
-      );
-    }
     function loadExpensesView() {
       const content = `
         <div class="filter-container">
