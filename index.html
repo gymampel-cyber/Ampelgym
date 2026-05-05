@@ -4667,7 +4667,7 @@
                     </button>
                   </div>
                 </div>
-                <button class="btn btn-primary" onclick="loadPOSProducts()">
+                <button class="btn btn-primary" onclick="loadPOSProducts(true)">
                   <i class="fas fa-sync-alt"></i>
                 </button>
                 <button class="btn btn-secondary" onclick="showPOSTransactionHistory()" title="Riwayat Transaksi">
@@ -5074,7 +5074,7 @@
       if (document.getElementById('pos_discount')) document.getElementById('pos_discount').value = '0';
       if (document.getElementById('pos_wa_number')) document.getElementById('pos_wa_number').value = '';
       updateCartUI();
-      loadPOSProducts();
+      loadPOSProducts(true);
     }
 
     function sendPOSReceiptToWA(trxId, data) {
@@ -5254,6 +5254,9 @@
             <div style="display:flex; gap:8px">
               <button class="btn btn-sm btn-outline" onclick="loadProductList(true)" title="Perbarui Data">
                 <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="viewStockHistory()" style="color:#d97706; border-color:#fcd34d">
+                <i class="fas fa-history"></i> Riwayat Stok
               </button>
               <button class="btn btn-sm btn-success" onclick="openProductModal()">
                 <i class="fas fa-plus"></i> Tambah Produk
@@ -5799,6 +5802,49 @@
     }
 
     let productModalScanner = null;
+    function viewStockHistory() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function (res) {
+          hideLoading();
+          if (res.success) {
+            _renderStockHistoryModal(res.logs);
+          } else {
+            showToast('Gagal memuat riwayat: ' + res.message, 'error');
+          }
+        })
+        .withFailureHandler(function(err) { hideLoading(); showToast('Error: ' + err, 'error'); })
+        .getStockLogs();
+    }
+
+    function _renderStockHistoryModal(logs) {
+      const modal = document.getElementById('stockHistoryModal');
+      const listEl = document.getElementById('stockHistoryList');
+      if (!modal || !listEl) return;
+
+      if (!logs || logs.length === 0) {
+        listEl.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">Belum ada riwayat pergerakan stok</td></tr>';
+      } else {
+        listEl.innerHTML = logs.map(l => `
+          <tr>
+            <td><small>${formatDateTime(l.Timestamp)}</small></td>
+            <td><b>${escapeHtml(l['Nama Produk'])}</b><br><small class="text-muted">${l['ID Produk']}</small></td>
+            <td><span class="badge badge-${l.Tipe === 'MASUK' ? 'success' : (l.Tipe === 'KELUAR' ? 'danger' : 'warning')}">${l.Tipe}</span></td>
+            <td style="text-align:right"><b>${l.Jumlah > 0 ? '+' + l.Jumlah : l.Jumlah}</b></td>
+            <td style="text-align:right"><b>${l['Stok Akhir']}</b></td>
+            <td><small>${escapeHtml(l.Keterangan)}</small></td>
+            <td><small>${l.User}</small></td>
+          </tr>
+        `).join('');
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeStockHistoryModal() {
+      document.getElementById('stockHistoryModal').style.display = 'none';
+    }
+
     function openProductModal(id) {
       document.getElementById('productModal').style.display = 'flex';
       const scannerArea = document.getElementById('productScannerArea');
@@ -9181,6 +9227,38 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeAdjustModal()">Batal</button>
         <button class="btn btn-warning" onclick="submitAdjust()">Update Stok</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Riwayat Stok -->
+  <div id="stockHistoryModal" class="modal-overlay" style="display:none">
+    <div class="modal-container" style="max-width:900px">
+      <div class="modal-header">
+        <h3><i class="fas fa-history"></i> Riwayat Pergerakan Stok</h3>
+      </div>
+      <div class="modal-body">
+        <div style="max-height:500px; overflow-y:auto">
+          <table class="data-table">
+            <thead style="position:sticky; top:0; background:white; z-index:1">
+              <tr>
+                <th>Waktu</th>
+                <th>Produk</th>
+                <th>Tipe</th>
+                <th style="text-align:right">Jumlah</th>
+                <th style="text-align:right">Stok Akhir</th>
+                <th>Keterangan</th>
+                <th>User</th>
+              </tr>
+            </thead>
+            <tbody id="stockHistoryList">
+              <!-- Content loaded via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeStockHistoryModal()">Tutup</button>
       </div>
     </div>
   </div>
