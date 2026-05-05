@@ -8288,7 +8288,11 @@
             showToast('❌ ' + (res?.message || 'Gagal update'), 'error');
           }
         })
-        .updateUserAccount(userId, data, currentUser.name);
+        .withFailureHandler(function (err) {
+          hideLoading();
+          showToast('Error: ' + err.message, 'error');
+        })
+        .updateUserAccount(userId, data, currentUser.username || currentUser.name);
     }
 
     function triggerShowSysInfo() {
@@ -8387,7 +8391,7 @@
           role: role,
           email: email,
           password: password
-        }, currentUser?.name || 'Admin');
+        }, currentUser.username || currentUser.name || 'Admin');
     }
 
     function showDuplicateCleanupDialog() {
