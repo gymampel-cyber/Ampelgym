@@ -155,6 +155,24 @@
               if (p) p.stock = (p.stock || p.Stok || 0) - item.qty;
             });
           }
+        } else if (action === 'saveExpense') {
+          const exp = args[0];
+          appData.expenses.unshift(exp);
+          appData.stats.expenses = (appData.stats.expenses || 0) + (exp.amount || 0);
+        } else if (action === 'approveRegistration') {
+          const approvalId = args[0];
+          const index = appData.approvals.findIndex(a => a.requestId === approvalId);
+          if (index > -1) appData.approvals.splice(index, 1);
+          appData.stats.pendingApprovals = Math.max(0, (appData.stats.pendingApprovals || 0) - 1);
+        } else if (action === 'saveProduct') {
+          const prod = args[0];
+          const index = appData.products.findIndex(p => p.id === prod.id || p.ID_Produk === prod.ID_Produk);
+          if (index > -1) appData.products[index] = { ...appData.products[index], ...prod };
+          else appData.products.push(prod);
+        } else if (action === 'adjustStock') {
+          const data = args[0];
+          const p = appData.products.find(prod => prod.id === data.id || prod.ID_Produk === data.id);
+          if (p) p.stock = data.newStock;
         }
         
         saveAppData();
@@ -165,7 +183,13 @@
     }
 
     function isActionCachable(method) {
-      return ['getMembers', 'getProducts', 'getDashboardStats', 'getInitialAppData', 'getAllMembers', 'getPackages'].includes(method);
+      const cacheable = [
+        'getMembers', 'getProducts', 'getDashboardStats', 'getInitialAppData', 
+        'getAllMembers', 'getPackages', 'getFullCatalogue', 'getPTCatalogue',
+        'getPendingApprovals', 'getExpenses', 'getTodayCheckins', 'getAllUsers',
+        'getUpcomingBirthdays', 'searchMembers'
+      ];
+      return cacheable.includes(method);
     }
 
     function getCachedDataForAction(method, args) {
@@ -173,7 +197,32 @@
       if (method === 'getMembers' || method === 'getAllMembers') return { success: true, members: appData.members };
       if (method === 'getProducts') return { success: true, products: appData.products };
       if (method === 'getPackages') return { success: true, packages: appData.catalogue };
-      if (method === 'getDashboardStats' && !args[0] && !args[1]) return { success: true, stats: appData.stats };
+      if (method === 'getFullCatalogue') return { success: true, packages: appData.fullCatalogue };
+      if (method === 'getPTCatalogue') return { success: true, packages: appData.ptCatalogue };
+      if (method === 'getPendingApprovals') return { success: true, approvals: appData.approvals };
+      if (method === 'getTodayCheckins') return { success: true, checkins: appData.todayCheckins };
+      if (method === 'getAllUsers') return { success: true, users: appData.users };
+      if (method === 'getUpcomingBirthdays') return { success: true, birthdays: appData.birthdays };
+      
+      if (method === 'getExpenses') {
+        // Only serve from cache if it's "Today" (no filter or current date)
+        if (!args[0] && !args[1]) return { success: true, expenses: appData.expenses };
+      }
+
+      if (method === 'getDashboardStats' && !args[0] && !args[1]) {
+        return { success: true, stats: appData.stats };
+      }
+
+      if (method === 'searchMembers') {
+        const query = (args[0] || '').toLowerCase();
+        const results = appData.members.filter(m => 
+          (m.fullName || '').toLowerCase().includes(query) || 
+          (m.memberId || '').toLowerCase().includes(query) ||
+          (m.phone || '').toLowerCase().includes(query)
+        ).slice(0, 10);
+        return { success: true, members: results };
+      }
+      
       return null;
     }
 
@@ -2687,7 +2736,7 @@
     var productCameraFacing = 'environment';
     
     // ================ LOCAL-FIRST CACHE & SYNC ================
-    var appData = JSON.parse(localStorage.getItem('ampel_app_data') || '{"members":[],"catalogue":[],"products":[],"approvals":[],"stats":{},"lastSync":null}');
+    var appData = JSON.parse(localStorage.getItem('ampel_app_data') || '{"members":[],"catalogue":[],"fullCatalogue":[],"ptCatalogue":[],"products":[],"approvals":[],"expenses":[],"todayCheckins":[],"users":[],"birthdays":[],"stats":{},"lastSync":null}');
     var syncQueue = JSON.parse(localStorage.getItem('ampel_sync_queue') || '[]');
     var isSyncing = false;
     var isOffline = !navigator.onLine;
