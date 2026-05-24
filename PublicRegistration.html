@@ -3,71 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registrasi Member - Ampel Gym</title>
+  <title>Registrasi Member</title>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyCbtuJIB5VqEx0komvoxV_fngSCRk7w9iiEs4PWgu2umgllXkdYywilPlP7rJBNnp/exec';
     const google = {
       script: {
-        run: new Proxy({}, {
-          get: function(target, prop) {
-            let successHandler = null;
-            let failureHandler = null;
-            function createChain(propName) {
-              if (propName === 'withSuccessHandler') {
-                return function(callback) {
-                  successHandler = callback;
-                  return new Proxy({}, { get: (t, p) => createChain(p) });
+        run: (function() {
+          function createProxy(handlers) {
+            return new Proxy({}, {
+              get: function(target, name) {
+                if (name === 'withSuccessHandler') {
+                  return function(cb) { return createProxy({ ...handlers, success: cb }); };
+                }
+                if (name === 'withFailureHandler') {
+                  return function(cb) { return createProxy({ ...handlers, failure: cb }); };
+                }
+                return function(...args) {
+                  fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: name, args: args }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.success && handlers.success) handlers.success(data.result || data);
+                    else if (!data.success && handlers.failure) handlers.failure(new Error(data.message));
+                    else if (!data.success) console.error('Backend Error:', data.message);
+                  })
+                  .catch(err => {
+                    if (handlers.failure) handlers.failure(err);
+                    else console.error('Network Error:', err);
+                  });
                 };
               }
-              if (propName === 'withFailureHandler') {
-                return function(callback) {
-                  failureHandler = callback;
-                  return new Proxy({}, { get: (t, p) => createChain(p) });
-                };
-              }
-              return function(...args) {
-                fetch(SCRIPT_URL, {
-                  method: 'POST',
-                  body: JSON.stringify({ action: propName, args: args }),
-                  headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                  if (!data.success) {
-                    if (failureHandler) failureHandler(new Error(data.message));
-                    else console.error('Backend Error:', data.message);
-                  } else {
-                    if (successHandler) successHandler(data.result);
-                  }
-                })
-                .catch(err => {
-                  if (failureHandler) failureHandler(err);
-                  else console.error('Network Error:', err);
-                });
-              };
-            }
-            return createChain(prop);
+            });
           }
-        })
+          return createProxy({ success: null, failure: null });
+        })()
       }
     };
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-        :root {
+    :root {
       --primary: #d4af37;
       --primary-dark: #b5952f;
-      --accent: #000000;
+      --primary-light: #fdf8e7;
+      --accent: #d4af37;
       --dark: #000000;
-      --bg-gradient: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-      --card-header-gradient: linear-gradient(135deg, #000000, #333333);
+      --bg-gradient: linear-gradient(135deg, #f9f9f9 0%, #f0f0f0 100%);
+      --card-header-gradient: linear-gradient(135deg, #000000, #1a1a1a);
+      --glass: rgba(255, 255, 255, 0.9);
+      --border-color: #e5e5ea;
+      --text-main: #000000;
+      --text-secondary: #555555;
+      --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.05);
     }
-
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
     body { 
       background: var(--bg-gradient);
       min-height: 100vh;
       padding: 20px;
+      color: #1c1c1e;
     }
     .container { 
       max-width: 800px; 
@@ -154,7 +151,7 @@
       transition: 0.3s;
     }
     .step.active .step-circle {
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       border-color: var(--primary);
       color: white;
     }
@@ -388,8 +385,8 @@
     }
     .package-card.selected { 
       border-color: var(--primary); 
-      background: linear-gradient(135deg, #f3e8ff, #ffffff);
-      box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+      background: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.2);
     }
     .package-name { 
       font-weight: 700; 
@@ -445,7 +442,7 @@
     
     /* Bank Info */
     .bank-info {
-      background: #f3e8ff;
+      background: var(--primary-light);
       border-left: 4px solid var(--primary);
       border-radius: 12px;
       padding: 20px;
@@ -469,10 +466,16 @@
       margin: 8px 0;
     }
     .bank-account {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: var(--primary);
       letter-spacing: 1px;
+      margin: 10px 0;
+      padding: 10px;
+      background: #fdf8e7;
+      border-radius: 8px;
+      display: inline-block;
+      border: 1px dashed var(--primary);
     }
     
     /* File Upload */
@@ -556,7 +559,7 @@
     /* Footer */
     .footer {
       text-align: center;
-      color: rgba(255,255,255,0.8);
+      color: var(--text-secondary);
       font-size: 14px;
       padding: 20px;
     }
@@ -575,7 +578,7 @@
     }
     .pub-webcam-hdr {
       padding: 16px 20px;
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white; display: flex; justify-content: space-between; align-items: center;
     }
     .pub-webcam-hdr h4 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
@@ -600,11 +603,11 @@
     }
     .pub-webcam-snap {
       width: 60px; height: 60px; border-radius: 50%;
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       border: 4px solid white; color: white; cursor: pointer;
       font-size: 22px; display: flex; align-items: center; justify-content: center;
       transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 4px 12px rgba(102,126,234,0.5);
+      box-shadow: 0 4px 12px rgba(212,175,55,0.5);
     }
     .pub-webcam-snap:hover { transform: scale(1.08); }
     .pub-webcam-snap:active { transform: scale(0.95); }
@@ -686,13 +689,36 @@
   </div>
 
   <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <img id="gymLogoHeader" src="https://i.imgur.com/TPoUeRJ.jpeg" 
-           style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px;display:block;border:4px solid rgba(255,255,255,0.3);object-fit:cover">
-      <h1>Ampel Gym</h1>
-      <p>Daftar Membership Online — Cepat, Mudah, dan Aman</p>
+    <!-- Branch Selection Landing -->
+    <div id="landingView" style="display:none; text-align:center; padding:60px 20px; animation: slideUp 0.6s ease;">
+      <div style="background: white; width: 100px; height: 100px; border-radius: 30px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(0,0,0,0.08); padding: 15px; border: 1px solid #e5e5ea;">
+        <img src="https://i.imgur.com/NO5dVfb.png" style="width: 100%; height: auto; object-fit: contain;">
+      </div>
+      <h1 style="font-size: 36px; font-weight: 800; color: #000; margin-bottom: 12px; letter-spacing: -1px;">Selamat Datang</h1>
+      <p style="color: #555; font-size: 18px; margin-bottom: 40px;">Pilih lokasi gym untuk memulai pendaftaran membership</p>
+      
+      <div id="branchCardsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto;">
+        <!-- Branches will be loaded here dynamically -->
+      </div>
+
+      <!-- Public Extension Buttons -->
+      <div id="extensionLinksContainer" style="margin-top: 40px; padding-top: 28px; border-top: 1px solid #e5e5ea; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <p style="color: #555; font-size: 15px; margin-bottom: 20px; font-weight: 600;">Sudah punya membership? Perpanjang di sini:</p>
+        <div id="extensionLinks" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+          <!-- Extension links will be loaded here dynamically -->
+        </div>
+      </div>
     </div>
+
+    <!-- Header (Hidden on Landing) -->
+    <div class="header" id="mainHeader" style="display:none">
+      <img id="gymLogoHeader" src="https://i.imgur.com/NO5dVfb.png" 
+           style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px;display:block;border:4px solid var(--primary);object-fit:cover;box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+      <h1 id="gymNameHeader" style="color: #000;">Gym Name</h1>
+      <p id="gymMottoHeader" style="color: #555;">Daftar Membership Online — Cepat, Mudah, dan Aman</p>
+    </div>
+
+    <div id="registrationContent" style="display:none">
 
     <!-- Steps Progress -->
     <div class="card">
@@ -739,12 +765,18 @@
                 <label class="form-label">
                   Nama Lengkap <span style="color:#ef4444">*</span>
                 </label>
-                <input id="fullName" class="form-input" placeholder="Contoh: Budi Santoso">
+                <input id="name" class="form-input" placeholder="Contoh: Budi Santoso">
                 <small style="color:#94a3b8;margin-top:4px;display:block">Minimal 3 karakter</small>
               </div>
               <div class="form-group">
-                <label class="form-label">Tanggal Lahir</label>
-                <input id="dob" type="date" class="form-input">
+                <label class="form-label">
+                  Jenis Kelamin <span style="color:#ef4444">*</span>
+                </label>
+                <select id="gender" class="form-input">
+                  <option value="" disabled selected>Pilih Jenis Kelamin</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
               </div>
             </div>
             <div class="form-row">
@@ -753,7 +785,7 @@
                   No. Telepon <span style="color:#ef4444">*</span>
                 </label>
                 <input id="phone" class="form-input" placeholder="0xxxxxxxxxx" type="tel">
-                <small style="color:#94a3b8">Contoh: 0812345678 atau 021xxxxxxx</small>
+                <small style="color:#94a3b8">Contoh: 0812345678</small>
               </div>
               <div class="form-group">
                 <label class="form-label">
@@ -762,6 +794,21 @@
                 <input id="email" type="email" class="form-input" placeholder="contoh@email.com">
                 <small style="color:#94a3b8">Email untuk konfirmasi</small>
               </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Tanggal Lahir <span style="color:#ef4444">*</span>
+              </label>
+              <input id="dob" type="date" class="form-input">
+              <small style="color:#94a3b8">Untuk verifikasi pengingat ulang tahun member</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Pilih Lokasi Gym <span style="color:#ef4444">*</span>
+              </label>
+              <select id="gymLocation" class="form-input">
+                <option value="" disabled selected>Memuat lokasi...</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="fas fa-camera" style="color:var(--primary)"></i> Foto Member <span style="color:#ef4444">*</span></label>
@@ -840,15 +887,13 @@
 
             <!-- Bank Info -->
             <div class="bank-info">
-              <h4><i class="fas fa-university"></i> Transfer Pembayaran ke:</h4>
-              <div class="bank-detail">
-                <p><strong>Bank:</strong> BCA</p>
-                <p><strong>No. Rekening:</strong> <span class="bank-account">183-118-0001</span></p>
-                <p><strong>Atas Nama:</strong> MUHAMMAD R MASCATY</p>
-                <p style="margin-top:12px;color:#64748b;font-size:13px">
-                  <i class="fas fa-info-circle"></i> Upload bukti transfer setelah pembayaran
-                </p>
+              <h4><i class="fas fa-university"></i> Informasi Rekening</h4>
+              <div class="bank-detail" id="bankInfoContent">
+                <p>Memuat informasi bank...</p>
               </div>
+              <p style="margin-top:12px;color:#64748b;font-size:13px">
+                <i class="fas fa-info-circle"></i> Upload bukti transfer setelah pembayaran
+              </p>
             </div>
 
             <!-- Payment Summary -->
@@ -865,9 +910,9 @@
                 <span>Harga Paket</span>
                 <span id="summaryPackagePrice">Rp 0</span>
               </div>
-              <div class="payment-row" style="display:flex">
+              <div class="payment-row" style="display:none">
                 <span>Biaya Registrasi</span>
-                <span id="summaryRegFee">Rp 0</span>
+                <span>Rp 0</span>
               </div>
               <div class="payment-row payment-total">
                 <span>TOTAL</span>
@@ -910,34 +955,67 @@
         </div>
       </div>
     </div>
+  </div> <!-- End registrationContent -->
 
     <!-- Footer -->
-    <div class="footer">
-      <i class="fas fa-phone"></i> 087795175243 | 
-      <i class="fas fa-envelope"></i> ampelgym@gmail.com
-      <p style="margin-top:8px; margin-bottom: 20px;">© Ampel Gym · Pertanyaan? Hubungi admin kami</p>
-      
-      <!-- Developer Branding -->
-      <div class="developer-branding" style="text-align: center; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" onclick="window.open('https://wa.me/6285777723458', '_blank')" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-        <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 36px; height: 36px; margin-bottom: 4px; object-fit: contain;">
-        <div style="font-weight: bold; color: #1e293b; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">KIZIY</div>
-        <div style="font-family: 'Comic Sans MS', 'Comic Sans', cursive; font-size: 11px; color: #64748b; margin-top: 2px;">key to easy</div>
+    <div class="footer" id="gymFooter">
+      <div style="margin-bottom: 8px;">
+        <strong id="footerBranchName" style="font-size: 16px; color: #000;">Gym Name</strong>
       </div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #555;">
+        <span><i class="fas fa-phone" style="color: var(--primary); margin-right: 4px;"></i> <span id="footerPhone">-</span></span>
+        <span><i class="fas fa-envelope" style="color: var(--primary); margin-right: 4px;"></i> <span id="footerEmail">-</span></span>
+      </div>
+      <div id="footerAddress" style="font-size: 12px; color: #888; margin-top: 6px;"></div>
+      <p style="margin-top: 10px; font-size: 12px; color: #aaa;">© <span id="copyrightName">Gym</span> · Pertanyaan? Hubungi admin kami</p>
+    </div>
+
+    <!-- Developer Branding -->
+    <div class="developer-branding" style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 1px solid var(--border-color); cursor: pointer; opacity: 0.8; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center;" onclick="window.open('https://wa.me/6285777723458', '_blank')" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.05)'" onmouseout="this.style.opacity='0.8'; this.style.transform='scale(1)'">
+      <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 100px; height: auto; margin-bottom: 8px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+      <div style="font-weight: 800; color: var(--text-main); font-size: 18px; letter-spacing: 3px; text-align: center; text-transform: uppercase;">KIZIY</div>
+      <div style="font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 12px; color: var(--text-secondary); margin-top: 4px; text-align: center; letter-spacing: 1.5px;">key to easy</div>
     </div>
   </div>
 
   <script>
     // ================ GLOBAL VARIABLES ================
-    var MEDIA_FOLDER_URL = "https://drive.google.com/drive/folders/1U0in53hDPuhRXAHnDxvTt7SuGRGjS7f0";
     var selectedPackage = null;
     var paymentProofBase64 = null;
     var packages = [];
     var formData = {
-      fullName: '',
+      name: '',
       phone: '',
-      email: '',
-      dob: ''
+      email: ''
     };
+    var currentBranch = null;
+    var branchSettings = null;
+
+    // ================ CACHE SYSTEM ================
+    function saveToCache(key, data) {
+      try {
+        const cacheData = { timestamp: new Date().getTime(), payload: data };
+        localStorage.setItem('gym_pub_' + key, JSON.stringify(cacheData));
+      } catch (e) {}
+    }
+    function getFromCache(key) {
+      try {
+        const cached = localStorage.getItem('gym_pub_' + key);
+        return cached ? JSON.parse(cached).payload : null;
+      } catch (e) { return null; }
+    }
+
+    // ================ NAVIGATION ================
+    function goToExtension(branch) {
+      var currentUrl = window.location.href;
+      var url;
+      if (currentUrl.includes('script.google.com')) {
+        url = SCRIPT_URL + '?page=extension&branch=AMPEL';
+      } else {
+        url = 'PublicExtension.html?branch=AMPEL';
+      }
+      try { window.top.location.href = url; } catch(e) { window.location.href = url; }
+    }
 
     // ================ UTILS ================
     function showLoading() { 
@@ -1116,21 +1194,29 @@
 
     function nextToPackage() {
       // Validate personal data
-      const fullName = document.getElementById('fullName').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const dob = document.getElementById('dob').value;
+      formData.name = document.getElementById('name').value.trim();
+      formData.gender   = document.getElementById('gender').value;
+      formData.phone    = document.getElementById('phone').value.trim();
+      formData.email    = document.getElementById('email').value.trim();
 
-      if (!fullName || fullName.length < 3) {
+      if (!formData.name || formData.name.length < 3) {
         showAlert('Nama lengkap minimal 3 karakter', 'warning');
         return;
       }
-      if (!phone || !validatePhone(phone)) {
+      if (!formData.gender) {
+        showAlert('Pilih jenis kelamin', 'warning');
+        return;
+      }
+      if (!formData.phone || !validatePhone(formData.phone)) {
         showAlert('Format nomor telepon tidak valid (Contoh: 081234567890)', 'warning');
         return;
       }
-      if (!email || !validateEmail(email)) {
+      if (!formData.email || !validateEmail(formData.email)) {
         showAlert('Format email tidak valid', 'warning');
+        return;
+      }
+      if (!document.getElementById('gymLocation').value) {
+        showAlert('Silakan pilih lokasi gym', 'warning');
         return;
       }
 
@@ -1141,13 +1227,13 @@
         return;
       }
 
-      // Save form data
-      formData = { fullName, phone, email, dob };
+      // Data diri sudah tersimpan di formData
 
       // Show package section
       document.getElementById('personalDataSection').style.display = 'none';
       document.getElementById('packageSection').style.display = 'block';
       updateStep(2);
+      loadPackages();
     }
 
     function prevToPersonal() {
@@ -1163,9 +1249,11 @@
       }
 
       // Update payment summary
-      document.getElementById('summaryName').textContent = formData.fullName;
+      document.getElementById('summaryName').textContent = formData.name;
       document.getElementById('summaryPackage').textContent = selectedPackage.name;
-      const total = selectedPackage.price;
+      document.getElementById('summaryPackagePrice').textContent = formatCurrency(selectedPackage.price);
+      
+      const total = (selectedPackage.total || selectedPackage.price) + 0;
       document.getElementById('summaryTotal').textContent = formatCurrency(total);
 
       // Show payment section
@@ -1182,43 +1270,65 @@
 
     // ================ LOAD PACKAGES ================
     function loadPackages() {
+      const cacheKey = 'packages_list';
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        renderPackagesUI(cached);
+        console.log('Packages loaded from cache');
+      }
+
       google.script.run
         .withSuccessHandler(function(res) {
-          const container = document.getElementById('packagesContainer');
-          if (!container) return;
-          
-          if (!res || !res.success || !res.packages || !res.packages.length) {
-            container.innerHTML = '<p style="color:#ef4444;text-align:center;padding:30px">Tidak ada paket tersedia saat ini.</p>';
-            return;
+          if (res && res.success && res.packages) {
+            saveToCache(cacheKey, res);
+            renderPackagesUI(res);
           }
-          
-          packages = res.packages.filter(p => p.type && p.type.toLowerCase().includes('regular'));
-          
-          container.innerHTML = `
-            <div class="packages-grid">
-              ${packages.map(p => `
-                <div class="package-card" id="pkg_${p.id}" onclick="selectPackage(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-                  <div class="package-name">${p.name}</div>
-                  <div class="package-price">${formatCurrency(p.price)}</div>
-                  <div class="package-duration">
-                    <i class="far fa-clock"></i> ${p.duration || '-'}
-                  </div>
-                  ${p.benefits ? `
-                    <div style="margin-top:12px;font-size:12px;color:#64748b">
-                      <i class="fas fa-check-circle" style="color:#22c55e"></i> ${p.benefits}
-                    </div>
-                  ` : ''}
-                </div>
-              `).join('')}
-            </div>
-          `;
         })
         .withFailureHandler(function(err) {
-          document.getElementById('packagesContainer').innerHTML = 
-            '<p style="color:#ef4444;text-align:center;padding:30px">Gagal memuat paket: ' + err.message + '</p>';
+          if (!cached) {
+            document.getElementById('packagesContainer').innerHTML = 
+              '<p style="color:#ef4444;text-align:center;padding:30px">Gagal memuat paket: ' + err.message + '</p>';
+          }
         })
-        .getPackages();
+        .getPackages(false, currentBranch);
     }
+
+    function renderPackagesUI(res) {
+      const container = document.getElementById('packagesContainer');
+      if (!container) return;
+      
+      if (!res || !res.success || !res.packages || !res.packages.length) {
+        container.innerHTML = '<p style="color:#ef4444;text-align:center;padding:30px">Tidak ada paket tersedia saat ini.</p>';
+        return;
+      }
+      
+      const selectedGym = document.getElementById('gymLocation').value;
+      packages = res.packages.filter(p => {
+        const isRegular = p.type && p.type.toLowerCase().includes('regular');
+        const matchGym = !p.branch || p.branch === selectedGym || p.branch === 'All';
+        return isRegular && matchGym;
+      });
+      
+      container.innerHTML = `
+        <div class="packages-grid">
+          ${packages.map(p => `
+            <div class="package-card" id="pkg_${p.id}" onclick="selectPackage(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+              <div class="package-name">${p.name}</div>
+              <div class="package-price">${formatCurrency(p.total || p.price)}</div>
+              <div class="package-duration">
+                <i class="far fa-clock"></i> ${p.duration || '-'}
+              </div>
+              ${p.benefits ? `
+                <div style="margin-top:12px;font-size:12px;color:#64748b">
+                  <i class="fas fa-check-circle" style="color:#22c55e"></i> ${p.benefits}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
 
     function selectPackage(pkg) {
       selectedPackage = pkg;
@@ -1232,7 +1342,7 @@
       document.getElementById('packageSummary').style.display = 'block';
       document.getElementById('selectedPackageName').textContent = pkg.name;
       document.getElementById('selectedPackageDuration').textContent = pkg.duration || '-';
-      document.getElementById('selectedPackagePrice').textContent = formatCurrency(pkg.price);
+      document.getElementById('selectedPackagePrice').textContent = formatCurrency(pkg.total || pkg.price);
       
       // Enable next button
       document.getElementById('btnNextToPayment').disabled = false;
@@ -1294,29 +1404,31 @@
         return; 
       }
 
-      const totalAmount = selectedPackage.price;
+      const totalAmount = (selectedPackage.total || selectedPackage.price) + 0;
 
       const btn = document.getElementById('btnSubmit');
-      btn.innerHTML = '<span class="spinner"></span> Mengirim...'; 
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...'; 
       btn.disabled = true;
       showLoading();
 
       const registrationData = {
-        fullName: formData.fullName,
+        name: formData.name,
+        gender: formData.gender,
         phone: formData.phone,
         email: formData.email,
-        dob: formData.dob,
+        gym: document.getElementById('gymLocation').value,
         packageId: selectedPackage.id,
         paymentMethod: paymentMethod,
         paymentProof: paymentProofBase64,
-        memberPhoto: memberPhoto,  // <-- TAMBAHKAN INI
+        memberPhoto: memberPhoto,
         ipAddress: 'web-client'
       };
 
       google.script.run
         .withSuccessHandler(function(res) {
           hideLoading();
-          btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Pendaftaran'; 
+          btn.innerHTML = originalHtml; 
           btn.disabled = false;
           
           if (res && res.success) {
@@ -1326,11 +1438,10 @@
             showAlert(
               `✅ PENDAFTARAN BERHASIL DIKIRIM!\n\n` +
               `Registration ID : ${res.registrationId || '-'}\n` +
-              `Nama            : ${formData.fullName}\n` +
+              `Nama            : ${formData.name}\n` +
               `Paket           : ${selectedPackage.name}\n` +
               `Metode Bayar    : ${paymentMethod}\n` +
               `Harga Paket     : ${formatCurrency(selectedPackage.price)}\n` +
-              `Biaya Registrasi: Rp 0\n` +
               `TOTAL           : ${formatCurrency(totalAmount)}\n\n` +
               `⏳ Admin akan memverifikasi dalam 1×24 jam.\n` +
               `📧 Cek email ${formData.email} untuk konfirmasi.`,
@@ -1346,30 +1457,140 @@
         })
         .withFailureHandler(function(err) {
           hideLoading();
-          btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Pendaftaran'; 
+          btn.innerHTML = originalHtml; 
           btn.disabled = false;
           showAlert('Error: ' + err.message, 'error');
         })
         .submitRegistration(registrationData);
     }
 
-    // Initialize
-    window.onload = function() {
-      loadPackages();
-    };
-    function getDirectLink(url) {
-      if (!url) return '';
-      if (url.startsWith('http://')) url = url.replace('http://', 'https://');
-      if (!url.includes('.google.com')) return url;
-      
-      let fileId = '';
-      const patterns = [/\/d\/([a-zA-Z0-9_-]+)/, /id=([a-zA-Z0-9_-]+)/, /\/file\/d\/([a-zA-Z0-9_-]+)/, /open\?id=([a-zA-Z0-9_-]+)/];
-      for (let p of patterns) {
-        const m = url.match(p);
-        if (m && m[1]) { fileId = m[1]; break; }
-      }
-      return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w600` : url;
+    function loadBranches() {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success && res.branches) {
+            renderBranchesUI(res.branches);
+          }
+        })
+        .getBranches();
     }
-  </script>
+
+    function renderBranchesUI(branches) {
+      const container = document.getElementById('branchCardsContainer');
+      const dropdown = document.getElementById('gymLocation');
+      const extLinks = document.getElementById('extensionLinks');
+      
+      if (container) {
+        let html = '';
+        branches.forEach(b => {
+          html += `
+            <div onclick="selectBranch('${b.id}')" style="background: white; border-radius: 24px; padding: 40px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e5e5ea; display: flex; flex-direction: column; align-items: center; gap: 20px;" onmouseover="this.style.transform='translateY(-8px)'; this.style.borderColor='#d4af37'; this.style.boxShadow='0 20px 40px rgba(212,175,55,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e5e5ea'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.05)'">
+              <img src="${b.logo || 'https://i.imgur.com/NO5dVfb.png'}" style="width: 120px; height: 120px; border-radius: 30px; object-fit: cover; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+              <div style="text-align: center;">
+                <h3 style="font-size: 22px; font-weight: 800; color: #000;">${b.name}</h3>
+                <p style="color: #555; font-size: 14px; margin-top: 4px;">${b.address || ''}</p>
+              </div>
+              <button class="btn btn-primary" style="width: auto; padding: 12px 30px; border-radius: 15px;">Pilih Cabang <i class="fas fa-arrow-right"></i></button>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
+      if (dropdown) {
+        let html = '<option value="" disabled selected>Pilih Lokasi...</option>';
+        branches.forEach(b => {
+          html += `<option value="${b.id}">${b.name}</option>`;
+        });
+        dropdown.innerHTML = html;
+      }
+
+      if (extLinks) {
+        let html = '';
+        branches.forEach(b => {
+          html += `
+            <a href="#" onclick="goToExtension('${b.id}'); return false;" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; background: linear-gradient(135deg, #000, #1a1a1a); color: #d4af37; border-radius: 14px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.25s; border: 1px solid rgba(212,175,55,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+              <i class="fas fa-sync-alt"></i> Perpanjang ${b.name}
+            </a>
+          `;
+        });
+        extLinks.innerHTML = html;
+      }
+    }
+
+    // Script consolidated below
+      window.onload = function() {
+        selectBranch('AMPEL');
+      };
+
+      function selectBranch(id) {
+        currentBranch = id;
+        document.getElementById('landingView').style.display = 'none';
+        document.getElementById('registrationContent').style.display = 'block';
+        document.getElementById('mainHeader').style.display = 'block';
+        
+        // Auto-select gym location dropdown
+        const gymLoc = document.getElementById('gymLocation');
+        if (gymLoc) {
+          gymLoc.value = id;
+          // Hide branch selector if already selected via URL or Landing
+          gymLoc.parentElement.style.display = 'none';
+        }
+
+        showLoading();
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideLoading();
+            if (res.success) {
+              branchSettings = res.settings;
+              applyBranchBranding();
+              loadPackages();
+            } else {
+              alert('Gagal memuat pengaturan cabang: ' + res.message);
+            }
+          })
+          .getSettings(id);
+      }
+
+      function applyBranchBranding() {
+        if (!branchSettings) return;
+        document.getElementById('gymLogoHeader').src = branchSettings.logo || 'https://i.imgur.com/NO5dVfb.png';
+        document.getElementById('gymNameHeader').textContent = branchSettings.name || 'Gym Name';
+        document.title = "Registrasi Member - " + branchSettings.name;
+        
+        // Footer
+        document.getElementById('footerBranchName').textContent = branchSettings.name || 'Gym Name';
+        document.getElementById('footerPhone').textContent = branchSettings.phone || '-';
+        document.getElementById('footerEmail').textContent = branchSettings.email || '-';
+        document.getElementById('footerAddress').textContent = branchSettings.address || '';
+        if (document.getElementById('copyrightName')) {
+          document.getElementById('copyrightName').textContent = branchSettings.name || 'Gym';
+        }
+
+        const bankEl = document.getElementById('bankInfoContent');
+        if (bankEl) {
+          bankEl.innerHTML = `
+            <div style="font-weight: 600; color: #334155; margin-bottom: 5px;">Silakan transfer ke rekening berikut:</div>
+            <div class="bank-account">${branchSettings.bank || '-'}</div>
+            <p style="color:#64748b;font-size:13px;margin-top:8px">
+              <i class="fas fa-info-circle"></i> Pastikan nominal transfer sesuai dengan total pembayaran di bawah ini.
+            </p>
+          `;
+        }
+      }
+
+      function getDirectLink(url) {
+        if (!url) return '';
+        if (url.startsWith('http://')) url = url.replace('http://', 'https://');
+        if (!url.includes('.google.com')) return url;
+        
+        let fileId = '';
+        const patterns = [/\/d\/([a-zA-Z0-9_-]+)/, /id=([a-zA-Z0-9_-]+)/, /\/file\/d\/([a-zA-Z0-9_-]+)/, /open\?id=([a-zA-Z0-9_-]+)/];
+        for (let p of patterns) {
+          const m = url.match(p);
+          if (m && m[1]) { fileId = m[1]; break; }
+        }
+        return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w600` : url;
+      }
+    </script>
 </body>
 </html>
