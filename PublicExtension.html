@@ -3,77 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perpanjangan Member Ampel Gym</title>
+  <title>Perpanjangan Member</title>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyCbtuJIB5VqEx0komvoxV_fngSCRk7w9iiEs4PWgu2umgllXkdYywilPlP7rJBNnp/exec';
     const google = {
       script: {
-        run: new Proxy({}, {
-          get: function(target, prop) {
-            let successHandler = null;
-            let failureHandler = null;
-            function createChain(propName) {
-              if (propName === 'withSuccessHandler') {
-                return function(callback) {
-                  successHandler = callback;
-                  return new Proxy({}, { get: (t, p) => createChain(p) });
+        run: (function() {
+          function createProxy(handlers) {
+            return new Proxy({}, {
+              get: function(target, name) {
+                if (name === 'withSuccessHandler') {
+                  return function(cb) { return createProxy({ ...handlers, success: cb }); };
+                }
+                if (name === 'withFailureHandler') {
+                  return function(cb) { return createProxy({ ...handlers, failure: cb }); };
+                }
+                return function(...args) {
+                  fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: name, args: args }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.success && handlers.success) handlers.success(data.result || data);
+                    else if (!data.success && handlers.failure) handlers.failure(new Error(data.message));
+                    else if (!data.success) console.error('Backend Error:', data.message);
+                  })
+                  .catch(err => {
+                    if (handlers.failure) handlers.failure(err);
+                    else console.error('Network Error:', err);
+                  });
                 };
               }
-              if (propName === 'withFailureHandler') {
-                return function(callback) {
-                  failureHandler = callback;
-                  return new Proxy({}, { get: (t, p) => createChain(p) });
-                };
-              }
-              return function(...args) {
-                fetch(SCRIPT_URL, {
-                  method: 'POST',
-                  body: JSON.stringify({ action: propName, args: args }),
-                  headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                  if (!data.success) {
-                    if (failureHandler) failureHandler(new Error(data.message));
-                    else console.error('Backend Error:', data.message);
-                  } else {
-                    if (successHandler) successHandler(data.result);
-                  }
-                })
-                .catch(err => {
-                  if (failureHandler) failureHandler(err);
-                  else console.error('Network Error:', err);
-                });
-              };
-            }
-            return createChain(prop);
+            });
           }
-        })
+          return createProxy({ success: null, failure: null });
+        })()
       }
     };
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    :root {
+      --primary: #d4af37;
+      --primary-dark: #b5952f;
+      --primary-light: #fdf8e7;
+      --accent: #d4af37;
+      --dark: #000000;
+      --bg-gradient: linear-gradient(135deg, #f9f9f9 0%, #f0f0f0 100%);
+      --glass: rgba(255, 255, 255, 0.9);
+      --border-color: #e5e5ea;
+      --text-main: #000000;
+      --text-secondary: #555555;
+      --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
     body { 
-      background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+      background: var(--bg-gradient);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       padding: 20px;
+      color: #1c1c1e;
     }
     .extension-container {
       max-width: 600px;
       width: 100%;
+      margin: 0 auto;
       background: white;
       border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
       overflow: hidden;
+      border: 1px solid var(--border-color);
       animation: slideUp 0.5s ease;
     }
     .header {
-      background: linear-gradient(135deg, #000000, #333333);
+      background: linear-gradient(135deg, #000000, #1a1a1a);
       color: white;
       padding: 30px;
       text-align: center;
@@ -99,8 +103,8 @@
     }
     .form-input:focus { 
       outline: none; 
-      border-color: #d4af37; 
-      box-shadow: 0 0 0 3px rgba(102,126,234,0.1); 
+      border-color: var(--primary); 
+      box-shadow: 0 0 0 4px rgba(212,175,55,0.15); 
     }
     .form-input:read-only {
       background: #f8fafc;
@@ -121,10 +125,10 @@
       width: 100%;
     }
     .btn-primary { 
-      background: linear-gradient(135deg, #000000, #333333); 
+      background: var(--primary); 
       color: white; 
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); opacity: 0.9; }
     .btn-success { 
       background: linear-gradient(135deg, #22c55e, #16a34a); 
       color: white; 
@@ -142,8 +146,8 @@
     .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
     .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
     .member-info {
-      background: #fdf8e7;
-      border: 1px solid #d4af37;
+      background: var(--primary-light);
+      border: 1px solid rgba(212,175,55,0.2);
       border-radius: 16px;
       padding: 20px;
       margin-bottom: 24px;
@@ -171,7 +175,7 @@
     }
     .info-row:last-child { border-bottom: none; }
     .info-label { color: #64748b; font-size: 13px; }
-    .info-value { font-weight: 600; color: #000000; }
+    .info-value { font-weight: 600; color: #0f172a; }
     .badge {
       display: inline-block;
       padding: 4px 12px;
@@ -191,14 +195,14 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .package-card:hover { border-color: #d4af37; background: #f1f5f9; }
+    .package-card:hover { border-color: var(--primary); background: var(--primary-light); }
     .package-card.selected { 
-      border: 2px solid #d4af37; 
-      background: #fdf8e7; 
-      box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+      border: 2px solid var(--primary); 
+      background: var(--primary-light); 
+      box-shadow: 0 4px 12px rgba(212,175,55,0.2);
     }
-    .package-name { font-weight: 700; font-size: 16px; color: #000000; }
-    .package-price { color: #d4af37; font-weight: 700; font-size: 18px; }
+    .package-name { font-weight: 700; font-size: 16px; color: #0f172a; }
+    .package-price { color: var(--primary); font-weight: 700; font-size: 18px; }
     .file-upload {
       position: relative;
       display: inline-block;
@@ -215,7 +219,7 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .file-upload-label:hover { border-color: #d4af37; background: #f1f5f9; }
+    .file-upload-label:hover { border-color: var(--primary); background: var(--primary-light); }
     .file-upload-input {
       position: absolute;
       width: 0.1px;
@@ -230,15 +234,28 @@
       color: #475569;
     }
     .bank-info {
-      background: #f1f5f9;
-      border-radius: 10px;
-      padding: 15px;
+      background: #fdf8e7;
+      border-radius: 12px;
+      padding: 20px;
       margin: 20px 0;
       font-size: 14px;
-      border-left: 4px solid #d4af37;
+      border: 1px solid rgba(212,175,55,0.3);
+      text-align: center;
+    }
+    .bank-account {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 1px;
+      margin: 10px 0;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      display: inline-block;
+      border: 1px dashed var(--primary);
     }
     .total-section {
-      background: linear-gradient(135deg, #000000, #000000);
+      background: linear-gradient(135deg, #000000, #1a1a1a);
       color: white;
       border-radius: 16px;
       padding: 20px;
@@ -248,7 +265,7 @@
     .total-amount {
       font-size: 28px;
       font-weight: 800;
-      color: #fbbf24;
+      color: var(--primary);
     }
     .footer {
       text-align: center;
@@ -274,7 +291,7 @@
       width: 40px;
       height: 40px;
       border: 4px solid #e2e8f0;
-      border-top: 4px solid #d4af37;
+      border-top: 4px solid var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -291,11 +308,33 @@
   </div>
 
   <div class="extension-container">
-    <div class="header">
-      <img src="https://i.imgur.com/TPoUeRJ.jpeg" style="width:80px;height:80px;border-radius:50%;margin-bottom:16px;border:3px solid rgba(255,255,255,0.3)">
-      <h1>🔄 Perpanjangan Member</h1>
-      <p>Form perpanjangan keanggotaan Ampel Gym</p>
+    <!-- Branch Selection Landing -->
+    <div id="landingView" style="display:none; text-align:center; padding:40px 20px; animation: slideUp 0.6s ease;">
+      <div style="background: white; width: 80px; height: 80px; border-radius: 24px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 30px rgba(0,0,0,0.08); padding: 12px; border: 1px solid #e5e5ea;">
+        <img src="https://i.imgur.com/NO5dVfb.png" style="width: 100%; height: auto; object-fit: contain;">
+      </div>
+      <h2 style="font-size: 28px; font-weight: 800; color: #000; margin-bottom: 10px; letter-spacing: -0.5px;">Selamat Datang</h2>
+      <p style="color: #555; font-size: 15px; margin-bottom: 30px;">Pilih lokasi gym untuk perpanjangan membership</p>
+      
+      <div id="branchCardsContainer" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <!-- Branches will be loaded here dynamically -->
+      </div>
+
+      <!-- Public Registration Buttons -->
+      <div id="registrationLinksContainer" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5ea; width: 100%;">
+        <p style="color: #555; font-size: 14px; margin-bottom: 16px; font-weight: 600;">Belum punya membership? Daftar sekarang:</p>
+        <div id="registrationLinks" style="display: flex; gap: 12px; width: 100%;">
+          <!-- Registration links will be loaded here dynamically -->
+        </div>
+      </div>
     </div>
+
+    <div id="extensionContent" style="display:none">
+      <div class="header">
+        <img id="gymLogoHeader" src="https://i.imgur.com/NO5dVfb.png" style="width:80px;height:80px;border-radius:50%;margin-bottom:16px;border:3px solid white;box-shadow: 0 10px 20px rgba(0,0,0,0.1);object-fit:cover">
+        <h1 id="gymNameHeader">Perpanjangan Member</h1>
+        <p id="gymMottoHeader">Form perpanjangan keanggotaan online</p>
+      </div>
 
     <div class="content">
       <div id="alertMessage" class="alert" style="display:none"></div>
@@ -304,7 +343,7 @@
         <div class="member-info">
           <img id="memberPhotoDisplay" class="member-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E">
           <div class="member-details-grid">
-            <h4 style="margin-bottom:12px;color:#000000"><i class="fas fa-user-circle" style="color:#d4af37"></i> Informasi Member</h4>
+            <h4 style="margin-bottom:12px;color:#000"><i class="fas fa-user-circle" style="color:var(--primary)"></i> Informasi Member</h4>
             <div class="info-row">
               <span class="info-label">Member ID</span>
               <span class="info-value" id="memberIdDisplay">-</span>
@@ -335,10 +374,10 @@
 
       <div id="searchSection">
         <div class="form-group">
-          <label class="form-label"><i class="fas fa-id-card"></i> Member ID</label>
-          <input type="text" id="memberIdInput" class="form-input" placeholder="Masukkan Member ID Anda" 
+          <label class="form-label"><i class="fas fa-search"></i> ID atau No. HP Member</label>
+          <input type="text" id="memberIdInput" class="form-input" placeholder="Masukkan ID atau No. HP Terdaftar" 
             onkeydown="if(event.key==='Enter') loadMemberInfo()">
-          <small style="color:#94a3b8">Contoh: M2301001</small>
+          <small style="color:#94a3b8">Contoh: M2301001 atau 081234567xxx</small>
         </div>
         <button class="btn btn-primary" onclick="loadMemberInfo()" id="loadMemberBtn">
           <i class="fas fa-search"></i> Cari Data Member
@@ -346,11 +385,12 @@
       </div>
 
       <div id="extensionForm" style="display:none; margin-top:24px">
-        <div class="bank-info">
-          <i class="fas fa-university" style="color:#d4af37;margin-right:8px"></i>
-          <strong>Transfer Pembayaran ke:</strong><br>
-      BCA 183-118-0001 a.n. MUHAMMAD R MASCATY<br>
-          <small style="color:#64748b">*Upload bukti transfer setelah pembayaran</small>
+        <div class="bank-info" id="bankInfoContent" style="display:none">
+          <div style="font-weight: 600; color: #334155; margin-bottom: 5px;">Silakan transfer ke rekening berikut:</div>
+          <div class="bank-account" id="bankAccountNumber" style="margin: 15px 0;">Memuat informasi bank...</div>
+          <p style="color:#64748b;font-size:12px;margin-top:8px">
+            <i class="fas fa-info-circle"></i> Upload bukti transfer setelah pembayaran sesuai total.
+          </p>
         </div>
 
         <div class="form-group">
@@ -367,7 +407,7 @@
           <label class="form-label"><i class="fas fa-image"></i> Upload Bukti Pembayaran <span style="color:#ef4444">*</span></label>
           <div class="file-upload">
             <label for="paymentProof" class="file-upload-label" id="fileUploadLabel">
-              <i class="fas fa-cloud-upload-alt fa-2x" style="color:#d4af37"></i>
+              <i class="fas fa-cloud-upload-alt fa-2x" style="color:var(--primary)"></i>
               <div>
                 <strong>Pilih file</strong><br>
                 <span style="font-size:12px;color:#64748b">Format: JPG, PNG (max 5MB)</span>
@@ -387,58 +427,207 @@
         </div>
       </div>
     </div>
+  </div> <!-- End extensionContent -->
 
-    <div class="footer">
-      <div style="margin-bottom: 15px;">
-        <i class="fas fa-phone"></i> 087795175243 | <i class="fas fa-envelope"></i> ampelgym@gmail.com
+    <div class="footer" id="gymFooter">
+      <div style="margin-bottom: 8px;">
+        <strong id="footerBranchName" style="font-size: 16px; color: #000;">Gym Name</strong>
       </div>
-      
-      <!-- Developer Branding -->
-      <div class="developer-branding" style="text-align: center; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s;" onclick="window.open('https://wa.me/6285777723458', '_blank')" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-        <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 36px; height: 36px; margin-bottom: 4px; object-fit: contain;">
-        <div style="font-weight: bold; color: #1e293b; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;">KIZIY</div>
-        <div style="font-family: 'Comic Sans MS', 'Comic Sans', cursive; font-size: 11px; color: #64748b; margin-top: 2px;">key to easy</div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #555;">
+        <span><i class="fas fa-phone" style="color: var(--primary); margin-right: 4px;"></i> <span id="footerPhone">-</span></span>
+        <span><i class="fas fa-envelope" style="color: var(--primary); margin-right: 4px;"></i> <span id="footerEmail">-</span></span>
       </div>
+      <div id="footerAddress" style="font-size: 12px; color: #888; margin-top: 6px;"></div>
+      <p style="margin-top: 10px; font-size: 12px; color: #aaa;">© <span id="copyrightName">Gym</span> · Pertanyaan? Hubungi admin kami</p>
+    </div>
+
+    <!-- Developer Branding -->
+    <div class="developer-branding" style="text-align: center; padding: 30px 0; margin-top: 40px; border-top: 1px solid var(--border-color); cursor: pointer; opacity: 0.8; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center;" onclick="window.open('https://wa.me/6285777723458', '_blank')" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.05)'" onmouseout="this.style.opacity='0.8'; this.style.transform='scale(1)'">
+      <img src="https://i.imgur.com/NO5dVfb.png" alt="KIZIY Logo" style="width: 100px; height: auto; margin-bottom: 8px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+      <div style="font-weight: 800; color: var(--text-main); font-size: 18px; letter-spacing: 3px; text-align: center; text-transform: uppercase;">KIZIY</div>
+      <div style="font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 12px; color: var(--text-secondary); margin-top: 4px; text-align: center; letter-spacing: 1.5px;">key to easy</div>
     </div>
   </div>
 
   <script>
-    var MEDIA_FOLDER_URL = "https://drive.google.com/drive/folders/1r1wZxeB8SkaCLQDvSHoe6LDyyY0pQWjS";
     var packages = [];
     var selectedPackage = null;
     var currentMember = null;
     var selectedFile = null;
+    var currentBranch = null;
+    var branchSettings = null;
+
+    // ================ CACHE SYSTEM ================
+    function saveToCache(key, data) {
+      try {
+        const cacheObj = {
+          data: data,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('gym_pub_' + key, JSON.stringify(cacheObj));
+      } catch (e) { console.error('Cache save error', e); }
+    }
+
+    function getFromCache(key, maxAge = 3600000) { // Default 1 jam
+      try {
+        const cached = localStorage.getItem('gym_pub_' + key);
+        if (!cached) return null;
+        const cacheObj = JSON.parse(cached);
+        if (Date.now() - cacheObj.timestamp > maxAge) return null;
+        return cacheObj.data;
+      } catch (e) { return null; }
+    }
+
+    // ================ NAVIGATION ================
+    function goToRegistration(branch) {
+      var currentUrl = window.location.href;
+      var url;
+      if (currentUrl.includes('script.google.com')) {
+        url = SCRIPT_URL + '?page=register&branch=AMPEL';
+      } else {
+        url = 'PublicRegistration.html?branch=AMPEL';
+      }
+      try { window.top.location.href = url; } catch(e) { window.location.href = url; }
+    }
+
+    function loadBranches() {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success && res.branches) {
+            renderBranchesUI(res.branches);
+          }
+        })
+        .getBranches();
+    }
+
+    function renderBranchesUI(branches) {
+      const container = document.getElementById('branchCardsContainer');
+      const regLinks = document.getElementById('registrationLinks');
+      
+      if (container) {
+        let html = '';
+        branches.forEach(b => {
+          html += `
+            <div onclick="selectBranch('${b.id}')" style="background: white; border-radius: 20px; padding: 24px; cursor: pointer; transition: all 0.3s ease; border: 1px solid #e5e5ea; display: flex; align-items: center; gap: 16px; text-align: left;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='#d4af37'; this.style.boxShadow='0 12px 24px rgba(212,175,55,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e5e5ea'; this.style.boxShadow='none'">
+              <img src="${b.logo || 'https://i.imgur.com/NO5dVfb.png'}" style="width: 60px; height: 60px; border-radius: 15px; object-fit: cover;">
+              <div style="flex: 1;">
+                <h3 style="font-size: 18px; font-weight: 800; color: #000;">${b.name}</h3>
+                <p style="color: #555; font-size: 13px;">${b.address || ''}</p>
+              </div>
+              <i class="fas fa-chevron-right" style="color: #d4af37;"></i>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
+      if (regLinks) {
+        let html = '';
+        branches.forEach(b => {
+          html += `
+            <a href="#" onclick="goToRegistration('${b.id}'); return false;" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; background: linear-gradient(135deg, #000, #1a1a1a); color: #d4af37; border-radius: 14px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.25s; border: 1px solid rgba(212,175,55,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+              <i class="fas fa-user-plus"></i> Daftar ${b.name}
+            </a>
+          `;
+        });
+        regLinks.innerHTML = html;
+      }
+    }
 
     window.onload = function() {
-      loadPackages();
-      
-      // Check if memberId is provided in URL
       const urlParams = new URLSearchParams(window.location.search);
       const memberId = urlParams.get('id') || urlParams.get('memberId');
-      if (memberId) {
-        document.getElementById('memberIdInput').value = memberId;
-        loadMemberInfo();
-      }
+      selectBranch('AMPEL', memberId);
     };
 
+    function selectBranch(id, memberId = null) {
+      currentBranch = id;
+      document.getElementById('landingView').style.display = 'none';
+      document.getElementById('extensionContent').style.display = 'block';
+      
+      // SWR for Branch Settings
+      const cacheKey = 'branch_settings_' + id;
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        branchSettings = cached;
+        applyBranchBranding();
+        loadPackages();
+      } else {
+        showLoading();
+      }
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideLoading();
+          if (res.success) {
+            branchSettings = res.settings;
+            saveToCache(cacheKey, res.settings);
+            applyBranchBranding();
+            loadPackages();
+            if (memberId && !currentMember) {
+              document.getElementById('memberIdInput').value = memberId;
+              loadMemberInfo();
+            }
+          }
+        })
+        .getSettings(id);
+    }
+
+    function applyBranchBranding() {
+      if (!branchSettings) return;
+      document.getElementById('gymLogoHeader').src = branchSettings.logo || 'https://i.imgur.com/NO5dVfb.png';
+      document.getElementById('gymNameHeader').textContent = branchSettings.name || 'Perpanjangan Member';
+      document.getElementById('gymMottoHeader').textContent = "Pusat Perpanjangan Member Online - " + (branchSettings.name || 'Gym');
+      document.title = "Perpanjangan Member - " + branchSettings.name;
+      
+      document.getElementById('footerPhone').textContent = branchSettings.phone || '-';
+      document.getElementById('footerEmail').textContent = branchSettings.email || '-';
+      document.getElementById('footerBranchName').textContent = branchSettings.name || 'Gym Name';
+      document.getElementById('footerAddress').textContent = branchSettings.address || '';
+      if (document.getElementById('copyrightName')) {
+        document.getElementById('copyrightName').textContent = branchSettings.name || 'Gym';
+      }
+
+      const bankEl = document.getElementById('bankInfoContent');
+      const bankNumEl = document.getElementById('bankAccountNumber');
+      if (bankEl && bankNumEl) {
+        bankNumEl.textContent = branchSettings.bank || '-';
+        bankEl.style.display = 'block';
+      }
+    }
+
     function loadPackages() {
+      const cacheKey = 'packages_list';
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        packages = cached.filter(p => {
+          const type = p.type ? p.type.toLowerCase() : '';
+          const matchBranch = !p.branch || p.branch === currentBranch || p.branch === 'All';
+          return (type.includes('regular') || type.includes('member')) && matchBranch;
+        });
+        renderPackages();
+      }
+
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            packages = res.packages.filter(p => p.type && p.type.toLowerCase().includes('regular'));
-            if (currentMember) renderPackages();
+            saveToCache(cacheKey, res.packages);
+            packages = res.packages.filter(p => {
+              const type = p.type ? p.type.toLowerCase() : '';
+              const matchBranch = !p.branch || p.branch === currentBranch || p.branch === 'All';
+              return (type.includes('regular') || type.includes('member')) && matchBranch;
+            });
+            renderPackages();
           }
         })
-        .withFailureHandler(function(err) {
-          console.error('Gagal memuat paket:', err);
-        })
-        .getPackages();
+        .getPackages(false, currentBranch);
     }
+
 
     function loadMemberInfo() {
       const memberId = document.getElementById('memberIdInput').value.trim();
       if (!memberId) {
-        showAlert('Masukkan Member ID', 'warning');
+        showAlert('Masukkan ID atau No. HP Member', 'warning');
         return;
       }
 
@@ -520,13 +709,12 @@
           <div class="package-card" onclick="selectPackage('${pkg.id}')" id="pkg-${pkg.id}">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <span class="package-name">${pkg.name}</span>
-              <span class="package-price">${formatCurrency(pkg.price || pkg.total)}</span>
+              <span class="package-price">${formatCurrency(pkg.total)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:4px">
               <span class="package-duration"><i class="far fa-clock"></i> ${pkg.duration}</span>
-              <span style="color:#94a3b8;font-size:13px">${pkg.discount > 0 ? 'Diskon: ' + formatCurrency(pkg.discount) : ''}</span>
+              <span style="color:#94a3b8;font-size:13px">Diskon: ${formatCurrency(pkg.discount)}</span>
             </div>
-            ${pkg.benefits ? `<div style="margin-top:8px;font-size:11px;color:#64748b;border-top:1px dashed #eee;padding-top:4px"><i class="fas fa-check-circle" style="color:#22c55e"></i> ${pkg.benefits}</div>` : ''}
           </div>`;
       });
       container.innerHTML = html;
@@ -590,7 +778,7 @@ function submitExtensionRequest() {
   reader.onload = function(e) {
     const base64Data = e.target.result.split(',')[1];
     
-    google.script.run
+      google.script.run
       .withSuccessHandler(function(res) {
         hideLoading();
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Permintaan Perpanjangan';
@@ -632,7 +820,8 @@ function submitExtensionRequest() {
       .submitExtensionRequest({
         memberId: currentMember.id,
         packageId: selectedPackage.id,
-        paymentProof: base64Data
+        paymentProof: base64Data,
+        branch: currentBranch
       });
   };
   reader.readAsDataURL(selectedFile);
