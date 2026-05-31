@@ -9352,6 +9352,9 @@
     }
 
     function renderApprovals(res) {
+      if (res && res.diagnostics) {
+        console.log('=== DIAGNOSIS PENDING APPROVALS ===', res.diagnostics);
+      }
       const list = (res && res.success) ? res.approvals : [];
       const el = document.getElementById('approvalsContainer');
       if (!el) return;
