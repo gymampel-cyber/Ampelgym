@@ -1728,6 +1728,14 @@
       // Auto-select gym location dropdown
       const gymLoc = document.getElementById('gymLocation');
       if (gymLoc) {
+        // Ensure the option exists before setting it, so validation doesn't fail
+        let opt = gymLoc.querySelector(`option[value="${id}"]`);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = id;
+          opt.textContent = id;
+          gymLoc.appendChild(opt);
+        }
         gymLoc.value = id;
         // Hide branch selector if already selected via URL or Landing
         gymLoc.parentElement.style.display = 'none';
@@ -1753,6 +1761,15 @@
       document.getElementById('gymLogoHeader').src = branchSettings.logo || 'https://i.imgur.com/TPoUeRJ.jpeg';
       document.getElementById('gymNameHeader').textContent = branchSettings.name || 'Gym Name';
       document.title = "Registrasi Member - " + branchSettings.name;
+
+      // Update gymLocation option text if it exists
+      const gymLoc = document.getElementById('gymLocation');
+      if (gymLoc) {
+        let opt = gymLoc.querySelector(`option[value="${currentBranch}"]`);
+        if (opt) {
+          opt.textContent = branchSettings.name || currentBranch;
+        }
+      }
 
       // Footer
       document.getElementById('footerBranchName').textContent = branchSettings.name || 'Gym Name';
