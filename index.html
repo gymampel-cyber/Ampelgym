@@ -2940,9 +2940,6 @@
         <div class="menu-item" data-view="analytics" onclick="showView('analytics')">
           <i class="fas fa-chart-pie"></i><span>Laporan Analitik</span>
         </div>
-        <div class="menu-item" data-view="birthdays" onclick="showView('birthdays')">
-          <i class="fas fa-birthday-cake"></i><span>Ulang Tahun Member</span>
-        </div>
         <div id="adminMenu" class="menu-item hidden" data-view="admin" onclick="showView('admin')">
           <i class="fas fa-cog"></i><span>Admin Panel</span>
         </div>
@@ -3897,8 +3894,7 @@
         pos: 'POS / Kantin',
         catalog: 'Katalog & Inventori',
         expenses: 'Pengeluaran Toko',
-        analytics: 'Analitik Performa',
-        birthdays: 'Ulang Tahun Member'
+        analytics: 'Analitik Performa'
       };
 
       document.getElementById('pageTitle').textContent = titles[view] || view;
@@ -3919,7 +3915,6 @@
         case 'catalog': loadCatalogView(); break;
         case 'expenses': loadExpensesView(); break;
         case 'analytics': loadAnalyticsView(); break;
-        case 'birthdays': loadBirthdaysView(); break;
       }
     }
 
@@ -4002,14 +3997,6 @@
             </div>
             <div class="stat-value" id="statCheckin">0</div>
             <div class="stat-label">Kunjungan Terhitung</div>
-          </div>
-          <div class="stat-card stat-card-clickable" id="cardBirthday" style="border-top-color:#fbbf24" onclick="showView('birthdays')">
-            <div class="stat-header">
-              <span class="stat-label">Ultah Hari Ini</span>
-              <div class="stat-icon" style="background:#fffbeb; color:#d97706"><i class="fas fa-birthday-cake"></i></div>
-            </div>
-            <div class="stat-value" id="statBirthday">0</div>
-            <div class="stat-label">Kirim Ucapan Ultah</div>
           </div>
           <div class="stat-card" style="border-top-color:#8b5cf6; ${(currentUser.role === 'Kasir' || currentUser.role === 'Staff') ? 'display:none' : ''}">
             <div class="stat-header">
@@ -4203,7 +4190,6 @@
       if (document.getElementById('statExpiring')) document.getElementById('statExpiring').textContent = s.expiring || 0;
       if (document.getElementById('statExpired')) document.getElementById('statExpired').textContent = s.expired || 0;
       if (document.getElementById('statCheckin')) document.getElementById('statCheckin').textContent = s.checkins || 0;
-      if (document.getElementById('statBirthday')) document.getElementById('statBirthday').textContent = s.birthdayCount || 0;
       if (document.getElementById('statPending')) document.getElementById('statPending').textContent = s.pendingApprovals || 0;
       if (document.getElementById('statFitnessRevenue')) document.getElementById('statFitnessRevenue').textContent = formatCurrency(s.fitnessRevenue || 0);
       
