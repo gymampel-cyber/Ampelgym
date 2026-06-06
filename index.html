@@ -2794,6 +2794,22 @@
       </div>
       <div class="modal-body">
         <div style="margin-top:8px">
+          <!-- Autocomplete Search for Visit -->
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-search"></i> Cari Data Visit (Nama/HP)</label>
+            <input id="visit_search" class="form-input" placeholder="Ketik nama atau nomor HP..." oninput="searchVisitorForVisit(this.value)">
+            <div id="visitSearchResults" style="margin-top:8px;max-height:200px;overflow-y:auto;border-radius:8px;z-index:9999"></div>
+          </div>
+          <div style="border-top:1px dashed #cbd5e1;margin:16px 0;padding-top:16px">
+            <div class="form-group">
+              <label class="form-label">Nama Pengunjung *</label>
+              <input id="visit_name" class="form-input" placeholder="Masukkan nama lengkap...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nomor HP *</label>
+              <input id="visit_phone" class="form-input" placeholder="Contoh: 081234567890">
+            </div>
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Tipe Visit *</label>
@@ -4757,7 +4773,7 @@
                 <div class="form-group">
                   <label class="form-label">Pilih Paket *</label>
                   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
-                    ${pkgs.length ? pkgs.filter(p => p.type && p.type.toLowerCase().includes('regular')).map(p => `
+                    ${pkgs.length ? pkgs.filter(p => p.type && (p.type.toLowerCase().includes('regular') || p.type.toLowerCase().includes('member'))).map(p => `
                       <div class="pkg-card" data-id="${p.id}" data-price="${p.price}" data-name="${p.name}" data-dur="${p.duration}" onclick="selectPkg(this)">
                         <div style="font-weight:600;margin-bottom:6px">${escapeHtml(p.name)}</div>
                         <div style="color:#667eea;font-weight:700">${formatCurrency(p.price)}</div>
@@ -5539,7 +5555,7 @@
                     <label class="form-label">Pilih Paket *</label>
                     <select id="trx_package" class="form-input">
                       <option value="">-- Pilih Paket --</option>
-                      ${pkgs.filter(p => p.type && p.type.toLowerCase().includes('regular')).map(p =>
+                      ${pkgs.filter(p => p.type && (p.type.toLowerCase().includes('regular') || p.type.toLowerCase().includes('member'))).map(p =>
             `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}" data-duration="${p.duration}">${escapeHtml(p.name)} - ${formatCurrency(p.price)} (${escapeHtml(p.duration)})</option>`
           ).join('')}
                     </select>
@@ -7505,7 +7521,7 @@
           if (res.success) {
             showToast('✅ Paket disimpan', 'success');
             loadPackageList();
-            loadInitialData(true); // Refresh all app data (catalogue, etc)
+            fetchInitialAppData(); // Refresh all app data (catalogue, etc)
           } else {
             showToast('❌ Gagal: ' + res.message, 'error');
             loadPackageList(); // Re-fetch to ensure UI is correct
@@ -8318,6 +8334,10 @@
     }
 
     function openVisitModal() {
+      document.getElementById('visit_search').value = '';
+      document.getElementById('visitSearchResults').innerHTML = '';
+      document.getElementById('visit_name').value = '';
+      document.getElementById('visit_phone').value = '';
       const select = document.getElementById('visit_type');
       select.innerHTML = '';
 
@@ -8382,7 +8402,11 @@
       const type = document.getElementById('visit_type').value;
       const qty = parseInt(document.getElementById('visit_qty').value) || 1;
       const payment = document.getElementById('visit_payment').value;
+      const name = document.getElementById('visit_name').value.trim();
+      const phone = document.getElementById('visit_phone').value.trim();
 
+      if (!name) { showToast('Masukkan nama pengunjung', 'warning'); return; }
+      if (!phone) { showToast('Masukkan nomor HP', 'warning'); return; }
       if (qty < 1) { showToast('Jumlah minimal 1', 'warning'); return; }
 
       showLoading();
@@ -8459,6 +8483,8 @@
           qty: qty,
           paymentMethod: payment,
           gym: currentBranch,
+          visitorName: name,
+          visitorPhone: phone,
           unitPrice: (window.appData && appData.catalogue) ? (appData.catalogue.find(p => (p.name || '') === type)?.price || 0) : 0
         }, getCurrentStaffIdentifier());
     }
@@ -9326,6 +9352,9 @@
     }
 
     function renderApprovals(res) {
+      if (res && res.diagnostics) {
+        console.log('=== DIAGNOSIS PENDING APPROVALS ===', res.diagnostics);
+      }
       const list = (res && res.success) ? res.approvals : [];
       const el = document.getElementById('approvalsContainer');
       if (!el) return;
