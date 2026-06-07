@@ -5054,7 +5054,7 @@
         showToast('Pilih jenis kelamin', 'warning');
         return;
       }
-      if (!phone || !/^0[0-9]{9,13}$/.test(phone)) {
+      if (!phone || !/^0[0-9]{8,13}$/.test(phone)) {
         showToast('Format nomor telepon tidak valid (contoh: 0812345678 atau 021xxxxxxx)', 'warning');
         return;
       }
