@@ -1024,10 +1024,38 @@
       return `Rp ${Number(amount || 0).toLocaleString('id-ID')}`;
     }
 
+    function parseCustomDate(d) {
+      if (!d) return null;
+      if (d instanceof Date) return d;
+      if (typeof d === 'string') {
+        const parts = d.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+        if (parts) {
+          const day = parseInt(parts[1], 10);
+          const month = parseInt(parts[2], 10) - 1;
+          const year = parseInt(parts[3], 10);
+          const timeParts = d.match(/\b(\d{2})[:\.](\d{2})(:[\.](\d{2}))?\b/);
+          if (timeParts) {
+            const hour = parseInt(timeParts[1], 10);
+            const minute = parseInt(timeParts[2], 10);
+            const second = timeParts[4] ? parseInt(timeParts[4], 10) : 0;
+            return new Date(year, month, day, hour, minute, second);
+          }
+          return new Date(year, month, day);
+        }
+      }
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
     function formatDate(date) {
       if (!date) return '-';
-      const d = new Date(date);
-      return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      try {
+        const dt = parseCustomDate(date);
+        if (!dt) return date;
+        return dt.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch (e) {
+        return date;
+      }
     }
   </script>
 </body>
