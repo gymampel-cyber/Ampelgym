@@ -3217,7 +3217,7 @@
 
     function parseCustomDate(d) {
       if (!d) return null;
-      if (d instanceof Date) return d;
+      if (d instanceof Date) return isNaN(d.getTime()) ? null : new Date(d.getTime());
       if (typeof d === 'string') {
         const parts = d.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
         if (parts) {
