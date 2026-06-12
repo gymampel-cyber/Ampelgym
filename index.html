@@ -3273,7 +3273,8 @@
     function formatTime(d) {
       if (!d) return '-';
       try {
-        const dt = new Date(d);
+        const dt = parseCustomDate(d);
+        if (!dt) return d;
         return dt.toLocaleTimeString('id-ID', {
           hour: '2-digit',
           minute: '2-digit',
@@ -5150,7 +5151,7 @@
               if (!resultEl) return;
 
               if (res && res.success === true) {
-                const checkinTime = res.checkinTime ? new Date(res.checkinTime) : new Date();
+                const checkinTime = res.checkinTime ? (parseCustomDate(res.checkinTime) || new Date()) : new Date();
                 const daysLeft = res.daysLeft || 0;
 
                 let warningHtml = '';
@@ -5358,7 +5359,8 @@
       const el = document.getElementById('checkinResult');
       if (el && member) {
         const checkinTime = new Date();
-        const daysLeft = member.expiryDate ? Math.max(0, Math.ceil((new Date(member.expiryDate) - new Date()) / 86400000)) : 0;
+        const expiryDateObj = parseCustomDate(member.expiryDate);
+        const daysLeft = expiryDateObj ? Math.max(0, Math.ceil((expiryDateObj - new Date()) / 86400000)) : 0;
         
         el.innerHTML = `
           <div class="checkin-success-card animate__animated animate__fadeInUp" style="background:white; border-radius:24px; padding:24px; box-shadow:0 15px 35px rgba(0,0,0,0.1)">
@@ -5914,7 +5916,8 @@
               if (res && res.success) {
                 const r = res.receipt || {};
                 const checkinTime = new Date();
-                const daysLeft = r.newExpiry ? Math.ceil((new Date(r.newExpiry) - new Date()) / 86400000) : 0;
+                const newExpiryObj = parseCustomDate(r.newExpiry);
+                const daysLeft = newExpiryObj ? Math.ceil((newExpiryObj - new Date()) / 86400000) : 0;
 
                 resultEl.className = 'result-card success';
                 resultEl.style.display = 'block';
@@ -7183,7 +7186,7 @@
                   <tbody>
                     ${res.history.map(h => `
                       <tr>
-                        <td><small>${new Date(h['Waktu']).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</small></td>
+                        <td><small>${(parseCustomDate(h['Waktu']) || new Date()).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</small></td>
                         <td><b>${escapeHtml(h['Nama Produk'])}</b> <small>(${h['ID Produk']})</small></td>
                         <td><span class="badge badge-${h['Tipe'] === 'Stok' ? 'info' : 'warning'}">${h['Tipe']}</span></td>
                         <td>${h['Tipe'] === 'Stok' ? h['Stok Awal'] : formatCurrency(h['Harga Awal'])}</td>
@@ -8161,7 +8164,7 @@
             // REFRESH DATA
             fetchDashboardData();
             loadTodayCheckins();
-            let checkinTime = res.checkinTime ? new Date(res.checkinTime) : new Date();
+            let checkinTime = res.checkinTime ? (parseCustomDate(res.checkinTime) || new Date()) : new Date();
             let daysLeft = res.daysLeft || 0;
             let memberName = res.memberName || mid;
             let ptUsed = res.ptUsed || false;
@@ -8422,7 +8425,7 @@
           if (!el) return;
 
           if (res && res.success) {
-            const checkinTime = res.checkinTime ? new Date(res.checkinTime) : new Date();
+            const checkinTime = res.checkinTime ? (parseCustomDate(res.checkinTime) || new Date()) : new Date();
             el.innerHTML = `
               <div class="checkin-success-card">
                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
@@ -9083,7 +9086,8 @@
 
               if (res && res.success) {
                 const checkinTime = new Date();
-                const daysLeft = res.expiryDate ? Math.ceil((new Date(res.expiryDate) - new Date()) / 86400000) : 0;
+                const expiryDateObj = parseCustomDate(res.expiryDate);
+                const daysLeft = expiryDateObj ? Math.ceil((expiryDateObj - new Date()) / 86400000) : 0;
 
                 resultEl.className = 'result-card success';
                 resultEl.style.display = 'block';
@@ -11655,7 +11659,7 @@
                       <div class="list-item-title">${escapeHtml(t['Nama Pembeli'] || 'Pelanggan Guest')}</div>
                       <div class="list-item-subtitle">
                         <span class="badge badge-primary" style="font-size:10px">${t['ID Transaksi']}</span> • 
-                        ${new Date(t.Waktu).toLocaleString('id-ID', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })} • 
+                        ${(parseCustomDate(t.Waktu) || new Date()).toLocaleString('id-ID', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })} • 
                         <i class="fas fa-user-tie"></i> ${t.Kasir}
                       </div>
                       <div style="font-size:11px; color:#64748b; margin-top:4px">${t['Daftar Item'] || '-'}</div>
