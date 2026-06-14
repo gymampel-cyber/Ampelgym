@@ -796,6 +796,7 @@
       background: var(--bg-card);
       color: var(--text-main);
       -webkit-appearance: none;
+      appearance: none;
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
     }
 
@@ -2178,6 +2179,7 @@
       line-height: 1.4;
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       min-height: 36px;
@@ -2451,6 +2453,7 @@
       background: rgba(142, 142, 147, 0.12);
       color: #1C1C1E;
       -webkit-appearance: none;
+      appearance: none;
     }
 
     .filter-input:focus {
@@ -9600,6 +9603,9 @@
                   <button class="btn btn-success" onclick="syncVisitTransactions()" style="background:#10b981; color:white">
                     <i class="fas fa-history"></i> Sinkron Visit Harian ke Transaksi
                   </button>
+                  <button class="btn btn-warning" onclick="cleanupOrphanVisitTransactions()" style="background:#f59e0b; color:white">
+                    <i class="fas fa-broom"></i> Pembersihan Transaksi Visit Yatim (Orphan)
+                  </button>
                   <button class="btn btn-success" onclick="syncPOSWhatsApp()" style="background:#10b981; color:white">
                     <i class="fab fa-whatsapp"></i> Tarik No. WA untuk POS Lama
                   </button>
@@ -9662,6 +9668,28 @@
             showToast('Error: ' + err.message, 'error');
           })
           .syncMissingVisitTransactions();
+      });
+    }
+
+    function cleanupOrphanVisitTransactions() {
+      showConfirm('Sistem akan mencari dan menghapus seluruh transaksi keuangan Visit Harian (lama/baru) yang data check-in-nya sudah terhapus.\n\nApakah Anda yakin ingin melanjutkan?', function (ok) {
+        if (!ok) return;
+        showLoading();
+        google.script.run
+          .withSuccessHandler(function (res) {
+            hideLoading();
+            if (res && res.success) {
+              Swal.fire('✅ Berhasil', res.message, 'success');
+              if (typeof fetchDashboardData === 'function') fetchDashboardData(null, null, true);
+            } else {
+              showToast('❌ Gagal: ' + (res?.message || 'Error'), 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            hideLoading();
+            showToast('Error: ' + err.message, 'error');
+          })
+          .cleanupOrphanVisitTransactions();
       });
     }
 
