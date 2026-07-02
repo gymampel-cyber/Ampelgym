@@ -11832,8 +11832,13 @@
           appData.members[idx].faceIdName = faceIdName;
           appData.members[idx].faceIdCode = faceIdCode;
           
-          // Save updated cache to localStorage
-          localStorage.setItem('gym_app_data', JSON.stringify(appData));
+          // Save updated cache to localStorage (wrapped in try/catch to handle
+          // QuotaExceededError on devices with full/restricted storage)
+          try {
+            localStorage.setItem('gym_app_data', JSON.stringify(appData));
+          } catch (storageErr) {
+            console.warn('localStorage gagal saat menyimpan cache member:', storageErr);
+          }
           
           // Re-render views if they are active
           const activeView = document.querySelector('.menu-item.active')?.dataset.view;
