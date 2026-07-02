@@ -122,7 +122,11 @@
         args: args,
         timestamp: new Date().toISOString()
       });
-      localStorage.setItem('gym_sync_queue', JSON.stringify(syncQueue));
+      try {
+        localStorage.setItem('gym_sync_queue', JSON.stringify(syncQueue));
+      } catch (storageErr) {
+        console.warn('localStorage gagal saat menyimpan sync queue:', storageErr);
+      }
       updateSyncIndicator();
       processSyncQueue();
     }
@@ -3862,7 +3866,11 @@
 
           if (res && res.success) {
             currentUser = res.user;
-            localStorage.setItem('gym_current_user', JSON.stringify(currentUser));
+            try {
+              localStorage.setItem('gym_current_user', JSON.stringify(currentUser));
+            } catch (storageErr) {
+              console.warn('localStorage gagal saat menyimpan sesi user:', storageErr);
+            }
             
             document.getElementById('authView').style.display = 'none';
             document.getElementById('dashboardView').style.display = 'flex';
@@ -10782,7 +10790,11 @@
     function toggleDarkMode() {
       const body = document.body;
       const isDark = body.classList.toggle('dark-mode');
-      localStorage.setItem('gym_theme', isDark ? 'dark' : 'light');
+      try {
+        localStorage.setItem('gym_theme', isDark ? 'dark' : 'light');
+      } catch (storageErr) {
+        console.warn('localStorage gagal saat menyimpan tema:', storageErr);
+      }
       updateThemeUI();
     }
 
@@ -12087,7 +12099,11 @@
       if (newBranch === currentBranch) return;
 
       currentBranch = newBranch;
-      localStorage.setItem('current_branch', currentBranch);
+      try {
+        localStorage.setItem('current_branch', currentBranch);
+      } catch (storageErr) {
+        console.warn('localStorage gagal saat menyimpan branch:', storageErr);
+      }
 
       // RESET ALL CACHES AND STATE TO PREVENT DATA LEAKAGE BETWEEN BRANCHES
       if (typeof __productsCache !== 'undefined') __productsCache = null;
