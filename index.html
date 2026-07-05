@@ -9754,10 +9754,10 @@
     }
 
     function triggerSetupLeveling() {
-      showConfirmModal(
-        'Setup Leveling User',
-        'Sistem akan membuat akun default: Super Admin, Admin, dan 6 Kasir Cabang.\nLanjutkan?',
-        function () {
+      showConfirm(
+        'Setup Leveling User\nSistem akan membuat akun default: Super Admin, Admin, dan 6 Kasir Cabang.\nLanjutkan?',
+        function (ok) {
+          if (!ok) return;
           showLoading();
           google.script.run
             .withSuccessHandler(function (res) {
@@ -9787,10 +9787,10 @@
     }
 
     function syncDatabase() {
-      showConfirmModal(
-        'Sinkronisasi Database',
-        'Sistem akan memeriksa dan membuat sheet yang belum ada (termasuk sheet Pengeluaran).\nLanjutkan?',
-        function () {
+      showConfirm(
+        'Sinkronisasi Database\nSistem akan memeriksa dan membuat sheet yang belum ada (termasuk sheet Pengeluaran).\nLanjutkan?',
+        function (ok) {
+          if (!ok) return;
           showLoading();
           google.script.run
             .withSuccessHandler(function (res) {
@@ -10277,10 +10277,10 @@
     }
 
     function confirmDeleteUser(id, username) {
-      showConfirmModal(
-        'Hapus Akun User',
-        `Apakah Anda yakin ingin menghapus akun "${username}"?\n\nAkun ini tidak akan dapat login lagi.`,
-        function () {
+      showConfirm(
+        `Hapus Akun User\nApakah Anda yakin ingin menghapus akun "${username}"?\n\nAkun ini tidak akan dapat login lagi.`,
+        function (ok) {
+          if (!ok) return;
           showLoading();
           google.script.run
             .withSuccessHandler(function (res) {
@@ -10573,10 +10573,10 @@
 
 
     function deleteExpenseRecord(id) {
-      showConfirmModal(
-        'Hapus Pengeluaran',
-        'Apakah Anda yakin ingin menghapus catatan pengeluaran ini?\nTindakan ini tidak dapat dibatalkan.',
-        function () {
+      showConfirm(
+        'Hapus Pengeluaran\nApakah Anda yakin ingin menghapus catatan pengeluaran ini?\nTindakan ini tidak dapat dibatalkan.',
+        function (ok) {
+          if (!ok) return;
           // ROLLBACK PREPARATION
           const start = document.getElementById('exp_start_date')?.value || 'all';
           const end = document.getElementById('exp_end_date')?.value || 'all';
