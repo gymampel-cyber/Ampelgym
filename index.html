@@ -4625,7 +4625,15 @@
               let typeBadge = '';
               let rowStyle = '';
               if (h.type === 'Transaction') {
-                typeBadge = '<span class="badge badge-success" style="font-size:9px">MEMBERSHIP</span>';
+                if (h.category === 'Registrasi Baru') {
+                  typeBadge = '<span class="badge badge-success" style="font-size:9px">REGISTRASI BARU</span>';
+                } else if (h.category === 'Perpanjangan') {
+                  typeBadge = '<span class="badge badge-info" style="font-size:9px; background:#e0f2fe; color:#0284c7">PERPANJANGAN</span>';
+                } else if (h.category === 'Personal Trainer') {
+                  typeBadge = '<span class="badge badge-secondary" style="font-size:9px; background:#fce7f3; color:#be185d">PERSONAL TRAINER</span>';
+                } else {
+                  typeBadge = `<span class="badge badge-success" style="font-size:9px">${h.category ? h.category.toUpperCase() : 'MEMBERSHIP'}</span>`;
+                }
                 rowStyle = 'border-left: 4px solid #10b981';
               } else if (h.type === 'POS') {
                 typeBadge = '<span class="badge badge-info" style="font-size:9px">POS/KANTIN</span>';
