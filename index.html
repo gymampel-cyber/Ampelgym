@@ -3974,7 +3974,7 @@
             <p class="view-subtitle">Ringkasan performa operasional dan keuangan ${currentBranchName}</p>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:12px">
-            <div class="filter-group" style="display:flex; align-items:center; gap:8px; background:white; padding:4px 12px; border-radius:10px; border:1px solid #e2e8f0">
+            <div class="filter-group" style="display:flex; align-items:center; gap:8px; background:white; padding:4px 12px; border-radius:10px; border:1px solid #e2e8f0; ${(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? 'display:none' : ''}">
               <i class="fas fa-calendar-alt" style="color:#64748b"></i>
               <input type="date" id="dash_start_date" class="filter-input" style="border:none; background:transparent">
               <span style="color:#cbd5e1">s/d</span>
@@ -3997,7 +3997,7 @@
           <i class="fas fa-star" style="color:#f59e0b"></i> Indikator Utama (KPI)
         </div>
         <div class="kpi-container">
-          <div class="stat-card stat-card-clickable" id="cardTotalMember" onclick="showDashboardDetail('total_member')">
+          <div class="stat-card stat-card-clickable" id="cardTotalMember" onclick="showDashboardDetail('total_member')" style="${(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? 'display:none' : ''}">
             <div class="stat-header">
               <span class="stat-label">Total Member</span>
               <div class="stat-icon" style="background:#f1f5f9; color:#64748b"><i class="fas fa-users"></i></div>
@@ -4008,7 +4008,7 @@
               <span title="Perempuan" style="color:#ec4899"><i class="fas fa-venus"></i> <span id="statFemale">0</span></span>
             </div>
           </div>
-          <div class="stat-card stat-card-clickable" id="cardMemberAktif" style="border-top-color:#22c55e" onclick="showDashboardDetail('active_member')">
+          <div class="stat-card stat-card-clickable" id="cardMemberAktif" style="border-top-color:#22c55e; ${(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? 'display:none' : ''}" onclick="showDashboardDetail('active_member')">
             <div class="stat-header">
               <span class="stat-label">Member Aktif</span>
               <div class="stat-icon" style="background:#dcfce7; color:#166534"><i class="fas fa-user-check"></i></div>
@@ -4019,7 +4019,7 @@
               <span title="Perempuan" style="color:#ec4899"><i class="fas fa-venus"></i> <span id="statAktifFemale">0</span></span>
             </div>
           </div>
-          <div class="stat-card stat-card-clickable" id="cardGallery" style="border-top-color:#f472b6" onclick="showView('gallery')">
+          <div class="stat-card stat-card-clickable" id="cardGallery" style="border-top-color:#f472b6; ${(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? 'display:none' : ''}" onclick="showView('gallery')">
             <div class="stat-header">
               <span class="stat-label">Galeri Member</span>
               <div class="stat-icon" style="background:#fdf2f8; color:#db2777"><i class="fas fa-images"></i></div>
@@ -4082,7 +4082,7 @@
               </div>
             </div>
 
-            <div class="stat-card" style="margin-bottom:24px">
+            <div id="cardExpenses" class="stat-card" style="margin-bottom:24px; ${(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? 'display:none' : ''}">
               <div style="display:flex; justify-content:space-between; align-items:center">
                 <div>
                   <div class="stat-label">Gabungan Biaya Operasional</div>
@@ -4476,6 +4476,13 @@
             </div>
           </div>
         </div>
+        ${(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? `
+          <div style="margin-top:32px; text-align:center; padding:48px 24px; background:#f8fafc; border-radius:20px; border:2px dashed #e2e8f0">
+            <i class="fas fa-user-shield fa-3x" style="color:#94a3b8; margin-bottom:16px; display:block"></i>
+            <div style="font-size:16px; font-weight:700; color:#475569; margin-bottom:8px">Data Kartu Profil Member Terbatas</div>
+            <div style="font-size:14px; color:#94a3b8">Akses kartu profil member hanya tersedia untuk Admin.<br>Gunakan tombol <strong>Registrasi Baru</strong> untuk mendaftarkan member baru.</div>
+          </div>
+        ` : `
         <div id="galleryGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:24px; margin-top:24px">
           ${members.map(m => {
             const isActive = m.status === 'Aktif';
@@ -4569,6 +4576,7 @@
             </div>
           `;}).join('')}
         </div>
+        `}
       `;
 
       // CSS for Hover Effect
@@ -10316,6 +10324,7 @@
     }
     function loadExpensesView() {
       const content = `
+        ${!(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? `
         <div class="filter-container">
           <div class="filter-item">
             <label class="filter-label">Tanggal Mulai</label>
@@ -10334,7 +10343,9 @@
             </button>
           </div>
         </div>
+        ` : ''}
 
+        ${!(currentUser.role === 'Staff' || currentUser.role === 'Kasir') ? `
         <div class="stats-grid">
           <div class="stat-card" style="border-top-color:#ef4444">
             <div class="stat-header">
@@ -10357,6 +10368,7 @@
             <div class="stat-label">Catatan Pengeluaran</div>
           </div>
         </div>
+        ` : ''}
 
         <div style="display:flex; flex-direction:column; gap:24px">
           <!-- FORM ADD EXPENSE -->
@@ -10483,8 +10495,10 @@
             <p>Tidak ada data pengeluaran ditemukan</p>
           </div>
         `;
-        document.getElementById('expTotalValue').textContent = formatCurrency(0);
-        document.getElementById('expCountValue').textContent = '0';
+        const totalEl = document.getElementById('expTotalValue');
+        const countEl = document.getElementById('expCountValue');
+        if (totalEl) totalEl.textContent = formatCurrency(0);
+        if (countEl) countEl.textContent = '0';
         return;
       }
 
@@ -10510,7 +10524,7 @@
           <tr>
             <td style="white-space:nowrap">${formatDate(item.date)}</td>
             <td><span class="badge badge-primary">${item.category}</span></td>
-            <td style="max-width:250px; font-size:13px">${item.description}</td>
+            <td style="max-width:250px; min-width:150px; font-size:13px; white-space:normal; word-break:break-word; overflow-wrap:break-word; line-height:1.5">${item.description}</td>
             <td style="font-weight:600; color:#ef4444">${formatCurrency(item.amount)}</td>
             <td>${item.paymentMethod}</td>
             <td style="font-size:12px; color:#64748b">${item.user || '-'}</td>
@@ -10526,8 +10540,10 @@
       html += `</tbody></table>`;
       container.innerHTML = html;
 
-      document.getElementById('expTotalValue').textContent = formatCurrency(totalAmount);
-      document.getElementById('expCountValue').textContent = data.length;
+      const totalEl = document.getElementById('expTotalValue');
+      const countEl = document.getElementById('expCountValue');
+      if (totalEl) totalEl.textContent = formatCurrency(totalAmount);
+      if (countEl) countEl.textContent = data.length;
     }
 
     function submitExpenseForm() {
@@ -10671,27 +10687,7 @@
       });
     }
 
-
-    function toggleExpenseSplit() {
-      const type = document.getElementById('exp_type').value;
-      document.getElementById('split_section').style.display = type === 'Global' ? 'block' : 'none';
-    }
-
-    function balanceSplit(source) {
-      const gymInput = document.getElementById('exp_gym_split');
-      const retailInput = document.getElementById('exp_retail_split');
-      if (source === 'gym') {
-        retailInput.value = 100 - (Number(gymInput.value) || 0);
-      } else {
-        gymInput.value = 100 - (Number(retailInput.value) || 0);
-      }
-    }
-
     function showDashboardDetail(type) {
-      const financialTypes = ['fitness_revenue', 'pos_revenue', 'expenses', 'fitness_expenses', 'pos_expenses'];
-      // Staff/Kasir are now allowed to see financial details
-      // if (currentUser && (currentUser.role === 'Staff' || currentUser.role === 'Kasir') && financialTypes.includes(type)) { ... }
-
       const modal = document.getElementById('detailModal');
       const title = document.getElementById('detailModalTitle');
       const container = document.getElementById('detailModalBody');
