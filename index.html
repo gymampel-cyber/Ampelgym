@@ -4925,8 +4925,15 @@
             </div>
 
             <div class="form-card" style="margin-top:24px">
-              <div class="form-card-header">
-                <h3><i class="fas fa-history"></i> Riwayat Registrasi Admin (Terbaru)</h3>
+              <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+                <h3 style="margin:0"><i class="fas fa-history"></i> Riwayat Registrasi Admin</h3>
+                <div style="display:flex; gap:8px">
+                  <input type="date" id="reg_hist_start" class="form-input" style="padding:4px 8px; width:auto; font-size:12px" title="Tanggal Mulai">
+                  <input type="date" id="reg_hist_end" class="form-input" style="padding:4px 8px; width:auto; font-size:12px" title="Tanggal Akhir">
+                  <button class="btn btn-primary" onclick="loadAdminTrxHistory('Registrasi Baru', 'regHistoryContainer', 'reg_hist_start', 'reg_hist_end')" style="padding:4px 12px; font-size:12px">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                </div>
               </div>
               <div class="form-card-body">
                 <div id="regHistoryContainer" style="overflow-x:auto">
@@ -4938,7 +4945,11 @@
             </div>
           `;
 
-          loadAdminTrxHistory('Registrasi Baru', 'regHistoryContainer');
+          const todayStr = new Date().toISOString().split('T')[0];
+          document.getElementById('reg_hist_start').value = todayStr;
+          document.getElementById('reg_hist_end').value = todayStr;
+
+          loadAdminTrxHistory('Registrasi Baru', 'regHistoryContainer', 'reg_hist_start', 'reg_hist_end');
 
           document.querySelectorAll('.pkg-card').forEach(card => {
             card.addEventListener('click', function () {
@@ -5663,8 +5674,15 @@
             </div>
 
             <div class="form-card" style="margin-top:24px">
-              <div class="form-card-header">
-                <h3><i class="fas fa-history"></i> Riwayat Perpanjangan Admin (Terbaru)</h3>
+              <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+                <h3 style="margin:0"><i class="fas fa-history"></i> Riwayat Perpanjangan Admin</h3>
+                <div style="display:flex; gap:8px">
+                  <input type="date" id="ext_hist_start" class="form-input" style="padding:4px 8px; width:auto; font-size:12px" title="Tanggal Mulai">
+                  <input type="date" id="ext_hist_end" class="form-input" style="padding:4px 8px; width:auto; font-size:12px" title="Tanggal Akhir">
+                  <button class="btn btn-primary" onclick="loadAdminTrxHistory('Perpanjangan', 'extHistoryContainer', 'ext_hist_start', 'ext_hist_end')" style="padding:4px 12px; font-size:12px">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                </div>
               </div>
               <div class="form-card-body">
                 <div id="extHistoryContainer" style="overflow-x:auto">
@@ -5676,7 +5694,11 @@
             </div>
           `;
 
-          loadAdminTrxHistory('Perpanjangan', 'extHistoryContainer');
+          const todayStrExt = new Date().toISOString().split('T')[0];
+          document.getElementById('ext_hist_start').value = todayStrExt;
+          document.getElementById('ext_hist_end').value = todayStrExt;
+
+          loadAdminTrxHistory('Perpanjangan', 'extHistoryContainer', 'ext_hist_start', 'ext_hist_end');
 
           document.getElementById('trx_package').addEventListener('change', updateTransactionSummary);
         })
@@ -6134,9 +6156,12 @@
       );
     }
 
-    function loadAdminTrxHistory(type, containerId) {
+    function loadAdminTrxHistory(type, containerId, startId, endId) {
       const container = document.getElementById(containerId);
       if (!container) return;
+
+      const startDate = startId && document.getElementById(startId) ? document.getElementById(startId).value : null;
+      const endDate = endId && document.getElementById(endId) ? document.getElementById(endId).value : null;
 
       google.script.run
         .withSuccessHandler(function (res) {
@@ -6193,7 +6218,7 @@
             container.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444">Gagal memuat riwayat: ${res.message}</div>`;
           }
         })
-        .getFilteredTransactionHistory(type, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
+        .getFilteredTransactionHistory(type, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name), startDate, endDate);
     }
 
     // ================ POS (POINT OF SALE) ================
@@ -6419,7 +6444,7 @@
         .withFailureHandler(function(err) {
           el.innerHTML = '<div style="text-align:center; padding:30px; color:#ef4444">Error: ' + err.message + '</div>';
         })
-        .getFilteredPOSTransactions(startDate, endDate, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
+        .getDashboardPOSTransactions(startDate, endDate, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
     }
 
     function loadPOSProducts(force = false) {
