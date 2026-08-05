@@ -277,6 +277,7 @@
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
     :root {
       --primary: #d4af37;
       --primary-light: #fdf8e7;
@@ -6309,11 +6310,18 @@
             </div>
 
             <div class="form-card" style="margin-top:0">
-              <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
+              <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
                 <h4 style="margin:0"><i class="fas fa-clock"></i> Transaksi Terakhir</h4>
-                <button class="btn btn-sm btn-outline" onclick="loadTodayPOSTransactions()">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
+                <div style="display:flex; gap:8px">
+                  <input type="date" id="pos_dash_start" class="btn btn-sm btn-outline" style="padding:4px">
+                  <input type="date" id="pos_dash_end" class="btn btn-sm btn-outline" style="padding:4px">
+                  <button class="btn btn-sm btn-primary" onclick="loadTodayPOSTransactions()">
+                    <i class="fas fa-filter"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline" onclick="loadTodayPOSTransactions(true)">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
               </div>
               <div class="form-card-body" id="posTodayTransactions" style="padding:0">
                 <div style="text-align:center; padding:30px; color:#94a3b8">
@@ -6325,12 +6333,29 @@
         </div>
       `;
       loadPOSProducts();
-      loadTodayPOSTransactions();
+      loadTodayPOSTransactions(true);
     }
 
-    function loadTodayPOSTransactions() {
+    function loadTodayPOSTransactions(reset = false) {
       const el = document.getElementById('posTodayTransactions');
       if (!el) return;
+
+      const startInput = document.getElementById('pos_dash_start');
+      const endInput = document.getElementById('pos_dash_end');
+      let startDate = null, endDate = null;
+      if (startInput && endInput) {
+        if (reset) {
+          const today = new Date().toISOString().split('T')[0];
+          startInput.value = today;
+          endInput.value = today;
+        }
+        if (startInput.value) {
+          startDate = startInput.value;
+          endDate = endInput.value;
+        }
+      }
+
+      el.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8"><i class="fas fa-spinner fa-spin"></i></div>';
 
       google.script.run
         .withSuccessHandler(function (res) {
@@ -6351,6 +6376,7 @@
                       <th>Pelanggan</th>
                       <th>Produk</th>
                       <th>Total</th>
+                      <th>Metode</th>
                       <th>Kasir</th>
                       <th>Aksi</th>
                     </tr>
@@ -6363,6 +6389,7 @@
                         <td>${escapeHtml(t.customer)}</td>
                         <td>${t.items || '-'}</td>
                         <td><b>${formatCurrency(t.total)}</b></td>
+                        <td><span class="badge badge-info">${escapeHtml(t.paymentMethod || '-')}</span></td>
                         <td><small>${t.cashier}</small></td>
                         <td style="text-align:center">
                           <div style="display:flex; gap:6px; justify-content:center">
@@ -6385,9 +6412,14 @@
                 </table>
               </div>
             `;
+          } else {
+            el.innerHTML = '<div style="text-align:center; padding:30px; color:#ef4444">Error: ' + res.message + '</div>';
           }
         })
-        .getTodayPOSTransactions(currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
+        .withFailureHandler(function(err) {
+          el.innerHTML = '<div style="text-align:center; padding:30px; color:#ef4444">Error: ' + err.message + '</div>';
+        })
+        .getFilteredPOSTransactions(startDate, endDate, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
     }
 
     function loadPOSProducts(force = false) {
@@ -8729,6 +8761,11 @@
               <h4 style="margin-bottom:16px;font-weight:600;color:#334155">
                 <i class="fas fa-history"></i> Riwayat Transaksi PT
               </h4>
+              <div style="display:flex; gap:8px; margin-bottom: 16px;">
+                <input type="date" id="pt_hist_start" class="btn btn-sm btn-outline" style="padding:4px">
+                <input type="date" id="pt_hist_end" class="btn btn-sm btn-outline" style="padding:4px">
+                <button class="btn btn-sm btn-primary" onclick="loadPTTransactionHistory()"><i class="fas fa-filter"></i> Filter</button>
+              </div>
               <div id="ptHistoryContainer">
                 <div style="text-align:center;padding:30px;color:#94a3b8">
                   <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -8753,6 +8790,18 @@
       const container = document.getElementById('ptHistoryContainer');
       if (!container) return;
 
+      const startInput = document.getElementById('pt_hist_start');
+      const endInput = document.getElementById('pt_hist_end');
+      let startDate = null, endDate = null;
+      if (startInput && endInput && startInput.value) {
+        startDate = startInput.value;
+        endDate = endInput.value;
+      } else {
+        const today = new Date();
+        startDate = today.toISOString().split('T')[0];
+        endDate = today.toISOString().split('T')[0];
+      }
+
       google.script.run
         .withSuccessHandler(function (res) {
           if (res && res.success) {
@@ -8774,6 +8823,7 @@
                         <th>Member</th>
                         <th>Paket</th>
                         <th>Total</th>
+                        <th>Metode</th>
                         <th>Tanggal</th>
                         <th>Status</th>
                         <th style="text-align:center">Aksi</th>
@@ -8786,6 +8836,7 @@
                           <td><b>${escapeHtml(t.memberName || '-')}</b></td>
                           <td>${escapeHtml(t.packageName || '-')}</td>
                           <td><b style="color:#22c55e">${formatCurrency(t.totalAmount || 0)}</b></td>
+                          <td><span class="badge badge-info">${escapeHtml(t.paymentMethod || '-')}</span></td>
                           <td>${formatDateTime(t.transactionDate)}</td>
                           <td><span class="badge badge-success">${escapeHtml(t.status || 'Berhasil')}</span></td>
                           <td style="text-align:center">
@@ -8797,7 +8848,7 @@
                                 <i class="fab fa-whatsapp"></i>
                               </button>
                               ${isAdmin ? `
-                                <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="confirmDeleteTransactionRecord('${t.receiptNumber}', 'Transaction', null)" title="Hapus">
+                                <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="event.stopPropagation(); confirmDeleteTransactionRecord('${t.receiptNumber}', 'Transaction', null)" title="Hapus">
                                   <i class="fas fa-trash-alt"></i>
                                 </button>
                               ` : ''}
@@ -8816,9 +8867,9 @@
           }
         })
         .withFailureHandler(function (err) {
-          container.innerHTML = '<p class="text-danger" style="text-align:center;padding:20px">Error: ' + err.message + '</p>';
+          if (container) container.innerHTML = '<p class="text-danger">Error: ' + err.message + '</p>';
         })
-        .getFilteredTransactionHistory('Personal Trainer', currentBranch);
+        .getFilteredTransactionHistory('Personal Trainer', currentBranch, 'All', startDate, endDate);
     }
 
     function sendPTWhatsApp(receipt, name, pkg, total, payment) {
@@ -9942,6 +9993,18 @@
       const adminDataView = document.getElementById('adminDataView');
       if (!adminDataView) return; // Exit if Admin Panel is not currently rendered
 
+      const startInput = document.getElementById('member_hist_start');
+      const endInput = document.getElementById('member_hist_end');
+      let startDate = null, endDate = null;
+      if (startInput && endInput && startInput.value) {
+        startDate = startInput.value;
+        endDate = endInput.value;
+      } else {
+        const today = new Date();
+        startDate = today.toISOString().split('T')[0];
+        endDate = today.toISOString().split('T')[0];
+      }
+
       adminDataView.innerHTML = `
         <div style="text-align:center;padding:20px;color:#94a3b8">
           <i class="fas fa-spinner fa-spin"></i> Memuat...
@@ -9964,7 +10027,12 @@
               <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
                 <h4 style="font-weight:600">Riwayat Transaksi (${list.length})</h4>
               </div>
-              <div style="overflow-x:auto">
+              <div style="padding:16px;background:#f8fafc;border-bottom:1px solid #e2e8f0; display:flex; gap:8px;">
+                <input type="date" id="member_hist_start" class="btn btn-sm btn-outline" style="padding:4px">
+                <input type="date" id="member_hist_end" class="btn btn-sm btn-outline" style="padding:4px">
+                <button class="btn btn-sm btn-primary" onclick="loadTransactionList()"><i class="fas fa-filter"></i> Filter</button>
+              </div>
+              <div class="table-responsive" style="overflow-x:auto; white-space:nowrap;">
                 <table class="data-table">
                   <thead>
                     <tr>
@@ -9972,6 +10040,7 @@
                       <th>Member</th>
                       <th>Paket</th>
                       <th>Total</th>
+                      <th>Metode</th>
                       <th>Tanggal</th>
                       <th>Status</th>
                     </tr>
@@ -9983,6 +10052,7 @@
                         <td>${escapeHtml(t.memberName || '-')}</td>
                         <td>${escapeHtml(t.packageName || '-')}</td>
                         <td><b style="color:#22c55e">${formatCurrency(t.totalAmount || 0)}</b></td>
+                        <td><span class="badge badge-info">${escapeHtml(t.paymentMethod || '-')}</span></td>
                         <td>${formatDateTime(t.transactionDate)}</td>
                         <td><span class="badge badge-success">${escapeHtml(t.status || 'Berhasil')}</span></td>
                       </tr>
@@ -9997,7 +10067,7 @@
           const el = document.getElementById('adminDataView');
           if (el) el.innerHTML = '<p class="text-muted">Error: ' + err.message + '</p>';
         })
-        .getTransactionHistory(currentBranch);
+        .getTransactionHistory(currentBranch, startDate, endDate);
     }
 
     function triggerShowSysInfo() {
@@ -11713,11 +11783,10 @@
         </div>
       `;
 
-      // Default dates: current month
-      const today = new Date();
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      document.getElementById('pos_hist_start').value = firstDay.toISOString().split('T')[0];
-      document.getElementById('pos_hist_end').value = today.toISOString().split('T')[0];
+      // Default dates: today
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('pos_hist_start').value = todayStr;
+      document.getElementById('pos_hist_end').value = todayStr;
 
       loadPOSTransactionHistory();
     }
