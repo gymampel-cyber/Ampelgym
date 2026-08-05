@@ -8097,6 +8097,7 @@
                       <th>ID</th>
                       <th>Waktu</th>
                       <th>Tipe</th>
+                      <th>Metode</th>
                       <th style="text-align:center">Aksi</th>
                     </tr>
                   </thead>
@@ -8111,6 +8112,7 @@
                           <td><code>${escapeHtml(c.memberId || '-')}</code></td>
                           <td>${formatTime(c.checkInTime)}</td>
                           <td><span class="badge badge-${typeClass}">${c.type || 'Member'}</span></td>
+                          <td><span class="badge badge-info">${c.paymentMethod === '-' && c.type !== 'Visit' ? '-' : escapeHtml(c.paymentMethod)}</span></td>
                           <td style="text-align:center">
                             <div style="display:flex; gap:6px; justify-content:center">
                               <button class="btn btn-ghost btn-xs" onclick="printCheckinSlip('${c.id}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${escapeHtml(c.type)}', '${formatDateTime(c.checkInTime)}', ${c.price || 0})" title="Cetak Slip">
