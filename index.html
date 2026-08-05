@@ -8062,10 +8062,14 @@
             </div>
             <div id="todayCheckinWidget" style="margin-top:24px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                <h4 style="font-weight:600;color:#334155"><i class="fas fa-list-check"></i> Check-In Hari Ini</h4>
-                <button class="btn btn-sm btn-outline" onclick="loadTodayCheckins()">
-                  <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+                <h4 style="font-weight:600;color:#334155"><i class="fas fa-list-check"></i> Riwayat Check-In</h4>
+                <div style="display:flex; gap:8px">
+                  <input type="date" id="ci_start_date" class="btn btn-sm btn-outline" style="padding:4px">
+                  <input type="date" id="ci_end_date" class="btn btn-sm btn-outline" style="padding:4px">
+                  <button class="btn btn-sm btn-primary" onclick="loadTodayCheckins()">
+                    <i class="fas fa-filter"></i>
+                  </button>
+                </div>
               </div>
               <div id="todayCheckinsTable">
                 <div style="text-align:center;padding:20px;color:#94a3b8">
@@ -8075,7 +8079,15 @@
             </div>
           </div>
         </div>
+        </div>
       `;
+      // Set default dates to today
+      const today = new Date().toISOString().split('T')[0];
+      const startEl = document.getElementById('ci_start_date');
+      const endEl = document.getElementById('ci_end_date');
+      if (startEl) startEl.value = today;
+      if (endEl) endEl.value = today;
+
       loadTodayCheckins();
     }
 
@@ -8151,7 +8163,7 @@
             el.innerHTML = '<p class="text-muted" style="padding:20px;text-align:center">Gagal memuat data: ' + err.message + '</p>';
           }
         })
-        .getTodayCheckins(currentBranch);
+        .getTodayCheckins(currentBranch, document.getElementById('ci_start_date')?.value || '', document.getElementById('ci_end_date')?.value || '');
     }
 
     function autoPreviewCheckin(val) {
