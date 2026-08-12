@@ -3416,9 +3416,6 @@
         .getInitialAppData(currentBranch);
     }
 
-    function removeFromCache(key) {
-      localStorage.removeItem(APP_CACHE_KEY + key);
-    }
 
 
     // ================ UTILS ================
@@ -3886,10 +3883,6 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function hideAlert(containerId) {
-      const el = document.getElementById(containerId);
-      if (el) { el.style.display = 'none'; }
-    }
 
     function showConfirm(msg, cb) {
       confirmCallback = cb;
@@ -5722,116 +5715,6 @@
         .processCheckIn({ memberId: mid, requestId: requestId }, getCurrentStaffIdentifier());
     }
 
-    function printMemberCard(memberId) {
-      if (!memberId) {
-        showToast('ID Member tidak valid', 'warning');
-        return;
-      }
-
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res && res.success) {
-            const m = res.member;
-            const printWindow = window.open('', '_blank');
-            const photoUrl = m.profilePic ? getDirectLink(m.profilePic) : 'https://i.imgur.com/vHEx3jR.png';
-
-            printWindow.document.write(`
-              <html>
-                <head>
-                  <title>Member Card - ${m.name}</title>
-                  <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap');
-                    body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; font-family: 'Roboto', sans-serif; }
-                    .card { 
-                      width: 350px; height: 210px; background: #000; color: white; border-radius: 12px; position: relative; overflow: hidden; 
-                      box-shadow: none; border: 1px solid #222; -webkit-print-color-adjust: exact;
-                    }
-                    .card::before {
-                      content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px;
-                      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), transparent); border-radius: 50%; z-index: 1;
-                    }
-                    .card::after {
-                      content: ''; position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px;
-                      background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), transparent); border-radius: 50%; z-index: 1;
-                    }
-                    .card-content { position: relative; z-index: 2; padding: 15px; display: flex; height: 100%; box-sizing: border-box; }
-                    .card-left { flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; }
-                    .card-right { flex: 1; padding-left: 18px; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid rgba(255,255,255,0.1); }
-                    .photo-container { 
-                      width: 90px; height: 110px; border: 2px solid #7c3aed; border-radius: 8px; overflow: hidden; background: #111; 
-                      box-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-bottom: 10px;
-                    }
-                    .photo-container img { width: 100%; height: 100%; object-fit: cover; }
-                    .qr-container { 
-                      width: 65px; height: 65px; background: white; padding: 4px; border-radius: 6px; 
-                      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                    }
-                    .qr-container img { width: 100%; height: 100%; }
-                    .header { margin-bottom: 12px; }
-                    .gym-name { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: #facc15; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-                    .tagline { font-size: 8px; color: #a78bfa; text-transform: uppercase; letter-spacing: 1px; margin-top: -4px; }
-                    .member-info { margin-bottom: 10px; }
-                    .member-name { font-size: 17px; font-weight: 700; color: #fff; text-transform: uppercase; margin: 0; line-height: 1.2; word-break: break-word; }
-                    .member-id { font-family: monospace; font-size: 14px; color: #7c3aed; font-weight: bold; margin-top: 2px; }
-                    .details { display: grid; grid-template-columns: 1fr; gap: 4px; }
-                    .info-row { font-size: 10px; display: flex; align-items: center; gap: 8px; color: #94a3b8; }
-                    .info-row b { color: #facc15; font-size: 11px; }
-                    .footer-tag { 
-                      position: absolute; bottom: 0; right: 0; padding: 5px 15px; background: #7c3aed; color: white; 
-                      font-size: 10px; font-weight: 700; border-top-left-radius: 12px; letter-spacing: 1px;
-                    }
-                    @media print {
-                      body { background: none; }
-                      .card { border: none; }
-                    }
-                  </style>
-                </head>
-                <body onload="setTimeout(() => { window.print(); window.close(); }, 500)">
-                  <div class="card">
-                    <div class="card-content">
-                      <div class="card-left">
-                        <div class="photo-container">
-                          <img src="${photoUrl}" alt="Photo" onerror="this.src='https://i.imgur.com/vHEx3jR.png'">
-                        </div>
-                        <div class="qr-container">
-                          <img src="${m.qr || ''}" alt="QR">
-                        </div>
-                      </div>
-                      <div class="card-right">
-                        <div>
-                          <div class="header">
-                            <div class="gym-name">${currentBranchName}</div>
-                            <div class="tagline">Power • Fitness • Health</div>
-                          </div>
-                          <div class="member-info">
-                            <div class="member-name">${m.name}</div>
-                            <div class="member-id">${m.id}</div>
-                          </div>
-                        </div>
-                        <div class="details">
-                          <div class="info-row"><span>PAKET:</span> <b>${m.package}</b></div>
-                          <div class="info-row"><span>EXPIRED:</span> <b>${formatDate(m.expiry)}</b></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="footer-tag">VIP MEMBER</div>
-                  </div>
-                </body>
-              </html>
-            `);
-            printWindow.document.close();
-          } else {
-            showToast('Gagal memuat data member: ' + (res.message || 'Error'), 'error');
-          }
-        })
-        .withFailureHandler(function (err) {
-          hideLoading();
-          showToast('Error: ' + err.message, 'error');
-        })
-        .getMemberDetail(memberId);
-    }
 
     // ================ TRANSACTIONS ================
     function loadTransactionForm() {
@@ -6982,35 +6865,6 @@
       loadPOSProducts();
     }
 
-    function sendPOSReceiptToWA(trxId, data) {
-      showLoading();
-      google.script.run
-        .withSuccessHandler(function (res) {
-          hideLoading();
-          if (res.success) {
-            const text = generateReceiptText('pos', {
-              receipt: trxId,
-              name: data.customerName,
-              items: data.items,
-              subtotal: data.subtotal,
-              discount: data.discount,
-              total: data.total,
-              payment: data.paymentMethod,
-              pdfUrl: res.url
-            });
-
-            const waNumber = data.whatsapp || '';
-            if (waNumber) {
-              shareToWhatsApp(waNumber, text);
-            } else {
-              showToast('Nomor WA tidak tersedia', 'warning');
-            }
-          } else {
-            showToast('Gagal membuat link struk: ' + res.message, 'error');
-          }
-        })
-        .generatePOSReceiptPDF(trxId);
-    }
     // printPOSReceipt function removed.
 
 
@@ -8979,24 +8833,6 @@
       });
     }
 
-    function sendPTWhatsApp(receipt, name, pkg, total, payment) {
-      const text = `*KWITANSI PEMBAYARAN PT*\n` +
-        `--------------------------------\n` +
-        `No: ${receipt}\n` +
-        `Nama: ${name}\n` +
-        `Paket: ${pkg}\n` +
-        `Total: ${formatCurrency(total)}\n` +
-        `Metode: ${payment}\n` +
-        `--------------------------------\n` +
-        `Terima kasih telah berlangganan PT di ${currentBranchName}.\n\n` +
-        `_Pesan otomatis dari System ${currentBranchName}_`;
-
-      // Try to find phone from appData if possible
-      const member = appData.members.find(m => m.name === name);
-      const phone = member ? member.phone : '';
-
-      shareToWhatsApp(phone, text);
-    }
 
     function loadPTCatalogue() {
       const sel = document.getElementById('pt_catalog');
@@ -10386,11 +10222,11 @@
         <div class="filter-container">
           <div class="filter-item">
             <label class="filter-label">Tanggal Mulai</label>
-            <input type="date" id="exp_start_date" class="filter-input">
+            <input type="date" id="exp_start_date" class="filter-input" value="${new Date().toISOString().split('T')[0]}">
           </div>
           <div class="filter-item">
             <label class="filter-label">Tanggal Akhir</label>
-            <input type="date" id="exp_end_date" class="filter-input">
+            <input type="date" id="exp_end_date" class="filter-input" value="${new Date().toISOString().split('T')[0]}">
           </div>
           <div style="display:flex; gap:8px">
             <button class="btn btn-primary" onclick="refreshExpenses()" style="padding:8px 20px">
@@ -10539,8 +10375,9 @@
     }
 
     function resetExpensesFilter() {
-      if (document.getElementById('exp_start_date')) document.getElementById('exp_start_date').value = '';
-      if (document.getElementById('exp_end_date')) document.getElementById('exp_end_date').value = '';
+      const today = new Date().toISOString().split('T')[0];
+      if (document.getElementById('exp_start_date')) document.getElementById('exp_start_date').value = today;
+      if (document.getElementById('exp_end_date')) document.getElementById('exp_end_date').value = today;
       refreshExpenses();
     }
 
@@ -10604,46 +10441,6 @@
     }
 
 
-    function deleteExpenseRecord(id) {
-      showConfirm(
-        'Hapus Pengeluaran\nApakah Anda yakin ingin menghapus catatan pengeluaran ini?\nTindakan ini tidak dapat dibatalkan.',
-        function (ok) {
-          if (!ok) return;
-          // ROLLBACK PREPARATION
-          const start = document.getElementById('exp_start_date')?.value || 'all';
-          const end = document.getElementById('exp_end_date')?.value || 'all';
-          const cacheKey = `expenses_list_${start}_${end}_${currentBranch}`;
-          const previousExpenses = getFromCache(cacheKey) || [];
-
-          // OPTIMISTIC DELETE
-          const optimisticExpenses = previousExpenses.filter(ex => ex.id !== id);
-          saveToCache(cacheKey, optimisticExpenses);
-          renderExpensesTable(optimisticExpenses);
-          showToast('Menghapus...', 'info');
-
-          google.script.run
-            .withSuccessHandler(function (res) {
-              if (res && res.success) {
-                showToast('✅ Pengeluaran dihapus', 'success');
-                refreshExpenses();
-                fetchDashboardData();
-              } else {
-                // ROLLBACK
-                saveToCache(cacheKey, previousExpenses);
-                renderExpensesTable(previousExpenses);
-                showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
-              }
-            })
-            .withFailureHandler(function (err) {
-              // ROLLBACK
-              saveToCache(cacheKey, previousExpenses);
-              renderExpensesTable(previousExpenses);
-              showToast('Error koneksi: ' + err.message, 'error');
-            })
-            .deleteExpense(id);
-        }
-      );
-    }
 
 
     function applyRolePermissions() {
@@ -11761,10 +11558,6 @@
     }
 
     // STOCK HISTORY
-    function showStockOpnameHistory() {
-      // This is already inside showInventoryTools in index.html
-      // We'll update the render part there.
-    }
     function openEditProfileModal(memberId) {
       if (currentUser && currentUser.role !== 'Admin') {
         showToast('Akses ditolak: Hanya Admin yang dapat mengedit profil member.', 'warning');
