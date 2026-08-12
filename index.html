@@ -11746,59 +11746,43 @@
       const end = document.getElementById('pos_hist_end').value;
       const container = document.getElementById('posHistoryTableContainer');
 
-      container.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>';
+      container.innerHTML = '<div id="posHistoryDataView"></div>';
 
-      google.script.run
-        .withSuccessHandler(function (res) {
-          if (res.success) {
-            const list = res.history;
-            if (list.length === 0) {
-              container.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8">Tidak ada transaksi ditemukan</div>';
-              return;
-            }
-
-            let html = `
-              <div class="list-container">
-                ${list.map(t => `
-                  <div class="list-item" onclick="showPOSReceiptDetail('${t['ID Transaksi']}')">
-                    <div class="list-item-content">
-                      <div class="list-item-title">${escapeHtml(t['Nama Pembeli'] || 'Pelanggan Guest')}</div>
-                      <div class="list-item-subtitle">
-                        <span class="badge badge-primary" style="font-size:10px">${t['ID Transaksi']}</span> • 
-                        ${(parseCustomDate(t.Waktu) || new Date()).toLocaleString('id-ID', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })} • 
-                        <i class="fas fa-user-tie"></i> ${t.Kasir}
-                      </div>
-                      <div style="font-size:11px; color:#64748b; margin-top:4px">${t['Daftar Item'] || '-'}</div>
-                    </div>
-                    <div class="list-item-action">
-                      <div style="text-align:right">
-                        ${formatCurrency(t.Total)}
-                        <div style="font-size:11px; color:#8E8E93; font-weight:normal">${t['Metode Pembayaran']}</div>
-                      </div>
-                      <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end">
-                        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); printReceipt('pos', { receipt: '${t['ID Transaksi']}', name: decodeURIComponent('${encodeURIComponent(t['Nama Pembeli'])}'), items: JSON.parse(decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}')), total: ${t.Total}, payment: '${t['Metode Pembayaran']}' })" title="Cetak Struk">
-                          <i class="fas fa-print"></i>
-                        </button>
-                        <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="event.stopPropagation(); sendPOSWhatsApp('${t['ID Transaksi']}', '${t['WhatsApp']}' || getMemberPhone('${t['Member ID']}'), decodeURIComponent('${encodeURIComponent(t['Nama Pembeli'])}'), ${t.Subtotal || t.Total}, ${t.Diskon || 0}, ${t.Total}, '${t['Metode Pembayaran']}', decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}'))" title="Kirim WA">
-                          <i class="fab fa-whatsapp"></i>
-                        </button>
-                        ${currentUser.role === 'Admin' ? `
-                          <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="event.stopPropagation(); confirmDeleteTransactionRecord('${t['ID Transaksi']}', 'POS', null)" title="Hapus Transaksi">
-                            <i class="fas fa-trash-alt"></i>
-                          </button>
-                        ` : ''}
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
+      new SmartDataTable({
+        containerId: 'posHistoryDataView',
+        title: 'Riwayat Transaksi POS',
+        fetchAction: 'getFilteredPOSTransactions',
+        fetchArgs: [start, end, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name)],
+        cacheKey: 'history',
+        itemType: 'POSTRANSACTION',
+        idField: 'ID Transaksi',
+        columns: ['ID Transaksi', 'Waktu', 'Pembeli', 'Item', 'Total', 'Metode', 'Kasir', 'Aksi'],
+        batchDeleteEnabled: true,
+        renderRow: (t) => `
+          <tr>
+            <td><code>${t['ID Transaksi']}</code></td>
+            <td><small>${(parseCustomDate(t.Waktu) || new Date()).toLocaleString('id-ID', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}</small></td>
+            <td><b>${escapeHtml(t['Nama Pembeli'] || 'Pelanggan Guest')}</b></td>
+            <td><small style="color:#64748b; white-space:pre-wrap;">${t['Daftar Item'] || '-'}</small></td>
+            <td><b style="color:#22c55e">${formatCurrency(t.Total)}</b></td>
+            <td><span class="badge badge-info">${t['Metode Pembayaran']}</span></td>
+            <td><small><i class="fas fa-user-tie"></i> ${t.Kasir}</small></td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); printReceipt('pos', { receipt: '${t['ID Transaksi']}', name: decodeURIComponent('${encodeURIComponent(t['Nama Pembeli'])}'), items: JSON.parse(decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}')), total: ${t.Total}, payment: '${t['Metode Pembayaran']}' })" title="Cetak Struk">
+                  <i class="fas fa-print"></i>
+                </button>
+                <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="event.stopPropagation(); sendPOSWhatsApp('${t['ID Transaksi']}', '${t['WhatsApp']}' || getMemberPhone('${t['Member ID']}'), decodeURIComponent('${encodeURIComponent(t['Nama Pembeli'])}'), ${t.Subtotal || t.Total}, ${t.Diskon || 0}, ${t.Total}, '${t['Metode Pembayaran']}', decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}'))" title="Kirim WA">
+                  <i class="fab fa-whatsapp"></i>
+                </button>
+                <button class="btn btn-ghost btn-xs" style="color:#3b82f6" onclick="showPOSReceiptDetail('${t['ID Transaksi']}')" title="Detail">
+                  <i class="fas fa-info-circle"></i>
+                </button>
               </div>
-            `;
-            container.innerHTML = html;
-          } else {
-            container.innerHTML = '<div class="alert alert-error">Gagal: ' + res.message + '</div>';
-          }
-        })
-        .getFilteredPOSTransactions(start, end, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
+            </td>
+          </tr>
+        `
+      });
     }
 
     // STOCK HISTORY
