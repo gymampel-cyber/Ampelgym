@@ -319,6 +319,7 @@
                 else if (res.data) freshData = res.data;
                 else if (res.list) freshData = res.list;
                 else if (res.expenses) freshData = res.expenses;
+                else if (res.transactions) freshData = res.transactions;
              }
              
              // Delta: Only re-render if data is different or we didn't have cache
@@ -6276,62 +6277,39 @@
       const startDate = startId && document.getElementById(startId) ? document.getElementById(startId).value : null;
       const endDate = endId && document.getElementById(endId) ? document.getElementById(endId).value : null;
 
-      google.script.run
-        .withSuccessHandler(function (res) {
-          if (res && res.success) {
-            const list = res.transactions;
-            if (!list || list.length === 0) {
-              container.innerHTML = '<div style="text-align:center; padding:32px; color:#94a3b8; background:rgba(0,0,0,0.02); border-radius:12px; border:1px dashed var(--border-color)"><i class="fas fa-receipt" style="font-size:24px; margin-bottom:12px; display:block; opacity:0.5"></i> Belum ada riwayat transaksi.</div>';
-              return;
-            }
+      container.innerHTML = '<div id="adminTrxHistoryDataView_' + type.replace(/ /g, '_') + '"></div>';
 
-            let html = `
-              <div class="table-responsive">
-                <table class="table-premium" style="width:100%; border-collapse:separate; border-spacing:0 8px">
-                  <thead>
-                    <tr style="background:transparent">
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700">Waktu</th>
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700">No. Resi</th>
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700">Member</th>
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700">Paket</th>
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700">Total</th>
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700">Metode</th>
-                      <th style="padding:12px; font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700; text-align:center">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${list.map(t => {
-              return `
-                        <tr style="background:var(--bg-card); box-shadow:0 2px 4px rgba(0,0,0,0.02); transition:0.2s">
-                          <td style="padding:12px; border-radius:12px 0 0 12px"><div style="font-size:11px;color:#64748b">${formatDate(t.transactionDate)}</div></td>
-                          <td style="padding:12px"><code>${t.receiptNumber}</code></td>
-                          <td style="padding:12px"><b>${escapeHtml(t.memberName)}</b> <small style="color:#64748b">(${t.memberId})</small></td>
-                          <td style="padding:12px">${escapeHtml(t.packageName)}</td>
-                          <td style="padding:12px"><b>${formatCurrency(t.totalAmount)}</b></td>
-                          <td style="padding:12px"><span class="badge badge-info" style="font-size:10px; padding:4px 8px; border-radius:6px">${t.paymentMethod}</span></td>
-                          <td style="padding:12px; border-radius:0 12px 12px 0; text-align:center">
-                            <div style="display:flex;gap:6px;justify-content:center">
-                              <button class="btn btn-ghost btn-xs" onclick="printReceipt('${t.type === 'Registrasi Baru' ? 'registration' : 'extension'}', { memberId:'${t.memberId}', name:decodeURIComponent('${encodeURIComponent(t.memberName)}'), package:decodeURIComponent('${encodeURIComponent(t.packageName)}'), receipt:'${t.receiptNumber}', total:${t.totalAmount}, payment:'${t.paymentMethod}', expiry:'${t.expiryDate || getMemberExpiry(t.memberId) || t.transactionDate}', qr: '${t.qrCodeUrl || ''}' })" title="Cetak Struk">
-                                <i class="fas fa-print"></i>
-                              </button>
-                              <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="const txt = generateReceiptText('${t.type === 'Registrasi Baru' ? 'registration' : 'extension'}', { memberId:'${t.memberId}', name:decodeURIComponent('${encodeURIComponent(t.memberName)}'), package:decodeURIComponent('${encodeURIComponent(t.packageName)}'), receipt:'${t.receiptNumber}', price:${t.packagePrice || t.totalAmount}, total:${t.totalAmount}, payment:'${t.paymentMethod}', expiry:'${t.expiryDate || getMemberExpiry(t.memberId) || t.transactionDate}', qr: '${t.qrCodeUrl || ''}' }); shareToWhatsApp(getMemberPhone('${t.memberId}'), txt)" title="Kirim WA">
-                                <i class="fab fa-whatsapp"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      `;
-            }).join('')}
-                  </tbody>
-                </table>
+      new SmartDataTable({
+        containerId: 'adminTrxHistoryDataView_' + type.replace(/ /g, '_'),
+        title: 'Riwayat ' + type,
+        fetchAction: 'getFilteredTransactionHistory',
+        fetchArgs: [type, currentBranch, (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') ? 'All' : (currentUser.id || currentUser.name), startDate, endDate],
+        cacheKey: 'transactions', // Backend returns res.transactions
+        itemType: 'TRANSACTION',
+        idField: 'receiptNumber',
+        columns: ['Waktu', 'No. Resi', 'Member', 'Paket', 'Total', 'Metode', 'Aksi'],
+        batchDeleteEnabled: true,
+        renderRow: (t) => `
+          <tr style="background:var(--bg-card); box-shadow:0 2px 4px rgba(0,0,0,0.02); transition:0.2s">
+            <td style="padding:12px; border-radius:12px 0 0 12px"><div style="font-size:11px;color:#64748b">${formatDate(t.transactionDate)}</div></td>
+            <td style="padding:12px"><code>${t.receiptNumber}</code></td>
+            <td style="padding:12px"><b>${escapeHtml(t.memberName)}</b> <small style="color:#64748b">(${t.memberId})</small></td>
+            <td style="padding:12px">${escapeHtml(t.packageName)}</td>
+            <td style="padding:12px"><b>${formatCurrency(t.totalAmount)}</b></td>
+            <td style="padding:12px"><span class="badge badge-info" style="font-size:10px; padding:4px 8px; border-radius:6px">${t.paymentMethod}</span></td>
+            <td style="padding:12px; border-radius:0 12px 12px 0; text-align:center">
+              <div style="display:flex;gap:6px;justify-content:center">
+                <button class="btn btn-ghost btn-xs" onclick="printReceipt('${t.type === 'Registrasi Baru' ? 'registration' : 'extension'}', { memberId:'${t.memberId}', name:decodeURIComponent('${encodeURIComponent(t.memberName)}'), package:decodeURIComponent('${encodeURIComponent(t.packageName)}'), receipt:'${t.receiptNumber}', total:${t.totalAmount}, payment:'${t.paymentMethod}', expiry:'${t.expiryDate || getMemberExpiry(t.memberId) || t.transactionDate}', qr: '${t.qrCodeUrl || ''}' })" title="Cetak Struk">
+                  <i class="fas fa-print"></i>
+                </button>
+                <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="const txt = generateReceiptText('${t.type === 'Registrasi Baru' ? 'registration' : 'extension'}', { memberId:'${t.memberId}', name:decodeURIComponent('${encodeURIComponent(t.memberName)}'), package:decodeURIComponent('${encodeURIComponent(t.packageName)}'), receipt:'${t.receiptNumber}', price:${t.packagePrice || t.totalAmount}, total:${t.totalAmount}, payment:'${t.paymentMethod}', expiry:'${t.expiryDate || getMemberExpiry(t.memberId) || t.transactionDate}', qr: '${t.qrCodeUrl || ''}' }); shareToWhatsApp(getMemberPhone('${t.memberId}'), txt)" title="Kirim WA">
+                  <i class="fab fa-whatsapp"></i>
+                </button>
               </div>
-            `;
-            container.innerHTML = html;
-          } else {
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444">Gagal memuat riwayat: ${res.message}</div>`;
-          }
-        })
-        .getFilteredTransactionHistory(type, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name), startDate, endDate);
+            </td>
+          </tr>
+        `
+      });
     }
 
     // ================ POS (POINT OF SALE) ================
@@ -6471,7 +6449,7 @@
         </div>
       `;
       loadPOSProducts();
-      loadTodayPOSTransactions(true);
+      loadTodayPOSTransactions();
     }
 
     function loadTodayPOSTransactions(reset = false) {
@@ -6499,7 +6477,7 @@
         containerId: 'posTodayTransactionsDataView',
         title: 'Transaksi POS Terakhir',
         fetchAction: 'getDashboardPOSTransactions',
-        fetchArgs: [startDate, endDate, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name)],
+        fetchArgs: [startDate, endDate, currentBranch, (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') ? 'All' : (currentUser.id || currentUser.name)],
         cacheKey: `pos_transactions_dash_${startDate}_${endDate}_${currentBranch}`,
         itemType: 'POSTRANSACTION',
         idField: 'id',
