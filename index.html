@@ -387,22 +387,20 @@
          for (let i = this.renderedCount; i < end; i++) {
             const item = this.items[i];
             const idVal = item[this.idField];
+            const isChecked = this.selectedIds.has(String(idVal)) ? 'checked' : '';
             let tdSelect = this.batchDeleteEnabled ? 
-               `<td style="text-align:center"><input type="checkbox" class="row-select" value="${idVal}" onchange="window.smartTableRowSelect('${this.tableBodyId}')"></td>` : '';
+               `<td style="text-align:center"><input type="checkbox" class="row-select" value="${idVal}" onchange="window.smartTableRowSelect('${this.tableBodyId}', this)" ${isChecked}></td>` : '';
             
             let rowHtml = this.renderRow(item, i);
-            // Inject tdSelect at the beginning of the row
+            // Inject tdSelect immediately after the first <tr ...>
             if (this.batchDeleteEnabled) {
-                rowHtml = rowHtml.replace(/^<tr[^>]*>/i, `$&${tdSelect}`);
+                rowHtml = rowHtml.replace(/(<tr[^>]*>)/i, `$1${tdSelect}`);
             }
             html += rowHtml;
          }
          
          tbody.insertAdjacentHTML('beforeend', html);
          this.renderedCount = end;
-         
-         // Re-evaluate checkboxes if 'select all' is checked
-         window.smartTableRowSelect(this.tableBodyId); 
       }
     }
 
@@ -416,32 +414,49 @@
     };
 
     window.smartTableSelectAll = function(cb, tableId) {
+        const instance = window.smartTableInstances[tableId];
+        if (!instance) return;
+
+        if (cb.checked) {
+            instance.selectedIds = new Set(instance.items.map(i => String(i[instance.idField])));
+        } else {
+            instance.selectedIds.clear();
+        }
+
         const tbody = document.getElementById(tableId);
-        if (!tbody) return;
-        const checkboxes = tbody.querySelectorAll('.row-select');
-        checkboxes.forEach(c => c.checked = cb.checked);
+        if (tbody) {
+            const checkboxes = tbody.querySelectorAll('.row-select');
+            checkboxes.forEach(c => c.checked = cb.checked);
+        }
+        
         window.smartTableRowSelect(tableId);
     };
 
-    window.smartTableRowSelect = function(tableId) {
+    window.smartTableRowSelect = function(tableId, cbElement) {
         const instance = window.smartTableInstances[tableId];
         if (!instance) return;
-        const tbody = document.getElementById(tableId);
-        if (!tbody) return;
         
-        const checkboxes = Array.from(tbody.querySelectorAll('.row-select'));
-        const checked = checkboxes.filter(c => c.checked).map(c => c.value);
+        // If triggered by a specific row checkbox
+        if (cbElement) {
+            if (cbElement.checked) {
+                instance.selectedIds.add(String(cbElement.value));
+            } else {
+                instance.selectedIds.delete(String(cbElement.value));
+                // Uncheck "Select All" if a row is unchecked
+                const selectAllCb = instance.container.querySelector('thead input[type="checkbox"]');
+                if (selectAllCb) selectAllCb.checked = false;
+            }
+        }
         
         const fab = document.getElementById(`fab_${tableId}`);
         if (fab) {
-           if (checked.length > 0) {
+           if (instance.selectedIds.size > 0) {
                fab.style.display = 'block';
-               fab.querySelector('.sel-count').innerText = checked.length;
+               fab.querySelector('.sel-count').innerText = instance.selectedIds.size;
            } else {
                fab.style.display = 'none';
            }
         }
-        instance.selectedIds = new Set(checked);
     };
 
     window.smartTableBatchDelete = function(itemType, tableId, btnEl) {
