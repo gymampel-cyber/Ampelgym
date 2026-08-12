@@ -318,6 +318,7 @@
                 else if (res.packages) freshData = res.packages;
                 else if (res.data) freshData = res.data;
                 else if (res.list) freshData = res.list;
+                else if (res.expenses) freshData = res.expenses;
              }
              
              // Delta: Only re-render if data is different or we didn't have cache
@@ -6609,71 +6610,45 @@
         }
       }
 
-      el.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8"><i class="fas fa-spinner fa-spin"></i></div>';
+      el.innerHTML = '<div id="posTodayTransactionsDataView"></div>';
 
-      google.script.run
-        .withSuccessHandler(function (res) {
-          if (res && res.success) {
-            const list = res.transactions || [];
-            if (list.length === 0) {
-              el.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8">Belum ada transaksi hari ini</div>';
-              return;
-            }
-
-            el.innerHTML = `
-              <div style="overflow-x:auto">
-                <table class="data-table" style="font-size:13px">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Waktu</th>
-                      <th>Pelanggan</th>
-                      <th>Produk</th>
-                      <th>Total</th>
-                      <th>Metode</th>
-                      <th>Kasir</th>
-                      <th>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${list.map(t => `
-                      <tr>
-                        <td><code>${t.id}</code></td>
-                        <td>${t.time}</td>
-                        <td>${escapeHtml(t.customer)}</td>
-                        <td>${t.items || '-'}</td>
-                        <td><b>${formatCurrency(t.total)}</b></td>
-                        <td><span class="badge badge-info">${escapeHtml(t.paymentMethod || '-')}</span></td>
-                        <td><small>${t.cashier}</small></td>
-                        <td style="text-align:center">
-                          <div style="display:flex; gap:6px; justify-content:center">
-                            <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); printReceipt('pos', { receipt: '${t.id}', name: decodeURIComponent('${encodeURIComponent(t.customer)}'), items: JSON.parse(decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}')), total: ${t.total}, payment: '${t.paymentMethod}' })" title="Cetak Struk">
-                              <i class="fas fa-print"></i>
-                            </button>
-                            <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="event.stopPropagation(); sendPOSWhatsApp('${t.id}', '${t.whatsapp}' || getMemberPhone('${t.memberId}'), decodeURIComponent('${encodeURIComponent(t.customer)}'), ${t.subtotal || t.total}, ${t.discount || 0}, ${t.total}, '${t.paymentMethod}', decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}'))" title="Kirim WA">
-                              <i class="fab fa-whatsapp"></i>
-                            </button>
-                            ${currentUser.role === 'Admin' ? `
-                              <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="event.stopPropagation(); confirmDeleteTransactionRecord('${t.id}', 'POS', null)" title="Hapus Transaksi">
-                                <i class="fas fa-trash-alt"></i>
-                              </button>
-                            ` : ''}
-                          </div>
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
+      new SmartDataTable({
+        containerId: 'posTodayTransactionsDataView',
+        title: 'Transaksi POS Terakhir',
+        fetchAction: 'getDashboardPOSTransactions',
+        fetchArgs: [startDate, endDate, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name)],
+        cacheKey: `pos_transactions_dash_${startDate}_${endDate}_${currentBranch}`,
+        itemType: 'POSTRANSACTION',
+        idField: 'id',
+        columns: ['ID', 'Waktu', 'Pelanggan', 'Produk', 'Total', 'Metode', 'Kasir', 'Aksi'],
+        batchDeleteEnabled: true,
+        renderRow: (t) => `
+          <tr>
+            <td><code>${t.id}</code></td>
+            <td>${t.time}</td>
+            <td>${escapeHtml(t.customer)}</td>
+            <td><small style="color:#64748b; white-space:pre-wrap;">${t.items || '-'}</small></td>
+            <td><b style="color:#22c55e">${formatCurrency(t.total)}</b></td>
+            <td><span class="badge badge-info">${escapeHtml(t.paymentMethod || '-')}</span></td>
+            <td><small>${t.cashier}</small></td>
+            <td style="text-align:center">
+              <div style="display:flex; gap:6px; justify-content:center">
+                <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); printReceipt('pos', { receipt: '${t.id}', name: decodeURIComponent('${encodeURIComponent(t.customer)}'), items: JSON.parse(decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}')), total: ${t.total}, payment: '${t.paymentMethod}' })" title="Cetak Struk">
+                  <i class="fas fa-print"></i>
+                </button>
+                <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="event.stopPropagation(); sendPOSWhatsApp('${t.id}', '${t.whatsapp}' || getMemberPhone('${t.memberId}'), decodeURIComponent('${encodeURIComponent(t.customer)}'), ${t.subtotal || t.total}, ${t.discount || 0}, ${t.total}, '${t.paymentMethod}', decodeURIComponent('${encodeURIComponent(t.rawItems || '[]')}'))" title="Kirim WA">
+                  <i class="fab fa-whatsapp"></i>
+                </button>
+                ${currentUser.role === 'Admin' ? `
+                  <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="event.stopPropagation(); confirmDeleteTransactionRecord('${t.id}', 'POS', null)" title="Hapus Transaksi">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                ` : ''}
               </div>
-            `;
-          } else {
-            el.innerHTML = '<div style="text-align:center; padding:30px; color:#ef4444">Error: ' + res.message + '</div>';
-          }
-        })
-        .withFailureHandler(function(err) {
-          el.innerHTML = '<div style="text-align:center; padding:30px; color:#ef4444">Error: ' + err.message + '</div>';
-        })
-        .getDashboardPOSTransactions(startDate, endDate, currentBranch, currentUser.role === 'Admin' ? 'All' : (currentUser.id || currentUser.name));
+            </td>
+          </tr>
+        `
+      });
     }
 
     function loadPOSProducts(force = false) {
