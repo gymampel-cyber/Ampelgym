@@ -21,7 +21,9 @@
     let isResultActive = false; // Flag to prevent automatic refresh while success card is shown
     let syncQueue = JSON.parse(localStorage.getItem('gym_sync_queue') || '[]');
 
-    const google = {
+    const nativeRun = (typeof window.google !== 'undefined' && window.google.script && window.google.script.run) ? window.google.script.run : null;
+
+    const customApi = {
       script: {
         run: new Proxy({}, {
           get: function (target, methodName) {
@@ -46,7 +48,7 @@
                     };
                   }
                   return function (...args) {
-                    executeAction(name, args, ctx.successHandler, ctx.failureHandler);
+                    executeAction(methodName, args, ctx.successHandler, ctx.failureHandler);
                   };
                 }
               });
@@ -75,6 +77,12 @@
       }
     };
 
+    if (typeof window.google === 'undefined') {
+      window.google = customApi;
+    } else {
+      window.google.script.run = customApi.script.run;
+    }
+
     function executeAction(methodName, args, successHandler, failureHandler) {
       if (WRITE_ACTIONS.includes(methodName)) {
         console.log(`[LocalFirst] Intercepting ${methodName}`);
@@ -93,6 +101,29 @@
           if (successHandler) setTimeout(() => successHandler(cachedData), 10);
           return;
         }
+      }
+
+      if (nativeRun) {
+        let runner = nativeRun;
+        if (successHandler) {
+          runner = runner.withSuccessHandler(function(res) {
+            successHandler(res);
+          });
+        }
+        if (failureHandler) {
+          runner = runner.withFailureHandler(failureHandler);
+        } else {
+          runner = runner.withFailureHandler(function(err) {
+            console.error('Backend Error:', err);
+          });
+        }
+        
+        if (args && args.length > 0) {
+          runner[methodName].apply(runner, args);
+        } else {
+          runner[methodName]();
+        }
+        return;
       }
 
       fetch(SCRIPT_URL, {
@@ -233,13 +264,25 @@
       while (syncQueue.length > 0 && navigator.onLine) {
         const item = syncQueue[0];
         try {
-          const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: item.action, args: item.args }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-          }).then(r => r.json());
+          let didNotCrash = false;
+          if (nativeRun) {
+            didNotCrash = await new Promise((resolve) => {
+              nativeRun.withSuccessHandler(function(res) {
+                resolve(true); 
+              }).withFailureHandler(function(err) {
+                resolve(false); 
+              })[item.action].apply(nativeRun, item.args || []);
+            });
+          } else {
+            const res = await fetch(SCRIPT_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: item.action, args: item.args }),
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(r => r.json());
+            didNotCrash = !!res.success;
+          }
 
-          if (res.success) {
+          if (didNotCrash) {
             syncQueue.shift();
             localStorage.setItem('gym_sync_queue', JSON.stringify(syncQueue));
           } else break;
