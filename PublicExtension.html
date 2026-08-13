@@ -7,7 +7,9 @@
   <title>Perpanjangan Member</title>
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyCbtuJIB5VqEx0komvoxV_fngSCRk7w9iiEs4PWgu2umgllXkdYywilPlP7rJBNnp/exec';
-    const google = {
+    const nativeRun = (typeof window.google !== 'undefined' && window.google.script && window.google.script.run) ? window.google.script.run : null;
+
+    const customApi = {
       script: {
         run: (function () {
           function createProxy(handlers) {
@@ -20,6 +22,25 @@
                   return function (cb) { return createProxy({ ...handlers, failure: cb }); };
                 }
                 return function (...args) {
+                  if (nativeRun) {
+                    let runner = nativeRun;
+                    if (handlers.success) {
+                      runner = runner.withSuccessHandler(function(res) {
+                        handlers.success(res);
+                      });
+                    }
+                    if (handlers.failure) {
+                      runner = runner.withFailureHandler(handlers.failure);
+                    } else {
+                      runner = runner.withFailureHandler(function(err) {
+                        console.error('Backend Error:', err);
+                      });
+                    }
+                    if (args && args.length > 0) runner[name].apply(runner, args);
+                    else runner[name]();
+                    return;
+                  }
+
                   fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: name, args: args }),
@@ -43,6 +64,12 @@
         })()
       }
     };
+
+    if (typeof window.google === 'undefined') {
+      window.google = customApi;
+    } else {
+      window.google.script.run = customApi.script.run;
+    }
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
