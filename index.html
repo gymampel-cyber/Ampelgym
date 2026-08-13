@@ -7845,7 +7845,8 @@
       }
 
       // Render immediately and close modal
-      _renderProductTable(__productsCache);
+      window.appData['products'] = __productsCache;
+      loadProductList();
       closeProductModal();
       showToast('Menyimpan produk...', 'info');
 
@@ -7859,7 +7860,8 @@
             // ROLLBACK
             if (previousCache) {
               __productsCache = previousCache;
-              _renderProductTable(__productsCache);
+              window.appData['products'] = __productsCache;
+              loadProductList();
             }
             showToast('❌ Gagal: ' + res.message, 'error');
           }
@@ -7868,7 +7870,8 @@
           // ROLLBACK
           if (previousCache) {
             __productsCache = previousCache;
-            _renderProductTable(__productsCache);
+            window.appData['products'] = __productsCache;
+            loadProductList();
           }
           showToast('Error: ' + err.message, 'error');
         })
@@ -10429,7 +10432,8 @@
       // OPTIMISTIC UPDATE: Add to local state and re-render
       const optimisticExpenses = [payload, ...previousExpenses];
       saveToCache(cacheKey, optimisticExpenses);
-      renderExpensesTable(optimisticExpenses);
+      window.appData[cacheKey] = optimisticExpenses; // Update appData for SmartDataTable cache
+      refreshExpenses();
 
       // Reset form immediately
       document.getElementById('expenseForm').reset();
@@ -10448,14 +10452,16 @@
           } else {
             // ROLLBACK
             saveToCache(cacheKey, previousExpenses);
-            renderExpensesTable(previousExpenses);
+            window.appData[cacheKey] = previousExpenses;
+            refreshExpenses();
             showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
           }
         })
         .withFailureHandler(function (err) {
           // ROLLBACK
           saveToCache(cacheKey, previousExpenses);
-          renderExpensesTable(previousExpenses);
+          window.appData[cacheKey] = previousExpenses;
+          refreshExpenses();
           showToast('Error koneksi: ' + err.message, 'error');
         })
         .saveExpense(payload);
