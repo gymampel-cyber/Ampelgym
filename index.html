@@ -4616,14 +4616,14 @@
               </div>
             </div>
             <div class="list-item-action" style="display:flex; gap:8px; align-items:center; margin-left:16px">
-              <button class="btn btn-ghost btn-xs" onclick="printCheckinSlip('${c.id}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${escapeHtml(c.type)}', '${formatDateTime(c.checkInTime)}', ${c.price || 0})" title="Cetak Slip">
+              <button class="btn btn-ghost btn-xs" onclick="printCheckinSlip('${c.id}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${escapeJs(c.type)}', '${formatDateTime(c.checkInTime)}', ${c.price || 0})" title="Cetak Slip">
                 <i class="fas fa-print"></i>
               </button>
               <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="sendCheckinWhatsApp('${c.id}', '${c.memberId}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${formatDateTime(c.checkInTime)}')" title="Kirim WA">
                 <i class="fab fa-whatsapp"></i>
               </button>
               ${(currentUser.role === 'Admin' || currentUser.role === 'Super Admin') ? `
-                <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="confirmDeleteCheckin('${c.id}', '${c.memberId}', '${escapeHtml(c.type)}', decodeURIComponent('${encodeURIComponent(c.memberName)}'))" title="Hapus Check-in">
+                <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="confirmDeleteCheckin('${c.id}', '${c.memberId}', '${escapeJs(c.type)}', decodeURIComponent('${encodeURIComponent(c.memberName)}'))" title="Hapus Check-in">
                   <i class="fas fa-trash-alt"></i>
                 </button>
               ` : ''}
@@ -4800,7 +4800,7 @@
               <!-- Avatar -->
               <div style="margin:-45px auto 12px; position:relative; z-index:2">
                 <div style="width:100px; height:100px; border-radius:30px; overflow:hidden; border:4px solid white; box-shadow:0 8px 20px rgba(0,0,0,0.1); background:#f8fafc; display:flex; align-items:center; justify-content:center; cursor:${m.photoUrl ? 'pointer' : 'default'}" 
-                     onclick="${m.photoUrl ? `viewPhoto('${getDirectLink(m.photoUrl)}', '${escapeHtml(m.name)}')` : ''}"
+                     onclick="${m.photoUrl ? `viewPhoto('${getDirectLink(m.photoUrl)}', '${escapeJs(m.name)}')` : ''}"
                      title="${m.photoUrl ? 'Klik untuk lihat foto' : ''}">
                   ${m.photoUrl ? `<img src="${getDirectLink(m.photoUrl)}" style="width:100%; height:100%; object-fit:cover">` : `<i class="fas fa-user fa-3x" style="color:#cbd5e1"></i>`}
                 </div>
@@ -4836,7 +4836,7 @@
               ${currentUser.role === 'Admin' ? `
                 <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center">
                   <div style="display:flex; gap:10px">
-                    <button class="btn-icon" style="color:#6366f1" onclick="viewPhoto('${m.photoUrl ? getDirectLink(m.photoUrl) : ''}', '${escapeHtml(m.name)}')" title="Lihat Foto" ${!m.photoUrl ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''}>
+                    <button class="btn-icon" style="color:#6366f1" onclick="viewPhoto('${m.photoUrl ? getDirectLink(m.photoUrl) : ''}', '${escapeJs(m.name)}')" title="Lihat Foto" ${!m.photoUrl ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''}>
                       <i class="fas fa-eye"></i>
                     </button>
                     <button class="btn-icon" style="color:#3b82f6" onclick="openChangePhotoModal('${m.memberId}', '${m.photoUrl ? getDirectLink(m.photoUrl) : ''}')" title="Ganti Foto">
@@ -4846,7 +4846,7 @@
                       <i class="fab fa-whatsapp"></i>
                     </button>
                   </div>
-                  <button class="btn-icon" style="color:#ef4444" onclick="confirmDeleteMember('${m.memberId}', '${escapeHtml(m.name)}')" title="Hapus Member">
+                  <button class="btn-icon" style="color:#ef4444" onclick="confirmDeleteMember('${m.memberId}', '${escapeJs(m.name)}')" title="Hapus Member">
                     <i class="fas fa-trash-alt"></i>
                   </button>
                 </div>
@@ -5895,10 +5895,10 @@
                 if (m.status === 'Aktif') statusClass = 'success';
                 else if (m.status === 'Expired') statusClass = 'danger';
 
-                const memberJson = JSON.stringify(m).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+                const memberJson = encodeURIComponent(JSON.stringify(m)).replace(/'/g, "%27");
 
                 html += `
-                  <div onclick="selectMemberForTrx('${memberJson}')" 
+                  <div onclick="selectMemberForTrx(decodeURIComponent('${memberJson}'))" 
                        style="padding:12px 14px;background:white;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:13px;transition:0.2s" 
                        onmouseover="this.style.background='#f0f4ff'" 
                        onmouseout="this.style.background='white'">
@@ -5962,9 +5962,9 @@
             if (res && res.success && res.members && res.members.length > 0) {
               let html = '';
               res.members.slice(0, 5).forEach(m => {
-                const memberJson = JSON.stringify(m).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+                const memberJson = encodeURIComponent(JSON.stringify(m)).replace(/'/g, "%27");
                 html += `
-                  <div onclick="selectMemberForPOS('${memberJson}')" 
+                  <div onclick="selectMemberForPOS(decodeURIComponent('${memberJson}'))" 
                        style="padding:10px;background:white;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12px">
                     <b>${escapeHtml(m.name)}</b> (${m.memberId})
                     <div style="color:#64748b;font-size:11px">${m.phone}</div>
@@ -8137,14 +8137,14 @@
               <td style="text-align:right">${c.price > 0 ? formatCurrency(c.price) : '-'}</td>
               <td style="text-align:center">
                 <div style="display:flex; gap:6px; justify-content:center">
-                  <button class="btn btn-ghost btn-xs" onclick="printCheckinSlip('${c.id}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${escapeHtml(c.type)}', '${formatDateTime(c.checkInTime)}', ${c.price || 0})" title="Cetak Slip">
+                  <button class="btn btn-ghost btn-xs" onclick="printCheckinSlip('${c.id}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${escapeJs(c.type)}', '${formatDateTime(c.checkInTime)}', ${c.price || 0})" title="Cetak Slip">
                     <i class="fas fa-print"></i>
                   </button>
                   <button class="btn btn-ghost btn-xs" style="color:#22c55e" onclick="sendCheckinWhatsApp('${c.id}', '${c.memberId}', decodeURIComponent('${encodeURIComponent(c.memberName)}'), '${formatDateTime(c.checkInTime)}')" title="Kirim WA">
                     <i class="fab fa-whatsapp"></i>
                   </button>
                   ${isAdmin ? `
-                    <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="confirmDeleteCheckin('${c.id}', '${c.memberId}', '${escapeHtml(c.type)}', decodeURIComponent('${encodeURIComponent(c.memberName)}')); loadTodayCheckins();" title="Hapus">
+                    <button class="btn btn-ghost btn-xs" style="color:#ef4444" onclick="confirmDeleteCheckin('${c.id}', '${c.memberId}', '${escapeJs(c.type)}', decodeURIComponent('${encodeURIComponent(c.memberName)}')); loadTodayCheckins();" title="Hapus">
                       <i class="fas fa-trash-alt"></i>
                     </button>
                   ` : ''}
@@ -8965,11 +8965,7 @@
                   statusClass = 'warning';
                 }
 
-                const memberJson = JSON.stringify(m)
-                  .replace(/'/g, "&#39;")
-                  .replace(/"/g, '&quot;')
-                  .replace(/\n/g, '\\n')
-                  .replace(/\r/g, '\\r');
+                const memberJson = encodeURIComponent(JSON.stringify(m)).replace(/'/g, "%27");
 
                 const canRegisterPT = m.status === 'Aktif';
                 const opacityStyle = canRegisterPT ? '' : 'opacity:0.7';
@@ -8977,7 +8973,7 @@
                 const hoverStyle = canRegisterPT ? 'this.style.background="#f0f4ff"' : '';
 
                 html += `
-                  <div onclick="${canRegisterPT ? `selectMemberForPT('${memberJson}')` : 'showToast(\'Member tidak aktif, tidak bisa registrasi PT\', \'warning\')'}" 
+                  <div onclick="${canRegisterPT ? `selectMemberForPT(decodeURIComponent('${memberJson}'))` : 'showToast(\'Member tidak aktif, tidak bisa registrasi PT\', \'warning\')'}" 
                        style="padding:12px 14px;background:white;border:1px solid #e2e8f0;border-radius:8px;cursor:${cursorStyle};margin-bottom:6px;font-size:13px;transition:0.2s;${opacityStyle}" 
                        onmouseover="${canRegisterPT ? hoverStyle : ''}" 
                        onmouseout="this.style.background='white'">
@@ -9462,10 +9458,10 @@
               </td>
               <td>
                 <div style="display:flex;gap:4px">
-                  <button class="btn btn-success btn-sm" onclick="approveRequest('${escapeHtml(a.approvalId)}','${escapeHtml(a.type)}')">
+                  <button class="btn btn-success btn-sm" onclick="approveRequest('${escapeJs(a.approvalId)}','${escapeJs(a.type)}')">
                     <i class="fas fa-check"></i>
                   </button>
-                  <button class="btn btn-danger btn-sm" onclick="rejectRequest('${escapeHtml(a.approvalId)}')">
+                  <button class="btn btn-danger btn-sm" onclick="rejectRequest('${escapeJs(a.approvalId)}')">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
