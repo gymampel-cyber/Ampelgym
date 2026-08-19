@@ -377,9 +377,10 @@
         
         // SWR: Load from cache first
         let cached = appData[this.cacheKey];
-        if (cached && Array.isArray(cached) && cached.length > 0) {
+        if (cached && Array.isArray(cached)) {
            this.items = cached;
            this.renderShell();
+           if (this.onDataChange) this.onDataChange(this.items);
         }
         
         // Revalidate
