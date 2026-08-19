@@ -10443,6 +10443,13 @@
         return;
       }
 
+      // Amankan Tombol dari Double Click
+      const submitBtn = document.querySelector('#expenseForm button.btn-primary') || document.querySelector('#expenseForm button[onclick="submitExpenseForm()"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      }
+
       // ROLLBACK PREPARATION
       const start = document.getElementById('exp_start_date')?.value || 'all';
       const end = document.getElementById('exp_end_date')?.value || 'all';
@@ -10476,6 +10483,10 @@
             refreshExpenses();
             showToast('❌ Gagal: ' + (res.message || 'Error'), 'error');
           }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Pengeluaran';
+          }
         })
         .withFailureHandler(function (err) {
           // ROLLBACK
@@ -10483,6 +10494,10 @@
           window.appData[cacheKey] = previousExpenses;
           refreshExpenses();
           showToast('Error koneksi: ' + err.message, 'error');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Pengeluaran';
+          }
         })
         .saveExpense(payload);
     }
