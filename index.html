@@ -159,7 +159,8 @@
       fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({ action: methodName, args: args }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        credentials: 'omit' // Solusi ajaib untuk bypass Bug Multi-Akun Google
       })
         .then(response => response.json())
         .then(data => {
