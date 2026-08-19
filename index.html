@@ -83,13 +83,29 @@
       window.google.script.run = customApi.script.run;
     }
 
+    const pendingRequests = new Set();
+
     function executeAction(methodName, args, successHandler, failureHandler) {
+      const requestSignature = methodName + JSON.stringify(args || []);
+      if (pendingRequests.has(requestSignature)) {
+        console.warn(`[Double-Submit Protection] Memblokir duplikasi request: ${methodName}`);
+        return;
+      }
+      pendingRequests.add(requestSignature);
+
+      const releaseLock = () => pendingRequests.delete(requestSignature);
+
       if (WRITE_ACTIONS.includes(methodName)) {
         console.log(`[LocalFirst] Intercepting ${methodName}`);
         performOptimisticUpdate(methodName, args);
         addToSyncQueue(methodName, args);
         if (successHandler) {
-          setTimeout(() => successHandler({ success: true, local: true, message: 'Disimpan di cache lokal' }), 10);
+          setTimeout(() => {
+            releaseLock();
+            successHandler({ success: true, local: true, message: 'Disimpan di cache lokal' });
+          }, 10);
+        } else {
+          releaseLock();
         }
         return;
       }
@@ -98,7 +114,11 @@
         const cachedData = getCachedDataForAction(methodName, args);
         if (cachedData) {
           console.log(`[Offline] Serving ${methodName} from cache`);
-          if (successHandler) setTimeout(() => successHandler(cachedData), 10);
+          if (successHandler) setTimeout(() => {
+            releaseLock();
+            successHandler(cachedData);
+          }, 10);
+          else releaseLock();
           return;
         }
       }
@@ -107,13 +127,23 @@
         let runner = nativeRun;
         if (successHandler) {
           runner = runner.withSuccessHandler(function(res) {
+            releaseLock();
             successHandler(res);
           });
+        } else {
+          runner = runner.withSuccessHandler(function() {
+            releaseLock();
+          });
         }
+        
         if (failureHandler) {
-          runner = runner.withFailureHandler(failureHandler);
+          runner = runner.withFailureHandler(function(err) {
+            releaseLock();
+            failureHandler(err);
+          });
         } else {
           runner = runner.withFailureHandler(function(err) {
+            releaseLock();
             console.error('Backend Error:', err);
           });
         }
@@ -133,6 +163,7 @@
       })
         .then(response => response.json())
         .then(data => {
+          releaseLock();
           if (!data.success) {
             if (failureHandler) failureHandler(new Error(data.message));
             else console.error('Backend Error:', data.message);
@@ -141,11 +172,11 @@
           }
         })
         .catch(err => {
+          releaseLock();
           if (failureHandler) failureHandler(err);
-          else console.error('Network Error:', err);
+          else console.error('Fetch Error:', err);
         });
     }
-
     function addToSyncQueue(action, args) {
       syncQueue.push({
         id: Date.now() + Math.random().toString(36).substr(2, 9),
@@ -546,9 +577,39 @@
           }
        });
     };
-
+    // --- Global Button Feedback ---
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      
+      // Jika tombol submit form, atau teksnya mengindikasikan aksi kritis,
+      // kita berikan class visual feedback agar user tahu sedang diklik.
+      // (Lock API sesungguhnya ada di executeAction, ini hanya visual UI/UX)
+      const text = (btn.textContent || '').toLowerCase();
+      const isCriticalBtn = text.includes('simpan') || text.includes('bayar') || text.includes('proses') || text.includes('tambah');
+      
+      if (isCriticalBtn && !btn.disabled) {
+        const originalOpacity = btn.style.opacity;
+        const originalPointerEvents = btn.style.pointerEvents;
+        
+        // Kasih jeda debounce visual sedikit (karena mungkin tombol dimatikan oleh script spesifik)
+        setTimeout(() => {
+          if (btn.disabled) {
+            btn.style.opacity = '0.6';
+            btn.style.pointerEvents = 'none';
+          }
+        }, 50);
+        
+        // Kembalikan otomatis setelah 3 detik sebagai fallback UI
+        setTimeout(() => {
+          btn.style.opacity = originalOpacity;
+          btn.style.pointerEvents = originalPointerEvents;
+        }, 3000);
+      }
+    }, true);
 
   </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
@@ -556,17 +617,21 @@
       --primary: #d4af37;
       --primary-light: #fdf8e7;
       --primary-dark: #b5952f;
-      --secondary: #000000;
+      --primary-glow: rgba(212, 175, 55, 0.4);
+      --secondary: #0f172a;
       --accent: #d4af37;
-      --dark: #000000;
-      --bg-light: #f9f9f9;
+      --dark: #0f172a;
+      --bg-light: #f8fafc;
       --bg-card: #ffffff;
-      --text-main: #000000;
-      --text-secondary: #555555;
-      --sidebar-bg: #000000;
-      --border-color: #e5e5ea;
-      --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.05);
-      --glass-bg: rgba(255, 255, 255, 0.9);
+      --text-main: #1e293b;
+      --text-secondary: #64748b;
+      --sidebar-bg: #0f172a;
+      --border-color: #e2e8f0;
+      --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 20px 40px -10px rgba(212, 175, 55, 0.15);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.18);
+      --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
 
@@ -600,16 +665,33 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg-light);
       color: var(--text-main);
       margin: 0;
       padding: 0;
-      transition: background 0.3s, color 0.3s;
+      transition: background 0.4s ease, color 0.4s ease;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
       overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    button {
+      font-family: 'Inter', sans-serif;
+      transition: var(--transition-smooth);
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
     }
 
     /* Subtle macOS Scrollbar */
@@ -7174,64 +7256,6 @@
 
     // _renderProductTable removed, using SmartDataTable
 
-    function showInventoryTools() {
-      const container = document.getElementById('catalogContent');
-      container.innerHTML = `
-        <div class="form-card" style="margin-bottom:24px">
-          <div class="form-card-header">
-            <h3><i class="fas fa-barcode"></i> Stock Opname & Update Harga</h3>
-          </div>
-          <div class="form-card-body" style="text-align:center">
-            <div class="form-group" style="max-width:500px; margin:0 auto 20px auto; position:relative">
-              <label class="form-label" style="text-align:left">Cari Nama atau ID Produk</label>
-              <div style="position:relative">
-                <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8"></i>
-                <input type="text" id="opnameSearch" class="form-input" style="padding-left:36px" placeholder="Ketik nama produk..." oninput="searchProductForOpname(this.value)">
-              </div>
-              <!-- Floating search results -->
-              <div id="opnameSearchResults" class="search-dropdown" style="display:none"></div>
-            </div>
-            
-            <div style="margin:20px 0; display:flex; align-items:center; gap:12px; justify-content:center">
-              <span style="height:1px; background:#e2e8f0; flex:1"></span>
-              <span style="color:#64748b; font-size:13px; font-weight:600">ATAU SCAN BARCODE</span>
-              <span style="height:1px; background:#e2e8f0; flex:1"></span>
-            </div>
-
-            <div id="invScannerContainer" style="max-width:500px; margin:0 auto; border:2px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:20px; background:#f1f5f9">
-              <div id="inv-reader" style="width:100%"></div>
-            </div>
-            <div id="invScannerResult" style="margin-bottom:20px; font-weight:600; color:#667eea"></div>
-            <button id="btnStartInvScan" class="btn btn-primary" onclick="startInventoryScanner()">
-              <i class="fas fa-camera"></i> Mulai Scan Barcode
-            </button>
-          </div>
-        </div>
-
-        <div class="form-card">
-          <div class="form-card-header" style="display:flex; justify-content:space-between; align-items:center">
-            <h3 style="margin:0"><i class="fas fa-history"></i> Riwayat Update Inventaris</h3>
-            <div style="display:flex; gap:8px">
-              <input type="date" id="restock_start" class="btn btn-sm btn-outline" style="padding:4px">
-              <input type="date" id="restock_end" class="btn btn-sm btn-outline" style="padding:4px">
-              <button class="btn btn-sm btn-primary" onclick="loadRestockHistory()"><i class="fas fa-filter"></i></button>
-            </div>
-          </div>
-          <div class="form-card-body">
-            <div id="restockHistoryTable">
-              <div style="text-align:center; padding:20px"><i class="fas fa-spinner fa-spin"></i> Memuat riwayat...</div>
-            </div>
-          </div>
-        </div>
-      `;
-      // Set default dates
-      const today = new Date();
-      document.getElementById('restock_end').value = today.toISOString().split('T')[0];
-      const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-      document.getElementById('restock_start').value = monthAgo.toISOString().split('T')[0];
-
-      loadRestockHistory();
-    }
 
     function searchProductForOpname(val) {
       const resultsEl = document.getElementById('opnameSearchResults');
