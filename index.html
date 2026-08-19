@@ -3512,20 +3512,34 @@
       } catch (e) { return null; }
     }
 
+    function updateSyncProgress(percent, text) {
+      const ind = document.getElementById('liveIndicator');
+      if (ind) {
+        if (percent >= 100) {
+          ind.innerHTML = '<i class="fas fa-check-circle"></i> Online';
+          ind.className = 'status-badge online';
+          ind.title = 'Status Koneksi & Sinkronisasi Selesai';
+        } else {
+          ind.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sync ' + percent + '%';
+          ind.className = 'status-badge warning';
+          ind.title = 'Sinkronisasi di latar belakang: ' + text;
+        }
+      }
+    }
+
     function fetchInitialAppData(callback) {
       if (!currentUser) return;
-      console.log('Fetching initial app data...');
+      console.log('Fetching initial app data (Phase 1)...');
+      updateSyncProgress(10, 'Memuat Data Inti');
 
       google.script.run
         .withSuccessHandler(function (res) {
           if (res && res.success) {
             const d = res.data;
-            if (d.members) saveToCache('members', d.members);
-            if (d.catalogue) saveToCache('catalogue', d.catalogue);
-            if (d.products) saveToCache('products', d.products);
             if (d.branches) saveToCache('branches', d.branches);
             if (d.settings) saveToCache('settings', d.settings);
             if (d.stats) saveToCache('stats', d.stats);
+            if (d.recentCheckins) saveToCache('recentCheckins', d.recentCheckins);
 
             window.appData.lastFetch = new Date().toISOString();
             if (typeof callback === 'function') {
@@ -3533,13 +3547,72 @@
             } else {
               refreshPage();
             }
+            
+            // Lanjut ke Fase 2 setelah UI di-render
+            setTimeout(fetchSecondaryAppData, 500);
+          } else {
+            updateSyncProgress(0, 'Gagal Memuat Data');
           }
         })
         .withFailureHandler(function (err) {
           console.error('Fetch error:', err);
+          updateSyncProgress(0, 'Error Koneksi');
           if (typeof callback === 'function') callback({ success: false, message: err });
         })
         .getInitialAppData(currentBranch);
+    }
+    
+    function fetchSecondaryAppData() {
+      console.log('Fetching secondary app data (Phase 2)...');
+      updateSyncProgress(40, 'Memuat Katalog & Produk');
+      
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            const d = res.data;
+            if (d.catalogue) saveToCache('catalogue', d.catalogue);
+            if (d.products) saveToCache('products', d.products);
+            
+            if (typeof loadProducts === 'function' && currentPage === 'pos') {
+              loadProducts(); // Update UI POS secara diam-diam
+            }
+            
+            // Lanjut ke Fase 3
+            setTimeout(fetchHeavyAppData, 500);
+          } else {
+            updateSyncProgress(0, 'Gagal Memuat Produk');
+          }
+        })
+        .withFailureHandler(function (err) {
+          console.error('Fetch Phase 2 error:', err);
+          updateSyncProgress(0, 'Error Koneksi Produk');
+        })
+        .getSecondaryAppData(currentBranch);
+    }
+
+    function fetchHeavyAppData() {
+      console.log('Fetching heavy app data (Phase 3)...');
+      updateSyncProgress(70, 'Memuat Data Member (Besar)');
+      
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            saveToCache('members', res.members);
+            updateSyncProgress(100, 'Selesai');
+            
+            // Refresh tabel member jika user sedang buka halaman member
+            if (typeof loadMembers === 'function' && currentPage === 'members') {
+              loadMembers();
+            }
+          } else {
+            updateSyncProgress(100, 'Gagal Memuat Member');
+          }
+        })
+        .withFailureHandler(function (err) {
+          console.error('Fetch Phase 3 error:', err);
+          updateSyncProgress(100, 'Error Koneksi Member');
+        })
+        .getAllMembers('All');
     }
 
 
